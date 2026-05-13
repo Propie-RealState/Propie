@@ -1,0 +1,14 @@
+---
+description: General repository rules
+globs:
+alwaysApply: true
+---
+
+- Never scan the full repository unless explicitly requested
+- Read only files directly related to the task
+- Prefer minimal context usage
+- Avoid re-reading files already analyzed
+- Ask before opening more than 3 files
+- Prefer targeted edits over architecture rewrites
+- Do not explain obvious code
+- Keep responses concise

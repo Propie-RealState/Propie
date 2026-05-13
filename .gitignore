@@ -1,0 +1,163 @@
+# =========================
+# OS FILES
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# LOGS
+# =========================
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# ENV FILES
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# DEPENDENCIES
+# =========================
+node_modules/
+vendor/
+
+# =========================
+# BUILD / DIST
+# =========================
+dist/
+build/
+out/
+coverage/
+.cache/
+.tmp/
+temp/
+
+# =========================
+# TYPESCRIPT
+# =========================
+*.tsbuildinfo
+
+# =========================
+# NEXT / NUXT / VITE
+# =========================
+.next/
+.nuxt/
+.vercel/
+.vite/
+
+# =========================
+# REACT
+# =========================
+storybook-static/
+
+# =========================
+# PYTHON
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+venv/
+.venv/
+env/
+
+# =========================
+# JAVA
+# =========================
+*.class
+*.jar
+*.war
+.gradle/
+target/
+
+# =========================
+# GO
+# =========================
+bin/
+pkg/
+
+# =========================
+# RUST
+# =========================
+target/
+Cargo.lock
+
+# =========================
+# PHP / LARAVEL
+# =========================
+/public/storage
+/storage/*.key
+/vendor
+
+# =========================
+# DATABASES
+# =========================
+*.sqlite
+*.db
+
+# =========================
+# DOCKER
+# =========================
+.docker/
+docker-compose.override.yml
+
+# =========================
+# IDEs / EDITORS
+# =========================
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# =========================
+# TESTS
+# =========================
+coverage/
+.nyc_output/
+
+# =========================
+# GENERATED FILES
+# =========================
+*.tgz
+*.zip
+*.tar.gz
+
+# =========================
+# SECRETS
+# =========================
+*.pem
+*.key
+*.crt
+secrets/
+credentials.json
+
+# =========================
+# MACROS / TEMP
+# =========================
+*.tmp
+*.temp
+*.bak
+
+# =========================
+# OPTIONAL MEDIA
+# (descomentá si querés)
+# =========================
+# *.mp4
+# *.mov
+# *.psd
+# *.ai
+# *.fig

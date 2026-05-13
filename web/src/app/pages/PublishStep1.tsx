@@ -1,0 +1,396 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { PropieLogo } from "../components/PropieLogo";
+import { ArrowLeft, MapPin, Search } from "lucide-react";
+import React from "react";
+type OperationType = "venta" | "alquiler" | "temporario" | null;
+type PropertyType = "casa" | "departamento" | "terreno" | "local" | "oficina" | null;
+
+export default function PublishStep1() {
+  const navigate = useNavigate();
+  const [operationType, setOperationType] = useState<OperationType>(null);
+  const [propertyType, setPropertyType] = useState<PropertyType>(null);
+  const [address, setAddress] = useState("");
+
+  const handleContinue = () => {
+    // TODO: Implementar navegación a siguiente paso
+    console.log("Publicar:", { operationType, propertyType, address });
+    navigate("/publicar/fotos-videos");
+  };
+
+  const isFormValid = operationType && propertyType && address;
+
+  const operationCards = [
+    { id: "venta" as OperationType, label: "Venta", emoji: "💰", desc: "Vendé tu propiedad" },
+    { id: "alquiler" as OperationType, label: "Alquiler", emoji: "🏘️", desc: "Alquilá largo plazo" },
+    { id: "temporario" as OperationType, label: "Temporario", emoji: "🌴", desc: "Alquiler temporario" },
+  ];
+
+  const propertyCards = [
+    { id: "casa" as PropertyType, label: "Casa", emoji: "🏠" },
+    { id: "departamento" as PropertyType, label: "Departamento", emoji: "🏢" },
+    { id: "terreno" as PropertyType, label: "Terreno", emoji: "🌳" },
+    { id: "local" as PropertyType, label: "Local", emoji: "🏪" },
+    { id: "oficina" as PropertyType, label: "Oficina", emoji: "💼" },
+  ];
+
+  return (
+    <div
+      style={{
+        minHeight: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+        background: "#f5f5f7",
+        fontFamily: "'Inter', sans-serif",
+      }}
+    >
+      {/* ── HERO ── */}
+      <div
+        style={{
+          position: "relative",
+          background: "linear-gradient(160deg, #5A32F0 0%, #4417E6 55%, #3510B8 100%)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          paddingBottom: 0,
+        }}
+      >
+        {/* Decorative blobs */}
+        <div style={{ position: "absolute", width: 300, height: 300, background: "radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%)", top: -80, right: -60, pointerEvents: "none" }} />
+        <div style={{ position: "absolute", width: 180, height: 180, background: "radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)", bottom: 40, left: -40, pointerEvents: "none" }} />
+
+        {/* Nav row */}
+        <div style={{ width: "100%", maxWidth: 420, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 24px 0" }}>
+          <button
+            onClick={() => navigate(-1)}
+            style={{
+              background: "rgba(255,255,255,0.15)",
+              border: "1px solid rgba(255,255,255,0.22)",
+              borderRadius: 12,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              color: "white",
+              padding: "8px 14px",
+              backdropFilter: "blur(8px)",
+            }}
+          >
+            <ArrowLeft size={15} color="white" />
+            <span style={{ fontSize: 13, fontWeight: 600 }}>Volver</span>
+          </button>
+
+          <PropieLogo size={38} />
+
+          {/* spacer */}
+          <div style={{ width: 80 }} />
+        </div>
+
+        {/* Heading */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "32px 28px 12px" }}>
+          <h1
+            style={{
+              color: "white",
+              fontSize: "clamp(26px, 7vw, 34px)",
+              fontWeight: 800,
+              letterSpacing: "-1.2px",
+              lineHeight: 1.15,
+              fontFamily: "'Sora', sans-serif",
+              margin: 0,
+            }}
+          >
+            Publicá tu propiedad
+          </h1>
+          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 10, lineHeight: 1.6, maxWidth: 300 }}>
+            Comenzá completando los datos básicos
+          </p>
+        </div>
+
+        {/* Wave */}
+        <div style={{ width: "100%", height: 44, position: "relative", marginTop: 8 }}>
+          <svg viewBox="0 0 390 44" preserveAspectRatio="none" style={{ position: "absolute", bottom: 0, width: "100%", height: 44 }}>
+            <path d="M0,24 C90,48 300,0 390,24 L390,44 L0,44 Z" fill="#f5f5f7" />
+          </svg>
+        </div>
+      </div>
+
+      {/* ── CONTENT ── */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          padding: "24px 24px 40px",
+          overflowY: "auto",
+        }}
+      >
+        <div style={{ width: "100%", maxWidth: 420, display: "flex", flexDirection: "column", gap: 28 }}>
+          {/* Tipo de operación */}
+          <div>
+            <h3 style={{ margin: "0 0 14px", fontSize: 16, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>
+              Tipo de operación
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {operationCards.map((card) => (
+                <button
+                  key={card.id}
+                  onClick={() => setOperationType(card.id)}
+                  style={{
+                    width: "100%",
+                    background: "white",
+                    border: operationType === card.id ? "2px solid #4417E6" : "2px solid transparent",
+                    borderRadius: 16,
+                    padding: "18px 18px",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 14,
+                    transition: "all 0.15s ease",
+                    boxShadow: operationType === card.id ? "0 4px 16px rgba(68,23,230,0.15)" : "0 1px 6px rgba(0,0,0,0.06)",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (operationType !== card.id) {
+                      (e.currentTarget as HTMLButtonElement).style.borderColor = "#e5e5ea";
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (operationType !== card.id) {
+                      (e.currentTarget as HTMLButtonElement).style.borderColor = "transparent";
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 1px 6px rgba(0,0,0,0.06)";
+                    }
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 50,
+                      height: 50,
+                      borderRadius: 14,
+                      background: operationType === card.id ? "linear-gradient(135deg, #f0eeff 0%, #e4deff 100%)" : "#f8f8f8",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 24,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {card.emoji}
+                  </div>
+                  <div style={{ flex: 1, textAlign: "left" }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>
+                      {card.label}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#6e6e73", marginTop: 2 }}>
+                      {card.desc}
+                    </div>
+                  </div>
+                  {operationType === card.id && (
+                    <div
+                      style={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: "50%",
+                        background: "#4417E6",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "white" }} />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tipo de propiedad */}
+          <div>
+            <h3 style={{ margin: "0 0 14px", fontSize: 16, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>
+              Tipo de propiedad
+            </h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
+              {propertyCards.map((card) => (
+                <button
+                  key={card.id}
+                  onClick={() => setPropertyType(card.id)}
+                  style={{
+                    background: "white",
+                    border: propertyType === card.id ? "2px solid #4417E6" : "2px solid transparent",
+                    borderRadius: 16,
+                    padding: "20px 16px",
+                    cursor: "pointer",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 10,
+                    transition: "all 0.15s ease",
+                    boxShadow: propertyType === card.id ? "0 4px 16px rgba(68,23,230,0.15)" : "0 1px 6px rgba(0,0,0,0.06)",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (propertyType !== card.id) {
+                      (e.currentTarget as HTMLButtonElement).style.borderColor = "#e5e5ea";
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (propertyType !== card.id) {
+                      (e.currentTarget as HTMLButtonElement).style.borderColor = "transparent";
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 1px 6px rgba(0,0,0,0.06)";
+                    }
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 14,
+                      background: propertyType === card.id ? "linear-gradient(135deg, #f0eeff 0%, #e4deff 100%)" : "#f8f8f8",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 28,
+                    }}
+                  >
+                    {card.emoji}
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a", textAlign: "center" }}>
+                    {card.label}
+                  </div>
+                  {propertyType === card.id && (
+                    <div
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: "50%",
+                        background: "#4417E6",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginTop: -4,
+                      }}
+                    >
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: "white" }} />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Dirección */}
+          <div>
+            <h3 style={{ margin: "0 0 14px", fontSize: 16, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>
+              Dirección
+            </h3>
+            <div style={{ position: "relative" }}>
+              <div
+                style={{
+                  position: "absolute",
+                  left: 16,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  zIndex: 1,
+                }}
+              >
+                <Search size={18} color="#9a9aa0" />
+              </div>
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Buscar dirección..."
+                style={{
+                  width: "100%",
+                  padding: "16px 16px 16px 46px",
+                  borderRadius: 14,
+                  border: "1.5px solid #e5e5ea",
+                  fontSize: 15,
+                  color: "#1a1a1a",
+                  outline: "none",
+                  transition: "all 0.15s ease",
+                  boxSizing: "border-box",
+                  background: "white",
+                }}
+                onFocus={(e) => {
+                  (e.target as HTMLInputElement).style.borderColor = "#4417E6";
+                  (e.target as HTMLInputElement).style.boxShadow = "0 0 0 3px rgba(68,23,230,0.08)";
+                }}
+                onBlur={(e) => {
+                  (e.target as HTMLInputElement).style.borderColor = "#e5e5ea";
+                  (e.target as HTMLInputElement).style.boxShadow = "none";
+                }}
+              />
+            </div>
+
+            {/* Map placeholder */}
+            <div
+              style={{
+                marginTop: 12,
+                width: "100%",
+                height: 200,
+                borderRadius: 14,
+                background: "linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexDirection: "column",
+                gap: 8,
+                border: "1.5px solid #e5e5ea",
+              }}
+            >
+              <MapPin size={32} color="#9a9aa0" />
+              <span style={{ fontSize: 13, color: "#9a9aa0", fontWeight: 500 }}>
+                Mapa interactivo
+              </span>
+              <span style={{ fontSize: 11, color: "#b0b0b0" }}>
+                Pin draggable + autocompletado
+              </span>
+            </div>
+          </div>
+
+          {/* Continue button */}
+          <button
+            onClick={handleContinue}
+            disabled={!isFormValid}
+            style={{
+              width: "100%",
+              background: isFormValid ? "#4417E6" : "#e5e5ea",
+              border: "none",
+              borderRadius: 16,
+              padding: "16px 18px",
+              cursor: isFormValid ? "pointer" : "not-allowed",
+              fontSize: 16,
+              fontWeight: 700,
+              color: isFormValid ? "white" : "#9a9aa0",
+              transition: "all 0.18s ease",
+              marginTop: 8,
+              boxShadow: isFormValid ? "0 4px 16px rgba(68,23,230,0.24)" : "none",
+            }}
+            onMouseEnter={(e) => {
+              if (isFormValid) {
+                (e.currentTarget as HTMLButtonElement).style.background = "#3510B8";
+                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 20px rgba(68,23,230,0.32)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (isFormValid) {
+                (e.currentTarget as HTMLButtonElement).style.background = "#4417E6";
+                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 16px rgba(68,23,230,0.24)";
+              }
+            }}
+          >
+            Continuar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,89 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+
+    container_name: propie-postgres
+
+    restart: unless-stopped
+
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-propie}
+
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-propie123}
+
+      POSTGRES_DB: ${POSTGRES_DB:-propie_db}
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+      - ./src/database/schemas:/docker-entrypoint-initdb.d
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-propie} -d ${POSTGRES_DB:-propie_db}"
+        ]
+
+      interval: 10s
+
+      timeout: 5s
+
+      retries: 5
+
+
+
+  app:
+    build:
+      context: .
+
+      dockerfile: Dockerfile
+
+    container_name: propie-app
+
+    profiles:
+      - app
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    environment:
+      NODE_ENV: development
+
+      DATABASE_URL: postgresql://${POSTGRES_USER:-propie}:${POSTGRES_PASSWORD:-propie123}@postgres:5432/${POSTGRES_DB:-propie_db}
+
+      DB_HOST: postgres
+
+      DB_PORT: 5432
+
+      DB_USER: ${POSTGRES_USER:-propie}
+
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-propie123}
+
+      DB_NAME: ${POSTGRES_DB:-propie_db}
+
+      JWT_SECRET: super_secret
+
+      JWT_REFRESH_SECRET: super_refresh_secret
+
+    ports:
+      - "3000:3000"
+
+    command:
+      - npm
+      - run
+      - dev
+
+    volumes:
+      - .:/app
+
+      - /app/node_modules
+
+
+
+volumes:
+  postgres_data:
