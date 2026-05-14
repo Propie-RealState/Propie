@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS users (
 
     password_hash TEXT NOT NULL,
 
+    role TEXT NOT NULL DEFAULT 'CLIENT' CHECK (role IN ('CLIENT', 'OWNER', 'AGENT')),
+
     avatar_url TEXT,
 
     is_verified BOOLEAN NOT NULL DEFAULT false,
@@ -20,6 +22,7 @@ CREATE TABLE IF NOT EXISTS users (
 
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_email

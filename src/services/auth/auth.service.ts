@@ -1,51 +1,22 @@
 import bcrypt from 'bcryptjs';
+import { randomUUID } from 'crypto';
+
+import { db } from '../../database/client';
 
 import {
-  findUserById,
-} from '@/database/repositories/user.repository';
-
-import {
-  findSessionByTokenHash,
-} from '@/database/repositories/session.repository';
-
-import {
-  verifyRefreshToken,
-} from './jwt';
-
-import {
-  createUser,
   findUserByEmail,
-} from '@/database/repositories/user.repository';
-
-import {
-  createSession,
-} from '@/database/repositories/session.repository';
+} from '../../database/repositories/user.repository';
 
 import type {
-  AuthResponse,
   LoginInput,
   RegisterInput,
-} from '@/database/types/auth';
+  AuthUser,
+} from '../../database/types/auth';
 
 import {
   generateAccessToken,
   generateRefreshToken,
 } from './jwt';
-
-import {
-  revokeSession,
-} from '@/database/repositories/session.repository';
-
-
-// ========================================================
-// HASH TOKEN
-// ========================================================
-
-async function hashToken(
-  token: string
-): Promise<string> {
-  return bcrypt.hash(token, 10);
-}
 
 
 
@@ -55,17 +26,37 @@ async function hashToken(
 
 export async function register(
   input: RegisterInput
-): Promise<AuthResponse> {
+) {
+
+  // ======================================================
+  // CHECK EMAIL
+  // ======================================================
+
   const existingUser =
-    await findUserByEmail(
-      input.email
+    await db.query(
+      `
+        SELECT id
+        FROM users
+        WHERE email = $1
+      `,
+      [
+        input.email,
+      ]
     );
 
-  if (existingUser) {
+  if (
+    existingUser.rows.length > 0
+  ) {
     throw new Error(
       'EMAIL_ALREADY_EXISTS'
     );
   }
+
+
+
+  // ======================================================
+  // HASH PASSWORD
+  // ======================================================
 
   const passwordHash =
     await bcrypt.hash(
@@ -73,18 +64,56 @@ export async function register(
       10
     );
 
-  const user =
-    await createUser({
-      firstName:
+
+
+  // ======================================================
+  // CREATE USER
+  // ======================================================
+
+  const userResult =
+    await db.query<AuthUser>(
+      `
+        INSERT INTO users (
+          id,
+          first_name,
+          last_name,
+          email,
+          password_hash,
+          role
+        )
+        VALUES (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,
+          $6
+        )
+        RETURNING *
+      `,
+      [
+        randomUUID(),
+
         input.firstName,
 
-      lastName:
         input.lastName,
 
-      email: input.email,
+        input.email,
 
-      passwordHash,
-    });
+        passwordHash,
+
+        input.role,
+      ]
+    );
+
+  const user =
+    userResult.rows[0];
+
+
+
+  // ======================================================
+  // TOKENS
+  // ======================================================
 
   const accessToken =
     generateAccessToken({
@@ -97,28 +126,20 @@ export async function register(
 
   const refreshToken =
     generateRefreshToken(
-      user.id
+      {
+        userId: user.id,
+
+        email: user.email,
+
+        role: user.role,
+      }
     );
 
-  const refreshTokenHash =
-    await hashToken(
-      refreshToken
-    );
 
-  const refreshTokenExpiresAt =
-    new Date(
-      Date.now() +
-      1000 * 60 * 60 * 24 * 30
-    );
 
-  await createSession({
-    userId: user.id,
-
-    refreshTokenHash,
-
-    expiresAt:
-      refreshTokenExpiresAt,
-  });
+  // ======================================================
+  // RESPONSE
+  // ======================================================
 
   return {
     accessToken,
@@ -137,7 +158,12 @@ export async function register(
 
 export async function login(
   input: LoginInput
-): Promise<AuthResponse> {
+) {
+
+  // ======================================================
+  // FIND USER
+  // ======================================================
+
   const user =
     await findUserByEmail(
       input.email
@@ -149,17 +175,30 @@ export async function login(
     );
   }
 
-  const isPasswordValid =
+
+
+  // ======================================================
+  // CHECK PASSWORD
+  // ======================================================
+
+  const passwordMatch =
     await bcrypt.compare(
       input.password,
+
       user.passwordHash
     );
 
-  if (!isPasswordValid) {
+  if (!passwordMatch) {
     throw new Error(
       'INVALID_CREDENTIALS'
     );
   }
+
+
+
+  // ======================================================
+  // TOKENS
+  // ======================================================
 
   const accessToken =
     generateAccessToken({
@@ -172,153 +211,32 @@ export async function login(
 
   const refreshToken =
     generateRefreshToken(
-      user.id
+      {
+        userId: user.id,
+
+        email: user.email,
+
+        role: user.role,
+      }
     );
 
-  const refreshTokenHash =
-    await hashToken(
-      refreshToken
-    );
 
-  const refreshTokenExpiresAt =
-    new Date(
-      Date.now() +
-      1000 * 60 * 60 * 24 * 30
-    );
 
-  await createSession({
-    userId: user.id,
+  // ======================================================
+  // RESPONSE
+  // ======================================================
 
-    refreshTokenHash,
+  const {
+    passwordHash: _passwordHash,
 
-    expiresAt:
-      refreshTokenExpiresAt,
-  });
+    ...authUser
+  } = user;
 
   return {
     accessToken,
 
     refreshToken,
 
-    user: {
-      id: user.id,
-
-      firstName:
-        user.firstName,
-
-      lastName:
-        user.lastName,
-
-      email: user.email,
-
-      phone: user.phone,
-
-      avatarUrl:
-        user.avatarUrl,
-
-      bio: user.bio,
-
-      role: user.role,
-
-      status: user.status,
-
-      isVerified:
-        user.isVerified,
-
-      createdAt:
-        user.createdAt,
-
-      updatedAt:
-        user.updatedAt,
-    },
+    user: authUser,
   };
-
-}
-
-// ========================================================
-// REFRESH ACCESS TOKEN
-// ========================================================
-
-export async function refreshAccessToken(
-  refreshToken: string
-): Promise<AuthResponse> {
-  const payload =
-    verifyRefreshToken(
-      refreshToken
-    );
-
-  const user =
-    await findUserById(
-      payload.sub
-    );
-
-  if (!user) {
-    throw new Error(
-      'USER_NOT_FOUND'
-    );
-  }
-
-  const session =
-    await findSessionByTokenHash(
-      refreshToken
-    );
-
-  if (!session) {
-    throw new Error(
-      'INVALID_SESSION'
-    );
-  }
-
-  if (session.isRevoked) {
-    throw new Error(
-      'SESSION_REVOKED'
-    );
-  }
-
-  const isExpired =
-    new Date(
-      session.expiresAt
-    ) < new Date();
-
-  if (isExpired) {
-    throw new Error(
-      'SESSION_EXPIRED'
-    );
-  }
-
-  const newAccessToken =
-    generateAccessToken({
-      userId: user.id,
-
-      email: user.email,
-
-      role: user.role,
-    });
-
-  const newRefreshToken =
-    generateRefreshToken(
-      user.id
-    );
-
-  return {
-    accessToken:
-      newAccessToken,
-
-    refreshToken:
-      newRefreshToken,
-
-    user,
-  };
-}
-
-// ========================================================
-// LOGOUT
-// ========================================================
-
-export async function logout(
-  sessionId: string
-): Promise<void> {
-  await revokeSession(
-    sessionId
-  );
 }

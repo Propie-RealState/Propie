@@ -15,6 +15,7 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
+    "db:setup": "bash scripts/setup-db.sh",
     "dev": "tsx watch src/server.ts",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",

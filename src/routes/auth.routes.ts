@@ -16,6 +16,14 @@ import {
   refreshSession,
 } from '../services/auth/refresh';
 
+import {
+  authMiddleware,
+} from '../middlewares/auth.middleware';
+
+import {
+  roleMiddleware,
+} from '../middlewares/role.middleware';
+
 // ========================================================
 // AUTH ROUTES
 // ========================================================
@@ -198,5 +206,63 @@ export async function authRoutes(
       }
     }
   );
+
+  // ======================================================
+  // ME
+  // ======================================================
+
+  app.get(
+    '/me',
+
+    {
+      preHandler:
+        authMiddleware,
+    },
+
+    async (
+      request,
+      reply
+    ) => {
+      return reply.send({
+        success: true,
+
+        data:
+          request.user,
+      });
+    }
+  );
+
+  // ======================================================
+// OWNER ONLY
+// ======================================================
+
+app.get(
+  '/owner-only',
+
+  {
+    preHandler: [
+      authMiddleware,
+
+      roleMiddleware([
+        'OWNER',
+      ]),
+    ],
+  },
+
+  async (
+    request,
+    reply
+  ) => {
+    return reply.send({
+      success: true,
+
+      message:
+        'Welcome owner',
+
+      user:
+        request.user,
+    });
+  }
+);
 }
 

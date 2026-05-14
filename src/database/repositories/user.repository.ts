@@ -25,15 +25,17 @@ type UserRow = {
 
   avatar_url: string | null;
 
-  bio: string | null;
-
-  status: string;
-
   is_verified: boolean;
+
+  is_active: boolean;
+
+  role: string;
 
   created_at: string;
 
   updated_at: string;
+
+  bio?: string | null;
 };
 
 
@@ -61,12 +63,13 @@ function mapUserRowToUser(
     avatarUrl:
       row.avatar_url,
 
-    bio: row.bio,
+    bio: row.bio ?? null,
 
-    role: 'CLIENT',
+    role: row.role as User['role'],
 
-    status:
-      row.status as User['status'],
+    status: row.is_active
+      ? 'ACTIVE'
+      : 'INACTIVE',
 
     isVerified:
       row.is_verified,
@@ -135,6 +138,40 @@ export async function createUser(
 // FIND USER BY EMAIL
 // ========================================================
 
+function readPasswordHashFromRow(
+  row: UserRow
+): string | undefined {
+  const raw =
+    row as unknown as Record<
+      string,
+      unknown
+    >;
+
+  const snake =
+    raw.password_hash;
+
+  if (
+    typeof snake ===
+      'string' &&
+    snake.length > 0
+  ) {
+    return snake;
+  }
+
+  const camel =
+    raw.passwordHash;
+
+  if (
+    typeof camel ===
+      'string' &&
+    camel.length > 0
+  ) {
+    return camel;
+  }
+
+  return undefined;
+}
+
 export async function findUserByEmail(
   email: string
 ): Promise<
@@ -161,11 +198,21 @@ export async function findUserByEmail(
 
   const row = result.rows[0];
 
+  const passwordHash =
+    readPasswordHashFromRow(
+      row
+    );
+
+  if (
+    passwordHash == null
+  ) {
+    return null;
+  }
+
   return {
     ...mapUserRowToUser(row),
 
-    passwordHash:
-      row.password_hash,
+    passwordHash,
   };
 }
 
