@@ -1,5 +1,5 @@
 -- =============================================================================
--- create application user for propie
+-- create application user for agente (least-privilege DB role)
 -- =============================================================================
 
 \if :{?app_password}
@@ -7,17 +7,17 @@
 DO $$
 BEGIN
   IF NOT EXISTS (
-    SELECT FROM pg_user WHERE usename = 'propie_app_user'
+    SELECT FROM pg_user WHERE usename = 'agente_app_user'
   ) THEN
 
-    CREATE USER propie_app_user
+    CREATE USER agente_app_user
     WITH PASSWORD :'app_password';
 
-    RAISE NOTICE 'user propie_app_user created successfully';
+    RAISE NOTICE 'user agente_app_user created successfully';
 
   ELSE
 
-    RAISE NOTICE 'user propie_app_user already exists, skipping';
+    RAISE NOTICE 'user agente_app_user already exists, skipping';
 
   END IF;
 END
@@ -31,14 +31,14 @@ $$;
 \endif
 
 
-GRANT CONNECT ON DATABASE propie TO propie_app_user;
+GRANT CONNECT ON DATABASE propie_db TO agente_app_user;
 
-GRANT USAGE ON SCHEMA public TO propie_app_user;
+GRANT USAGE ON SCHEMA public TO agente_app_user;
 
 GRANT SELECT, INSERT, UPDATE, DELETE
 ON ALL TABLES IN SCHEMA public
-TO propie_app_user;
+TO agente_app_user;
 
 GRANT USAGE, SELECT
 ON ALL SEQUENCES IN SCHEMA public
-TO propie_app_user;
+TO agente_app_user;

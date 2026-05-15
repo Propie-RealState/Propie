@@ -10,13 +10,16 @@ import {
 import type {
   LoginInput,
   RegisterInput,
-  AuthUser,
 } from '../../database/types/auth';
 
 import {
   generateAccessToken,
   generateRefreshToken,
 } from './jwt';
+
+import {
+  hashToken,
+} from './session';
 
 
 
@@ -70,8 +73,10 @@ export async function register(
   // CREATE USER
   // ======================================================
 
-  const userResult =
-    await db.query<AuthUser>(
+  const insertResult =
+    await db.query<{
+      id: string;
+    }>(
       `
         INSERT INTO users (
           id,
@@ -89,7 +94,7 @@ export async function register(
           $5,
           $6
         )
-        RETURNING *
+        RETURNING id
       `,
       [
         randomUUID(),
@@ -106,13 +111,29 @@ export async function register(
       ]
     );
 
+  if (
+    insertResult.rows.length === 0
+  ) {
+    throw new Error(
+      'REGISTRATION_FAILED'
+    );
+  }
+
   const user =
-    userResult.rows[0];
+    await findUserByEmail(
+      input.email
+    );
+
+  if (!user) {
+    throw new Error(
+      'REGISTRATION_FAILED'
+    );
+  }
 
 
 
   // ======================================================
-  // TOKENS
+  // GENERATE TOKENS
   // ======================================================
 
   const accessToken =
@@ -125,15 +146,56 @@ export async function register(
     });
 
   const refreshToken =
-    generateRefreshToken(
-      {
-        userId: user.id,
+    generateRefreshToken({
+      userId: user.id,
 
-        email: user.email,
+      email: user.email,
 
-        role: user.role,
-      }
+      role: user.role,
+    });
+
+
+
+  // ======================================================
+  // SAVE SESSION
+  // ======================================================
+
+  const refreshTokenHash =
+    hashToken(
+      refreshToken
     );
+
+  await db.query(
+    `
+      INSERT INTO sessions (
+        user_id,
+        refresh_token_hash,
+        expires_at
+      )
+      VALUES (
+        $1,
+        $2,
+        NOW() + interval '30 days'
+      )
+    `,
+    [
+      user.id,
+
+      refreshTokenHash,
+    ]
+  );
+
+
+
+  // ======================================================
+  // REMOVE PASSWORD HASH
+  // ======================================================
+
+  const {
+    passwordHash: _passwordHash,
+
+    ...authUser
+  } = user;
 
 
 
@@ -146,7 +208,7 @@ export async function register(
 
     refreshToken,
 
-    user,
+    user: authUser,
   };
 }
 
@@ -197,7 +259,7 @@ export async function login(
 
 
   // ======================================================
-  // TOKENS
+  // GENERATE TOKENS
   // ======================================================
 
   const accessToken =
@@ -210,20 +272,49 @@ export async function login(
     });
 
   const refreshToken =
-    generateRefreshToken(
-      {
-        userId: user.id,
+    generateRefreshToken({
+      userId: user.id,
 
-        email: user.email,
+      email: user.email,
 
-        role: user.role,
-      }
-    );
+      role: user.role,
+    });
 
 
 
   // ======================================================
-  // RESPONSE
+  // SAVE SESSION
+  // ======================================================
+
+  const refreshTokenHash =
+    hashToken(
+      refreshToken
+    );
+
+  await db.query(
+    `
+      INSERT INTO sessions (
+        user_id,
+        refresh_token_hash,
+        expires_at
+      )
+      VALUES (
+        $1,
+        $2,
+        NOW() + interval '30 days'
+      )
+    `,
+    [
+      user.id,
+
+      refreshTokenHash,
+    ]
+  );
+
+
+
+  // ======================================================
+  // REMOVE PASSWORD HASH
   // ======================================================
 
   const {
@@ -231,6 +322,12 @@ export async function login(
 
     ...authUser
   } = user;
+
+
+
+  // ======================================================
+  // RESPONSE
+  // ======================================================
 
   return {
     accessToken,

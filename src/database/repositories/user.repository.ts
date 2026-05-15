@@ -97,6 +97,11 @@ export async function createUser(
     email: string;
 
     passwordHash: string;
+
+    role:
+    | 'OWNER'
+    | 'AGENT';
+
   }
 ): Promise<User> {
   const result =
@@ -106,13 +111,15 @@ export async function createUser(
           first_name,
           last_name,
           email,
-          password_hash
+          password_hash,
+          role
         )
         VALUES (
           $1,
           $2,
           $3,
-          $4
+          $4,
+          $5
         )
         RETURNING *
       `,
@@ -124,6 +131,8 @@ export async function createUser(
         input.email,
 
         input.passwordHash,
+
+        input.role,
       ]
     );
 

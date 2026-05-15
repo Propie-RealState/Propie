@@ -3,9 +3,10 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 
 import {
-    authRoutes,
-  } from './routes/auth.routes';
-
+  authRoutes,
+} from './routes/auth.routes';
+import { registerRoute }
+  from "./routes/register.route";
 
 
 // ========================================================
@@ -42,6 +43,7 @@ export async function buildApp() {
     }
   );
 
+  await app.register(registerRoute);
 
 
   return app;

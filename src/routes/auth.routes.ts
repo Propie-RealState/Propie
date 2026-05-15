@@ -24,6 +24,14 @@ import {
   roleMiddleware,
 } from '../middlewares/role.middleware';
 
+import {
+  logoutSession,
+} from '../services/auth/logout';
+
+import {
+  cleanupSessions,
+} from "../services/auth/cleanup";
+
 // ========================================================
 // AUTH ROUTES
 // ========================================================
@@ -233,36 +241,129 @@ export async function authRoutes(
   );
 
   // ======================================================
-// OWNER ONLY
-// ======================================================
+  // OWNER ONLY
+  // ======================================================
 
-app.get(
-  '/owner-only',
+  app.get(
+    '/owner-only',
 
-  {
-    preHandler: [
-      authMiddleware,
+    {
+      preHandler: [
+        authMiddleware,
 
-      roleMiddleware([
-        'OWNER',
-      ]),
-    ],
-  },
+        roleMiddleware([
+          'OWNER',
+        ]),
+      ],
+    },
 
-  async (
-    request,
-    reply
-  ) => {
-    return reply.send({
-      success: true,
+    async (
+      request,
+      reply
+    ) => {
+      return reply.send({
+        success: true,
 
-      message:
-        'Welcome owner',
+        message:
+          'Welcome owner',
 
-      user:
-        request.user,
-    });
-  }
-);
+        user:
+          request.user,
+      });
+    }
+  );
+
+  // ======================================================
+  // LOGOUT
+  // ======================================================
+
+  app.post(
+    '/logout',
+
+    async (
+      request,
+      reply
+    ) => {
+      try {
+
+        const body =
+          request.body as {
+            refreshToken: string;
+          };
+
+        // ================================================
+        // LOGOUT SESSION
+        // ================================================
+
+        await logoutSession(
+          body.refreshToken
+        );
+
+        // ================================================
+        // RESPONSE
+        // ================================================
+
+        return reply
+          .status(200)
+          .send({
+            success: true,
+          });
+
+      } catch (error) {
+
+        console.error(error);
+
+        return reply
+          .status(400)
+          .send({
+            success: false,
+
+            error: {
+              code:
+                'LOGOUT_ERROR',
+
+              message:
+                'Failed to logout',
+            },
+          });
+      }
+    }
+  );
+
+  app.delete(
+    "/sessions/cleanup",
+
+    async (
+      _request,
+      reply
+    ) => {
+
+      try {
+
+        const result =
+          await cleanupSessions();
+
+        return reply
+          .status(200)
+          .send({
+            success: true,
+
+            data: result,
+          });
+
+      } catch (error) {
+
+        console.error(error);
+
+        return reply
+          .status(500)
+          .send({
+            success: false,
+          });
+      }
+    }
+  );
+
+
 }
 
