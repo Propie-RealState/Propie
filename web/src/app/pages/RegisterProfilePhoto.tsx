@@ -3,16 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { PropieLogo } from "../components/PropieLogo";
 import { ArrowLeft, Upload, Camera, User } from "lucide-react";
 import React from "react";
+import { useRegister } from "../../context/RegisterContext";
 
 export default function RegisterProfilePhoto() {
+  const { data, updateData } = useRegister();
   const navigate = useNavigate();
-  const [photo, setPhoto] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const userType = sessionStorage.getItem("userType");
-  const isAgent = userType === "agente";
+  const isAgent = data.role === "AGENT";
 
   const colors = {
     gradient: isAgent
@@ -25,22 +24,19 @@ export default function RegisterProfilePhoto() {
   };
 
   const handleFileSelect = (file: File) => {
-    setPhoto(file);
+    updateData({ ...data, profilePhoto: URL.createObjectURL(file) });
     const reader = new FileReader();
     reader.onloadend = () => {
-      setPhotoPreview(reader.result as string);
+      updateData({ ...data, profilePhoto: reader.result as string });
     };
     reader.readAsDataURL(file);
   };
 
   const handleContinue = () => {
-    const userType = sessionStorage.getItem("userType");
-    console.log("Foto de perfil:", photo);
-
-    if (userType === "agente") {
-      navigate("/registro/informacion-agente");
+    if (data.role === "AGENT") {
+      navigate("/registro/agent-info");
     } else {
-      navigate("/registro/informacion-propietario");
+      navigate("/registro/owner-info");
     }
   };
 
@@ -142,7 +138,7 @@ export default function RegisterProfilePhoto() {
                 width: 180,
                 height: 180,
                 borderRadius: "50%",
-                background: photoPreview ? `url(${photoPreview}) center/cover` : "linear-gradient(135deg, #f0eeff 0%, #e4deff 100%)",
+                background: data.profilePhoto ? `url(${data.profilePhoto}) center/cover` : "linear-gradient(135deg, #f0eeff 0%, #e4deff 100%)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -151,7 +147,7 @@ export default function RegisterProfilePhoto() {
                 overflow: "hidden",
               }}
             >
-              {!photoPreview && <User size={64} color={colors.primary} strokeWidth={1.5} />}
+              {!data.profilePhoto && <User size={64} color={colors.primary} strokeWidth={1.5} />}
             </div>
           </div>
 

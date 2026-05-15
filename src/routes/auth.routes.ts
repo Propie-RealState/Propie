@@ -3,12 +3,10 @@ import type {
 } from 'fastify';
 
 import {
-  RegisterSchema,
   LoginSchema,
 } from '@/database/types/auth';
 
 import {
-  register,
   login,
 } from '../services/auth/auth.service';
 
@@ -55,55 +53,7 @@ export async function authRoutes(
 
 
 
-  // ======================================================
-  // REGISTER
-  // ======================================================
-
-  app.post(
-    '/register',
-    async (
-      request,
-      reply
-    ) => {
-      try {
-        const input =
-          RegisterSchema.parse(
-            request.body
-          );
-
-        const response =
-          await register(
-            input
-          );
-
-        return reply
-          .status(201)
-          .send({
-            success: true,
-
-            data: response,
-          });
-      } catch (error) {
-        console.error(error);
-
-        return reply
-          .status(400)
-          .send({
-            success: false,
-
-            error: {
-              code:
-                'REGISTER_ERROR',
-
-              message:
-                'Failed to register user',
-            },
-          });
-      }
-    }
-  );
-
-
+  // Registro: POST /auth/register → register.route.ts
 
   // ======================================================
   // LOGIN

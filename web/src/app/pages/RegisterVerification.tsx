@@ -40,7 +40,7 @@ export default function RegisterVerification() {
         setEmailVerified(true);
         // Navigate to next page after verification
         setTimeout(() => {
-          navigate("/registro/datos-personales");
+          navigate("/registro/personal-data");
         }, 800);
       }, 500);
     }

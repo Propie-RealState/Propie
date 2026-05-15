@@ -357,4 +357,6 @@ export async function updateUserProfile(
   return mapUserRowToUser(
     result.rows[0]
   );
+  
 }
+

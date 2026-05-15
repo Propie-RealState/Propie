@@ -1,8 +1,14 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { PropieLogo } from "../components/PropieLogo";
-import { ArrowLeft, Home, Search, GraduationCap, Award, Briefcase, Plus, X } from "lucide-react";
+import { ArrowLeft, Check, GraduationCap, Award, Briefcase, Plus, X } from "lucide-react";
 import React from "react";
+import { useRegister } from "../../context/RegisterContext";
+import { useAuth } from "../../context/AuthContext";
+import { apiFetch } from "../../lib/api";
+import { buildRegisterPayload } from "../../lib/buildRegisterPayload";
+import { RegisterSuccessOverlay } from "../components/register/RegisterSuccessOverlay";
+import { REGISTER_COMPLETION } from "../components/register/registerCompletionTheme";
 
 type EducationEntry = {
   id: string;
@@ -27,7 +33,13 @@ type ExperienceEntry = {
 
 export default function RegisterAgentInfo() {
   const navigate = useNavigate();
-  const [bio, setBio] = useState("");
+  const auth = useAuth();
+  const { data, updateData } = useRegister();
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const agentTheme = REGISTER_COMPLETION.AGENT;
+
   const [education, setEducation] = useState<EducationEntry[]>([]);
   const [certifications, setCertifications] = useState<CertificationEntry[]>([]);
   const [experience, setExperience] = useState<ExperienceEntry[]>([]);
@@ -40,15 +52,62 @@ export default function RegisterAgentInfo() {
   const [newCertification, setNewCertification] = useState({ name: "", issuer: "", year: "" });
   const [newExperience, setNewExperience] = useState({ title: "", company: "", years: "" });
 
-  const handlePublish = () => {
-    console.log("Ir a publicar", { bio, education, certifications, experience });
-    navigate("/publicar");
+  const handleFinalizar = async () => {
+    if (isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      updateData({
+        mainGoal: "EXPLORE",
+      });
+
+      const payload = buildRegisterPayload(
+        {
+          ...data,
+          mainGoal: "EXPLORE",
+        },
+        "AGENT",
+        "EXPLORE"
+      );
+
+      const response = await apiFetch("/auth/register", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      const authData = response?.data;
+
+      if (
+        !authData?.accessToken ||
+        !authData?.refreshToken ||
+        !authData?.user
+      ) {
+        throw new Error("INVALID_REGISTER_RESPONSE");
+      }
+
+      auth.login(
+        authData.accessToken,
+        authData.refreshToken,
+        authData.user
+      );
+
+      sessionStorage.setItem("userType", "agente");
+
+      setShowSuccess(true);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleExplore = () => {
-    console.log("Ir a explorar", { bio, education, certifications, experience });
-    navigate("/explorar");
-  };
+  const handleSuccessFinish = useCallback(() => {
+    setShowSuccess(false);
+    navigate("/explorar", { replace: true });
+  }, [navigate]);
 
   const addEducation = () => {
     if (newEducation.institution && newEducation.degree && newEducation.year) {
@@ -86,7 +145,7 @@ export default function RegisterAgentInfo() {
     setExperience(experience.filter((e) => e.id !== id));
   };
 
-  const charCount = bio.length;
+  const charCount = data.bio.length;
   const maxChars = 300;
 
   return (
@@ -99,6 +158,14 @@ export default function RegisterAgentInfo() {
         fontFamily: "'Inter', sans-serif",
       }}
     >
+      <RegisterSuccessOverlay
+        open={showSuccess}
+        variant="AGENT"
+        title="¡Tu cuenta está lista!"
+        subtitle="Ya creamos tu perfil de agente. Bienvenido a Propie."
+        onFinish={handleSuccessFinish}
+      />
+
       {/* ── HERO ── */}
       <div
         style={{
@@ -189,10 +256,12 @@ export default function RegisterAgentInfo() {
             <div style={{ position: "relative" }}>
               <textarea
                 id="bio"
-                value={bio}
+                value={data.bio}
                 onChange={(e) => {
                   if (e.target.value.length <= maxChars) {
-                    setBio(e.target.value);
+                    updateData({
+                      bio: e.target.value,
+                    });
                   }
                 }}
                 placeholder="Contale a propietarios y clientes sobre tu experiencia, especialización, o lo que te diferencia..."
@@ -676,93 +745,42 @@ export default function RegisterAgentInfo() {
             ))}
           </div>
 
-          {/* Divider */}
-          <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "8px 0" }}>
-            <div style={{ flex: 1, height: 1, background: "#e5e5ea" }} />
-            <span style={{ fontSize: 13, color: "#9a9aa0", fontWeight: 500 }}>¿Qué querés hacer?</span>
-            <div style={{ flex: 1, height: 1, background: "#e5e5ea" }} />
-          </div>
-
-          {/* Action buttons */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {/* Publish button */}
-            <button
-              onClick={handlePublish}
-              style={{
-                width: "100%",
-                background: "#C52E3E",
-                border: "none",
-                borderRadius: 16,
-                padding: "18px 20px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 10,
-                transition: "all 0.18s ease",
-                boxShadow: "0 4px 16px rgba(197,46,62,0.24)",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "#A82534";
-                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 20px rgba(197,46,62,0.32)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "#C52E3E";
-                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 16px rgba(197,46,62,0.24)";
-              }}
-            >
-              <Home size={20} color="white" strokeWidth={2} />
-              <div style={{ textAlign: "left" }}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: "white" }}>
-                  Publicar mi propiedad
-                </div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", marginTop: 2 }}>
-                  Empezá a recibir consultas de inmediato
-                </div>
-              </div>
-            </button>
-
-            {/* Explore button */}
-            <button
-              onClick={handleExplore}
-              style={{
-                width: "100%",
-                background: "white",
-                border: "1.5px solid #e5e5ea",
-                borderRadius: 16,
-                padding: "18px 20px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 10,
-                transition: "all 0.18s ease",
-                boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "#C52E3E";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 12px rgba(197,46,62,0.1)";
-                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "#e5e5ea";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)";
-                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-              }}
-            >
-              <Search size={20} color="#C52E3E" strokeWidth={2} />
-              <div style={{ textAlign: "left" }}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a" }}>
-                  Explorar propiedades
-                </div>
-                <div style={{ fontSize: 12, color: "#6e6e73", marginTop: 2 }}>
-                  Mirá qué hay disponible en el mercado
-                </div>
-              </div>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleFinalizar}
+            disabled={isSubmitting}
+            style={{
+              width: "100%",
+              background: isSubmitting ? "#e5e5ea" : agentTheme.primary,
+              border: "none",
+              borderRadius: 16,
+              padding: "16px 20px",
+              cursor: isSubmitting ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
+              transition: "all 0.18s ease",
+              boxShadow: isSubmitting ? "none" : agentTheme.buttonShadow,
+            }}
+            onMouseEnter={(e) => {
+              if (isSubmitting) return;
+              (e.currentTarget as HTMLButtonElement).style.background = agentTheme.primaryHover;
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = agentTheme.buttonShadowHover;
+            }}
+            onMouseLeave={(e) => {
+              if (isSubmitting) return;
+              (e.currentTarget as HTMLButtonElement).style.background = agentTheme.primary;
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = agentTheme.buttonShadow;
+            }}
+          >
+            <Check size={22} color="white" strokeWidth={2.5} />
+            <span style={{ fontSize: 17, fontWeight: 800, color: "white", letterSpacing: "-0.2px" }}>
+              {isSubmitting ? "Creando cuenta…" : "Finalizar"}
+            </span>
+          </button>
 
           {/* Info box */}
           <div

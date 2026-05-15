@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../Root";
+import { useAuth } from "../../context/AuthContext";
 import React from "react";
 import {
   ArrowLeft,
@@ -97,7 +97,8 @@ type UserType = "guest" | "propie" | "agente" | null;
 
 export default function PropertyDetails() {
   const navigate = useNavigate();
-  const { isLoggedIn } = useAuth();
+  const { user } = useAuth();
+  const isLoggedIn = !!user;
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
@@ -109,11 +110,19 @@ export default function PropertyDetails() {
   const [chatMessages, setChatMessages] = useState<Array<{ from: string; message: string; time: string }>>([]);
 
   // Simular tipo de usuario basado en sessionStorage
+
   const getUserType = (): UserType => {
-    if (!isLoggedIn) return "guest";
-    const userType = sessionStorage.getItem("userType");
-    return userType === "agente" ? "agente" : "propie";
+
+    if (!isLoggedIn) {
+      return "guest";
+    }
+
+    return user?.role === "AGENT"
+      ? "agente"
+      : "propie";
   };
+
+
 
   const userType = getUserType();
   const isOwner = userType === "propie"; // En producción verificar si el usuario es el dueño
@@ -630,178 +639,178 @@ export default function PropertyDetails() {
                     const isRejected = rejectedRequests.includes(request.id);
 
                     return (
-                    <div
-                      key={request.id}
-                      style={{
-                        background: isApproved
-                          ? "linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)"
-                          : isRejected
-                          ? "linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)"
-                          : "#f5f5f7",
-                        borderRadius: 14,
-                        padding: "16px",
-                        marginBottom: 12,
-                        border: isApproved
-                          ? "2px solid #10b981"
-                          : isRejected
-                          ? "2px solid #ef4444"
-                          : "none",
-                        transition: "all 0.3s ease",
-                        position: "relative",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {isApproved && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: 12,
-                            right: 12,
-                            background: "#10b981",
-                            color: "white",
-                            padding: "4px 10px",
-                            borderRadius: 8,
-                            fontSize: 11,
-                            fontWeight: 700,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 4,
-                          }}
-                        >
-                          <CheckCircle size={12} />
-                          Aprobado
-                        </div>
-                      )}
-                      {isRejected && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: 12,
-                            right: 12,
-                            background: "#ef4444",
-                            color: "white",
-                            padding: "4px 10px",
-                            borderRadius: 8,
-                            fontSize: 11,
-                            fontWeight: 700,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 4,
-                          }}
-                        >
-                          <X size={12} />
-                          Rechazado
-                        </div>
-                      )}
-                      <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
-                        <img
-                          src={request.agent.photo}
-                          alt={request.agent.name}
-                          style={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: "50%",
-                            objectFit: "cover",
-                          }}
-                        />
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a", marginBottom: 4 }}>
-                            {request.agent.name}
-                          </div>
-                          <div style={{ fontSize: 12, color: "#6e6e73", marginBottom: 6 }}>
-                            <Star size={12} color="#f59e0b" fill="#f59e0b" style={{ display: "inline", marginRight: 4 }} />
-                            {request.agent.rating} • {request.agent.zone} • {request.agent.experience}
-                          </div>
-                          <div style={{ fontSize: 13, color: "#1a1a1a", lineHeight: 1.5 }}>
-                            {request.message}
-                          </div>
-                        </div>
-                      </div>
-                      <div style={{ fontSize: 11, color: isApproved ? "#166534" : isRejected ? "#991b1b" : "#9a9aa0", marginBottom: 12 }}>
-                        {request.date}
-                      </div>
-
-                      {!isApproved && !isRejected ? (
-                        <div style={{ display: "flex", gap: 8 }}>
-                          <button
-                            onClick={() => handleApproveRequest(request.id, request.agent.name)}
+                      <div
+                        key={request.id}
+                        style={{
+                          background: isApproved
+                            ? "linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)"
+                            : isRejected
+                              ? "linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)"
+                              : "#f5f5f7",
+                          borderRadius: 14,
+                          padding: "16px",
+                          marginBottom: 12,
+                          border: isApproved
+                            ? "2px solid #10b981"
+                            : isRejected
+                              ? "2px solid #ef4444"
+                              : "none",
+                          transition: "all 0.3s ease",
+                          position: "relative",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {isApproved && (
+                          <div
                             style={{
-                              flex: 1,
-                              background: colors.primary,
+                              position: "absolute",
+                              top: 12,
+                              right: 12,
+                              background: "#10b981",
+                              color: "white",
+                              padding: "4px 10px",
+                              borderRadius: 8,
+                              fontSize: 11,
+                              fontWeight: 700,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 4,
+                            }}
+                          >
+                            <CheckCircle size={12} />
+                            Aprobado
+                          </div>
+                        )}
+                        {isRejected && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: 12,
+                              right: 12,
+                              background: "#ef4444",
+                              color: "white",
+                              padding: "4px 10px",
+                              borderRadius: 8,
+                              fontSize: 11,
+                              fontWeight: 700,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 4,
+                            }}
+                          >
+                            <X size={12} />
+                            Rechazado
+                          </div>
+                        )}
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
+                          <img
+                            src={request.agent.photo}
+                            alt={request.agent.name}
+                            style={{
+                              width: 48,
+                              height: 48,
+                              borderRadius: "50%",
+                              objectFit: "cover",
+                            }}
+                          />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a", marginBottom: 4 }}>
+                              {request.agent.name}
+                            </div>
+                            <div style={{ fontSize: 12, color: "#6e6e73", marginBottom: 6 }}>
+                              <Star size={12} color="#f59e0b" fill="#f59e0b" style={{ display: "inline", marginRight: 4 }} />
+                              {request.agent.rating} • {request.agent.zone} • {request.agent.experience}
+                            </div>
+                            <div style={{ fontSize: 13, color: "#1a1a1a", lineHeight: 1.5 }}>
+                              {request.message}
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ fontSize: 11, color: isApproved ? "#166534" : isRejected ? "#991b1b" : "#9a9aa0", marginBottom: 12 }}>
+                          {request.date}
+                        </div>
+
+                        {!isApproved && !isRejected ? (
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <button
+                              onClick={() => handleApproveRequest(request.id, request.agent.name)}
+                              style={{
+                                flex: 1,
+                                background: colors.primary,
+                                border: "none",
+                                borderRadius: 10,
+                                padding: "10px",
+                                color: "white",
+                                fontSize: 14,
+                                fontWeight: 600,
+                                cursor: "pointer",
+                              }}
+                            >
+                              Aprobar
+                            </button>
+                            <button
+                              onClick={() => handleRejectRequest(request.id)}
+                              style={{
+                                flex: 1,
+                                background: "white",
+                                border: "1.5px solid #e5e5ea",
+                                borderRadius: 10,
+                                padding: "10px",
+                                color: "#1a1a1a",
+                                fontSize: 14,
+                                fontWeight: 600,
+                                cursor: "pointer",
+                              }}
+                            >
+                              Rechazar
+                            </button>
+                          </div>
+                        ) : isApproved ? (
+                          <button
+                            onClick={() => handleOpenChat(request.agent.name)}
+                            style={{
+                              width: "100%",
+                              background: "#10b981",
                               border: "none",
                               borderRadius: 10,
-                              padding: "10px",
+                              padding: "12px",
                               color: "white",
                               fontSize: 14,
                               fontWeight: 600,
                               cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: 8,
                             }}
                           >
-                            Aprobar
+                            <MessageCircle size={16} />
+                            Abrir chat
                           </button>
+                        ) : (
                           <button
-                            onClick={() => handleRejectRequest(request.id)}
+                            onClick={() => handleUndoReject(request.id)}
                             style={{
-                              flex: 1,
+                              width: "100%",
                               background: "white",
-                              border: "1.5px solid #e5e5ea",
+                              border: "1.5px solid #ef4444",
                               borderRadius: 10,
-                              padding: "10px",
-                              color: "#1a1a1a",
+                              padding: "12px",
+                              color: "#ef4444",
                               fontSize: 14,
                               fontWeight: 600,
                               cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: 8,
                             }}
                           >
-                            Rechazar
+                            Deshacer rechazo
                           </button>
-                        </div>
-                      ) : isApproved ? (
-                        <button
-                          onClick={() => handleOpenChat(request.agent.name)}
-                          style={{
-                            width: "100%",
-                            background: "#10b981",
-                            border: "none",
-                            borderRadius: 10,
-                            padding: "12px",
-                            color: "white",
-                            fontSize: 14,
-                            fontWeight: 600,
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 8,
-                          }}
-                        >
-                          <MessageCircle size={16} />
-                          Abrir chat
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleUndoReject(request.id)}
-                          style={{
-                            width: "100%",
-                            background: "white",
-                            border: "1.5px solid #ef4444",
-                            borderRadius: 10,
-                            padding: "12px",
-                            color: "#ef4444",
-                            fontSize: 14,
-                            fontWeight: 600,
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 8,
-                          }}
-                        >
-                          Deshacer rechazo
-                        </button>
-                      )}
-                    </div>
-                  );
+                        )}
+                      </div>
+                    );
                   })}
                 </div>
               )}

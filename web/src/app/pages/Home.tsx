@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { UserPlus, LogIn, Search, ChevronRight } from "lucide-react";
-import { useAuth } from "../Root";
+import { useAuth } from "../../context/AuthContext";
 import React from "react";
 
 /** Marca: rgb(68, 23, 230) */
@@ -22,7 +22,9 @@ const LOGO_SRC = "/brand/logo-home-header.png";
 
 export default function Home() {
   const navigate = useNavigate();
-  const { isLoggedIn } = useAuth();
+  const { user } = useAuth();
+
+  const isLoggedIn = !!user;
 
   return (
     <div
@@ -70,98 +72,181 @@ export default function Home() {
           </div>
 
           <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: CARD_GAP }}>
-          {/* Explorar — tarjeta horizontal (fondo melocotón suave) */}
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={() => navigate("/explorar")}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                navigate("/explorar");
-              }
-            }}
-            style={{
-              background: EXPLORE_BG,
-              borderRadius: 22,
-              padding: "20px 18px",
-              cursor: "pointer",
-              transition: "transform 0.2s ease, box-shadow 0.2s ease",
-              boxShadow: "0 2px 14px rgba(0,0,0,0.06)",
-              border: "1.5px solid rgba(197, 46, 62, 0.18)",
-              display: "flex",
-              alignItems: "center",
-              gap: 16,
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)";
-              (e.currentTarget as HTMLDivElement).style.boxShadow = "0 6px 20px rgba(197,46,62,0.14)";
-              (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(197, 46, 62, 0.35)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
-              (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 14px rgba(0,0,0,0.06)";
-              (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(197, 46, 62, 0.18)";
-            }}
-          >
-            <div
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 16,
-                background: "linear-gradient(135deg, #fff4ed 0%, #ffe8d6 100%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-                boxShadow: "0 2px 10px rgba(197,46,62,0.12)",
-              }}
-            >
-              <Search size={26} color={SECONDARY} strokeWidth={2.2} />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: 17,
-                  fontWeight: 700,
-                  color: "#1a1a1a",
-                  fontFamily: "'Sora', sans-serif",
-                  letterSpacing: "-0.35px",
-                }}
-              >
-                Explorar propiedades
-              </h3>
-              <p style={{ margin: "6px 0 0", fontSize: 13, color: "#6e6e73", lineHeight: 1.45 }}>
-                Buscá entre miles de opciones
-              </p>
-            </div>
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 12,
-                background: "rgba(197, 46, 62, 0.12)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <ChevronRight size={18} color={SECONDARY} strokeWidth={2.5} />
-            </div>
-          </div>
-
-          {/* Ya tengo cuenta */}
-          {!isLoggedIn && (
+            {/* Explorar — tarjeta horizontal (fondo melocotón suave) */}
             <div
               role="button"
               tabIndex={0}
-              onClick={() => navigate("/ingresar")}
+              onClick={() => navigate("/explorar")}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  navigate("/ingresar");
+                  navigate("/explorar");
+                }
+              }}
+              style={{
+                background: EXPLORE_BG,
+                borderRadius: 22,
+                padding: "20px 18px",
+                cursor: "pointer",
+                transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                boxShadow: "0 2px 14px rgba(0,0,0,0.06)",
+                border: "1.5px solid rgba(197, 46, 62, 0.18)",
+                display: "flex",
+                alignItems: "center",
+                gap: 16,
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)";
+                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 6px 20px rgba(197,46,62,0.14)";
+                (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(197, 46, 62, 0.35)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
+                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 14px rgba(0,0,0,0.06)";
+                (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(197, 46, 62, 0.18)";
+              }}
+            >
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 16,
+                  background: "linear-gradient(135deg, #fff4ed 0%, #ffe8d6 100%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  boxShadow: "0 2px 10px rgba(197,46,62,0.12)",
+                }}
+              >
+                <Search size={26} color={SECONDARY} strokeWidth={2.2} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h3
+                  style={{
+                    margin: 0,
+                    fontSize: 17,
+                    fontWeight: 700,
+                    color: "#1a1a1a",
+                    fontFamily: "'Sora', sans-serif",
+                    letterSpacing: "-0.35px",
+                  }}
+                >
+                  Explorar propiedades
+                </h3>
+                <p style={{ margin: "6px 0 0", fontSize: 13, color: "#6e6e73", lineHeight: 1.45 }}>
+                  Buscá entre miles de opciones
+                </p>
+              </div>
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 12,
+                  background: "rgba(197, 46, 62, 0.12)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <ChevronRight size={18} color={SECONDARY} strokeWidth={2.5} />
+              </div>
+            </div>
+
+            {/* Ya tengo cuenta */}
+            {!isLoggedIn && (
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate("/ingresar")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    navigate("/ingresar");
+                  }
+                }}
+                style={{
+                  background: "white",
+                  borderRadius: 22,
+                  padding: "20px 18px",
+                  cursor: "pointer",
+                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                  boxShadow: "0 2px 14px rgba(0,0,0,0.06)",
+                  border: "1.5px solid #ececf0",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 16,
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)";
+                  (e.currentTarget as HTMLDivElement).style.boxShadow = `0 6px 22px ${BRAND.shadow}`;
+                  (e.currentTarget as HTMLDivElement).style.borderColor = BRAND.primary;
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
+                  (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 14px rgba(0,0,0,0.06)";
+                  (e.currentTarget as HTMLDivElement).style.borderColor = "#ececf0";
+                }}
+              >
+                <div
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: 16,
+                    background: `linear-gradient(135deg, ${BRAND.tintSoft} 0%, ${BRAND.tint} 100%)`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    boxShadow: `0 2px 10px ${BRAND.focusRing}`,
+                  }}
+                >
+                  <LogIn size={26} color={BRAND.primary} strokeWidth={2.2} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h3
+                    style={{
+                      margin: 0,
+                      fontSize: 17,
+                      fontWeight: 700,
+                      color: "#1a1a1a",
+                      fontFamily: "'Sora', sans-serif",
+                      letterSpacing: "-0.35px",
+                    }}
+                  >
+                    Ya tengo cuenta
+                  </h3>
+                  <p style={{ margin: "6px 0 0", fontSize: 13, color: "#6e6e73", lineHeight: 1.45 }}>
+                    Ingresá a tu cuenta
+                  </p>
+                </div>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 12,
+                    background: BRAND.tint,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <ChevronRight size={18} color={BRAND.primary} strokeWidth={2.5} />
+                </div>
+              </div>
+            )}
+
+            {/* Registrate */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate("/registro")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate("/registro");
                 }
               }}
               style={{
@@ -200,7 +285,7 @@ export default function Home() {
                   boxShadow: `0 2px 10px ${BRAND.focusRing}`,
                 }}
               >
-                <LogIn size={26} color={BRAND.primary} strokeWidth={2.2} />
+                <UserPlus size={26} color={BRAND.primary} strokeWidth={2.2} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <h3
@@ -213,10 +298,10 @@ export default function Home() {
                     letterSpacing: "-0.35px",
                   }}
                 >
-                  Ya tengo cuenta
+                  Registrate
                 </h3>
                 <p style={{ margin: "6px 0 0", fontSize: 13, color: "#6e6e73", lineHeight: 1.45 }}>
-                  Ingresá a tu cuenta
+                  Creá tu cuenta y empezá a publicar o encontrar propiedades
                 </p>
               </div>
               <div
@@ -234,145 +319,62 @@ export default function Home() {
                 <ChevronRight size={18} color={BRAND.primary} strokeWidth={2.5} />
               </div>
             </div>
-          )}
 
-          {/* Registrate */}
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={() => navigate("/registro")}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                navigate("/registro");
-              }
-            }}
-            style={{
-              background: "white",
-              borderRadius: 22,
-              padding: "20px 18px",
-              cursor: "pointer",
-              transition: "transform 0.2s ease, box-shadow 0.2s ease",
-              boxShadow: "0 2px 14px rgba(0,0,0,0.06)",
-              border: "1.5px solid #ececf0",
-              display: "flex",
-              alignItems: "center",
-              gap: 16,
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)";
-              (e.currentTarget as HTMLDivElement).style.boxShadow = `0 6px 22px ${BRAND.shadow}`;
-              (e.currentTarget as HTMLDivElement).style.borderColor = BRAND.primary;
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
-              (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 14px rgba(0,0,0,0.06)";
-              (e.currentTarget as HTMLDivElement).style.borderColor = "#ececf0";
-            }}
-          >
+            {/* Features */}
             <div
               style={{
-                width: 56,
-                height: 56,
-                borderRadius: 16,
-                background: `linear-gradient(135deg, ${BRAND.tintSoft} 0%, ${BRAND.tint} 100%)`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-                boxShadow: `0 2px 10px ${BRAND.focusRing}`,
+                background: "white",
+                borderRadius: 20,
+                padding: "24px",
+                border: "1.5px solid #e5e5ea",
+                marginTop: 16,
               }}
             >
-              <UserPlus size={26} color={BRAND.primary} strokeWidth={2.2} />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: 17,
-                  fontWeight: 700,
-                  color: "#1a1a1a",
-                  fontFamily: "'Sora', sans-serif",
-                  letterSpacing: "-0.35px",
-                }}
-              >
-                Registrate
-              </h3>
-              <p style={{ margin: "6px 0 0", fontSize: 13, color: "#6e6e73", lineHeight: 1.45 }}>
-                Creá tu cuenta y empezá a publicar o encontrar propiedades
-              </p>
-            </div>
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 12,
-                background: BRAND.tint,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <ChevronRight size={18} color={BRAND.primary} strokeWidth={2.5} />
-            </div>
-          </div>
-
-          {/* Features */}
-          <div
-            style={{
-              background: "white",
-              borderRadius: 20,
-              padding: "24px",
-              border: "1.5px solid #e5e5ea",
-              marginTop: 16,
-            }}
-          >
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    background: BRAND.primary,
-                    flexShrink: 0,
-                  }}
-                />
-                <span style={{ fontSize: 14, color: "#1a1a1a", lineHeight: 1.4 }}>
-                  Más de 10.000 propiedades disponibles
-                </span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    background: BRAND.primary,
-                    flexShrink: 0,
-                  }}
-                />
-                <span style={{ fontSize: 14, color: "#1a1a1a", lineHeight: 1.4 }}>
-                  Conectate directo con propietarios
-                </span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    background: BRAND.primary,
-                    flexShrink: 0,
-                  }}
-                />
-                <span style={{ fontSize: 14, color: "#1a1a1a", lineHeight: 1.4 }}>
-                  Sin comisiones ocultas
-                </span>
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      background: BRAND.primary,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span style={{ fontSize: 14, color: "#1a1a1a", lineHeight: 1.4 }}>
+                    Más de 10.000 propiedades disponibles
+                  </span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      background: BRAND.primary,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span style={{ fontSize: 14, color: "#1a1a1a", lineHeight: 1.4 }}>
+                    Conectate directo con propietarios
+                  </span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      background: BRAND.primary,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span style={{ fontSize: 14, color: "#1a1a1a", lineHeight: 1.4 }}>
+                    Sin comisiones ocultas
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
           </div>
         </div>
 

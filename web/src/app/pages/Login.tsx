@@ -2,12 +2,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PropieLogo } from "../components/PropieLogo";
 import { ArrowLeft, Eye, EyeOff, Check } from "lucide-react";
-import { useAuth } from "../Root";
+import { useAuth } from "../../context/AuthContext";
 import React from "react";
-
+import { apiFetch } from "../../lib/api";
 export default function Login() {
   const navigate = useNavigate();
-  const { setIsLoggedIn } = useAuth();
+  const auth = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [show2FA, setShow2FA] = useState(false);
   const [formData, setFormData] = useState({
@@ -20,26 +20,114 @@ export default function Login() {
   const handleSocialLogin = (provider: string) => {
     // Mock social login - default to propie
     sessionStorage.setItem("userType", "propie");
-    setIsLoggedIn(true);
+    auth.login(
+      "mock-access-token",
+      "mock-refresh-token",
+      {
+        id: "1",
+        email: formData.email,
+        role: "OWNER",
+      }
+    );
+
     navigate("/explorar");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const handleSubmit = async (
+    e: React.FormEvent
+  ) => {
+
     e.preventDefault();
-    if (!show2FA) {
-      // Simular que el usuario tiene 2FA activado
-      setShow2FA(true);
-    } else {
-      // Mock login based on email
-      if (formData.email === "agente@gmail.com") {
-        sessionStorage.setItem("userType", "agente");
-      } else if (formData.email === "propie@gmail.com") {
-        sessionStorage.setItem("userType", "propie");
+
+    // ====================================================
+    // MOCK 2FA STEP
+    // ====================================================
+
+    /*   if (!show2FA) {
+  
+        setShow2FA(true);
+  
+        return;
       }
-      setIsLoggedIn(true);
+   */
+    try {
+
+
+      // ==================================================
+      // LOGIN REQUEST
+      // ==================================================
+
+      const response =
+        await apiFetch(
+          "/auth/login",
+          {
+            method: "POST",
+
+            body: JSON.stringify({
+              email: formData.email,
+
+              password: formData.password,
+            }),
+          }
+        );
+
+      console.log("LOGIN RESPONSE");
+      console.log(response);
+
+      // ==================================================
+      // SAVE USER TYPE
+      // ==================================================
+
+      if (
+        response.data.user.role ===
+        "AGENT"
+      ) {
+
+        sessionStorage.setItem(
+          "userType",
+          "agente"
+        );
+
+      } else {
+
+        sessionStorage.setItem(
+          "userType",
+          "propie"
+        );
+      }
+
+      // ==================================================
+      // SAVE AUTH
+      // ==================================================
+
+      auth.login(
+        response.data.accessToken,
+
+        response.data.refreshToken,
+
+        response.data.user
+      );
+
+      // ==================================================
+      // REDIRECT
+      // ==================================================
+
       navigate("/explorar");
+
+
+    } catch (error: any) {
+
+      console.error(error);
+
+      alert(
+        error?.error?.message ||
+        "Error al iniciar sesión"
+      );
     }
   };
+
+
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

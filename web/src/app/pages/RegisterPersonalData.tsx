@@ -2,23 +2,17 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { PropieLogo } from "../components/PropieLogo";
 import { ArrowLeft, Check, Upload, Camera } from "lucide-react";
+import { useRegister } from "../../context/RegisterContext";
 import React from "react";
 
 export default function RegisterPersonalData() {
+  const { data, updateData } = useRegister();
+  const isAgent = data.role === "AGENT";
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    dni: "",
-    birthDate: "",
-    nationality: "",
-    cuitCuil: "",
-    address: "",
-  });
   const [dniFront, setDniFront] = useState<File | null>(null);
   const [dniBack, setDniBack] = useState<File | null>(null);
   const [selfie, setSelfie] = useState<File | null>(null);
 
-  const userType = sessionStorage.getItem("userType");
-  const isAgent = userType === "agente";
 
   const colors = {
     gradient: isAgent
@@ -38,22 +32,37 @@ export default function RegisterPersonalData() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: Implementar envío de datos
-    console.log("Datos personales:", formData, { dniFront, dniBack, selfie });
-    navigate("/registro/seguridad");
+    console.log(
+      "Datos personales:",
+      data,
+      isAgent
+        ? {
+            dniFront,
+            dniBack,
+            selfie,
+          }
+        : {}
+    );
+    navigate("/registro/security");
   };
 
-  const isDniValid = formData.dni.length === 8;
-  const isCuitCuilValid = formData.cuitCuil.length === 11;
+  const isDniValid = data.dni.length === 8;
+  const isCuitCuilValid = data.cuitCuil.length === 11;
+
+  const basePersonalValid =
+    isDniValid &&
+    data.birthDate &&
+    data.nationality &&
+    isCuitCuilValid &&
+    data.address;
 
   const isFormValid =
-    isDniValid &&
-    formData.birthDate &&
-    formData.nationality &&
-    isCuitCuilValid &&
-    formData.address &&
-    dniFront &&
-    dniBack &&
-    selfie;
+    isAgent
+      ? basePersonalValid &&
+        dniFront &&
+        dniBack &&
+        selfie
+      : basePersonalValid;
 
   return (
     <div
@@ -156,10 +165,10 @@ export default function RegisterPersonalData() {
                 <input
                   id="dni"
                   type="text"
-                  value={formData.dni}
+                  value={data.dni}
                   onChange={(e) => {
                     const value = e.target.value.replace(/\D/g, "").slice(0, 8);
-                    setFormData({ ...formData, dni: value });
+                    updateData({ ...data, dni: value });
                   }}
                   placeholder="12345678"
                   style={{
@@ -214,13 +223,13 @@ export default function RegisterPersonalData() {
                   <input
                     id="birthDate"
                     type="date"
-                    value={formData.birthDate}
-                    onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
+                    value={data.birthDate}
+                    onChange={(e) => updateData({ ...data, birthDate: e.target.value })}
                     style={{
                       width: "100%",
                       padding: "14px 48px 14px 16px",
                       borderRadius: 14,
-                      border: formData.birthDate ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
+                      border: data.birthDate ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
                       fontSize: 15,
                       color: "#1a1a1a",
                       outline: "none",
@@ -228,19 +237,19 @@ export default function RegisterPersonalData() {
                       boxSizing: "border-box",
                     }}
                     onFocus={(e) => {
-                      if (!formData.birthDate) {
+                      if (!data.birthDate) {
                         (e.target as HTMLInputElement).style.borderColor = colors.primary;
                         (e.target as HTMLInputElement).style.boxShadow = colors.focusShadow;
                       }
                     }}
                     onBlur={(e) => {
-                      if (!formData.birthDate) {
+                      if (!data.birthDate) {
                         (e.target as HTMLInputElement).style.borderColor = "#e5e5ea";
                         (e.target as HTMLInputElement).style.boxShadow = "none";
                       }
                     }}
                   />
-                  {formData.birthDate && (
+                  {data.birthDate && (
                     <div
                       style={{
                         position: "absolute",
@@ -266,14 +275,14 @@ export default function RegisterPersonalData() {
                   <input
                     id="nationality"
                     type="text"
-                    value={formData.nationality}
-                    onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
+                    value={data.nationality}
+                    onChange={(e) => updateData({ ...data, nationality: e.target.value })}
                     placeholder="Argentina"
                     style={{
                       width: "100%",
                       padding: "14px 48px 14px 16px",
                       borderRadius: 14,
-                      border: formData.nationality ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
+                      border: data.nationality ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
                       fontSize: 15,
                       color: "#1a1a1a",
                       outline: "none",
@@ -281,19 +290,19 @@ export default function RegisterPersonalData() {
                       boxSizing: "border-box",
                     }}
                     onFocus={(e) => {
-                      if (!formData.nationality) {
+                      if (!data.nationality) {
                         (e.target as HTMLInputElement).style.borderColor = colors.primary;
                         (e.target as HTMLInputElement).style.boxShadow = colors.focusShadow;
                       }
                     }}
                     onBlur={(e) => {
-                      if (!formData.nationality) {
+                      if (!data.nationality) {
                         (e.target as HTMLInputElement).style.borderColor = "#e5e5ea";
                         (e.target as HTMLInputElement).style.boxShadow = "none";
                       }
                     }}
                   />
-                  {formData.nationality && (
+                  {data.nationality && (
                     <div
                       style={{
                         position: "absolute",
@@ -321,10 +330,10 @@ export default function RegisterPersonalData() {
                 <input
                   id="cuitCuil"
                   type="text"
-                  value={formData.cuitCuil}
+                  value={data.cuitCuil}
                   onChange={(e) => {
                     const value = e.target.value.replace(/\D/g, "").slice(0, 11);
-                    setFormData({ ...formData, cuitCuil: value });
+                    updateData({ ...data, cuitCuil: value });
                   }}
                   placeholder="20123456789"
                   style={{
@@ -378,14 +387,14 @@ export default function RegisterPersonalData() {
                 <input
                   id="address"
                   type="text"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  value={data.address}
+                  onChange={(e) => updateData({ ...data, address: e.target.value })}
                   placeholder="Calle 123, Ciudad, Provincia"
                   style={{
                     width: "100%",
                     padding: "14px 48px 14px 16px",
                     borderRadius: 14,
-                    border: formData.address ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
+                    border: data.address ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
                     fontSize: 15,
                     color: "#1a1a1a",
                     outline: "none",
@@ -393,19 +402,19 @@ export default function RegisterPersonalData() {
                     boxSizing: "border-box",
                   }}
                   onFocus={(e) => {
-                    if (!formData.address) {
+                    if (!data.address) {
                       (e.target as HTMLInputElement).style.borderColor = colors.primary;
                       (e.target as HTMLInputElement).style.boxShadow = colors.focusShadow;
                     }
                   }}
                   onBlur={(e) => {
-                    if (!formData.address) {
+                    if (!data.address) {
                       (e.target as HTMLInputElement).style.borderColor = "#e5e5ea";
                       (e.target as HTMLInputElement).style.boxShadow = "none";
                     }
                   }}
                 />
-                {formData.address && (
+                {data.address && (
                   <div
                     style={{
                       position: "absolute",
@@ -423,182 +432,185 @@ export default function RegisterPersonalData() {
               </div>
             </div>
 
-            {/* Section: Validación documental */}
-            <div style={{ marginTop: 16 }}>
-              <h3 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>
-                Validación documental
-              </h3>
+            {isAgent && (
+              <>
+                {/* Section: Validación documental (solo agente) */}
+                <div style={{ marginTop: 16 }}>
+                  <h3 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>
+                    Validación documental
+                  </h3>
 
-              {/* DNI Front */}
-              <div style={{ marginBottom: 12 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>
-                  Frente DNI
-                </label>
-                <input
-                  ref={dniFrontRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      setDniFront(e.target.files[0]);
-                    }
-                  }}
-                  style={{ display: "none" }}
-                />
-                <button
-                  type="button"
-                  onClick={() => dniFrontRef.current?.click()}
-                  style={{
-                    width: "100%",
-                    padding: "14px 18px",
-                    borderRadius: 14,
-                    border: dniFront ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
-                    background: "white",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    transition: "all 0.15s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!dniFront) {
-                      (e.currentTarget as HTMLButtonElement).style.borderColor = colors.primary;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!dniFront) {
-                      (e.currentTarget as HTMLButtonElement).style.borderColor = "#e5e5ea";
-                    }
-                  }}
-                >
-                  <span style={{ fontSize: 15, color: dniFront ? "#1a1a1a" : "#9a9aa0" }}>
-                    {dniFront ? dniFront.name : "Seleccionar archivo"}
-                  </span>
-                  {dniFront ? (
-                    <Check size={20} color="#34C759" strokeWidth={2.5} />
-                  ) : (
-                    <Upload size={20} color="#9a9aa0" />
-                  )}
-                </button>
-              </div>
+                  {/* DNI Front */}
+                  <div style={{ marginBottom: 12 }}>
+                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>
+                      Frente DNI
+                    </label>
+                    <input
+                      ref={dniFrontRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setDniFront(e.target.files[0]);
+                        }
+                      }}
+                      style={{ display: "none" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => dniFrontRef.current?.click()}
+                      style={{
+                        width: "100%",
+                        padding: "14px 18px",
+                        borderRadius: 14,
+                        border: dniFront ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
+                        background: "white",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        transition: "all 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!dniFront) {
+                          (e.currentTarget as HTMLButtonElement).style.borderColor = colors.primary;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!dniFront) {
+                          (e.currentTarget as HTMLButtonElement).style.borderColor = "#e5e5ea";
+                        }
+                      }}
+                    >
+                      <span style={{ fontSize: 15, color: dniFront ? "#1a1a1a" : "#9a9aa0" }}>
+                        {dniFront ? dniFront.name : "Seleccionar archivo"}
+                      </span>
+                      {dniFront ? (
+                        <Check size={20} color="#34C759" strokeWidth={2.5} />
+                      ) : (
+                        <Upload size={20} color="#9a9aa0" />
+                      )}
+                    </button>
+                  </div>
 
-              {/* DNI Back */}
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>
-                  Dorso DNI
-                </label>
-                <input
-                  ref={dniBackRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      setDniBack(e.target.files[0]);
-                    }
-                  }}
-                  style={{ display: "none" }}
-                />
-                <button
-                  type="button"
-                  onClick={() => dniBackRef.current?.click()}
-                  style={{
-                    width: "100%",
-                    padding: "14px 18px",
-                    borderRadius: 14,
-                    border: dniBack ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
-                    background: "white",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    transition: "all 0.15s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!dniBack) {
-                      (e.currentTarget as HTMLButtonElement).style.borderColor = colors.primary;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!dniBack) {
-                      (e.currentTarget as HTMLButtonElement).style.borderColor = "#e5e5ea";
-                    }
-                  }}
-                >
-                  <span style={{ fontSize: 15, color: dniBack ? "#1a1a1a" : "#9a9aa0" }}>
-                    {dniBack ? dniBack.name : "Seleccionar archivo"}
-                  </span>
-                  {dniBack ? (
-                    <Check size={20} color="#34C759" strokeWidth={2.5} />
-                  ) : (
-                    <Upload size={20} color="#9a9aa0" />
-                  )}
-                </button>
-              </div>
-            </div>
+                  {/* DNI Back */}
+                  <div>
+                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>
+                      Dorso DNI
+                    </label>
+                    <input
+                      ref={dniBackRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setDniBack(e.target.files[0]);
+                        }
+                      }}
+                      style={{ display: "none" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => dniBackRef.current?.click()}
+                      style={{
+                        width: "100%",
+                        padding: "14px 18px",
+                        borderRadius: 14,
+                        border: dniBack ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
+                        background: "white",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        transition: "all 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!dniBack) {
+                          (e.currentTarget as HTMLButtonElement).style.borderColor = colors.primary;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!dniBack) {
+                          (e.currentTarget as HTMLButtonElement).style.borderColor = "#e5e5ea";
+                        }
+                      }}
+                    >
+                      <span style={{ fontSize: 15, color: dniBack ? "#1a1a1a" : "#9a9aa0" }}>
+                        {dniBack ? dniBack.name : "Seleccionar archivo"}
+                      </span>
+                      {dniBack ? (
+                        <Check size={20} color="#34C759" strokeWidth={2.5} />
+                      ) : (
+                        <Upload size={20} color="#9a9aa0" />
+                      )}
+                    </button>
+                  </div>
+                </div>
 
-            {/* Section: Validación biométrica */}
-            <div style={{ marginTop: 16 }}>
-              <h3 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>
-                Validación biométrica
-              </h3>
+                {/* Section: Validación biométrica (solo agente) */}
+                <div style={{ marginTop: 16 }}>
+                  <h3 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>
+                    Validación biométrica
+                  </h3>
 
-              {/* Selfie */}
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>
-                  Selfie facial
-                </label>
-                <input
-                  ref={selfieRef}
-                  type="file"
-                  accept="image/*"
-                  capture="user"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      setSelfie(e.target.files[0]);
-                    }
-                  }}
-                  style={{ display: "none" }}
-                />
-                <button
-                  type="button"
-                  onClick={() => selfieRef.current?.click()}
-                  style={{
-                    width: "100%",
-                    padding: "14px 18px",
-                    borderRadius: 14,
-                    border: selfie ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
-                    background: "white",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    transition: "all 0.15s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!selfie) {
-                      (e.currentTarget as HTMLButtonElement).style.borderColor = colors.primary;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!selfie) {
-                      (e.currentTarget as HTMLButtonElement).style.borderColor = "#e5e5ea";
-                    }
-                  }}
-                >
-                  <span style={{ fontSize: 15, color: selfie ? "#1a1a1a" : "#9a9aa0" }}>
-                    {selfie ? selfie.name : "Tomar selfie"}
-                  </span>
-                  {selfie ? (
-                    <Check size={20} color="#34C759" strokeWidth={2.5} />
-                  ) : (
-                    <Camera size={20} color="#9a9aa0" />
-                  )}
-                </button>
-                <p style={{ margin: "6px 0 0", fontSize: 12, color: "#9a9aa0", lineHeight: 1.5 }}>
-                  Usaremos la cámara frontal para verificar tu identidad
-                </p>
-              </div>
-            </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>
+                      Selfie facial
+                    </label>
+                    <input
+                      ref={selfieRef}
+                      type="file"
+                      accept="image/*"
+                      capture="user"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setSelfie(e.target.files[0]);
+                        }
+                      }}
+                      style={{ display: "none" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => selfieRef.current?.click()}
+                      style={{
+                        width: "100%",
+                        padding: "14px 18px",
+                        borderRadius: 14,
+                        border: selfie ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
+                        background: "white",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        transition: "all 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!selfie) {
+                          (e.currentTarget as HTMLButtonElement).style.borderColor = colors.primary;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!selfie) {
+                          (e.currentTarget as HTMLButtonElement).style.borderColor = "#e5e5ea";
+                        }
+                      }}
+                    >
+                      <span style={{ fontSize: 15, color: selfie ? "#1a1a1a" : "#9a9aa0" }}>
+                        {selfie ? selfie.name : "Tomar selfie"}
+                      </span>
+                      {selfie ? (
+                        <Check size={20} color="#34C759" strokeWidth={2.5} />
+                      ) : (
+                        <Camera size={20} color="#9a9aa0" />
+                      )}
+                    </button>
+                    <p style={{ margin: "6px 0 0", fontSize: 12, color: "#9a9aa0", lineHeight: 1.5 }}>
+                      Usaremos la cámara frontal para verificar tu identidad
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Submit button */}
             <button

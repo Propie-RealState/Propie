@@ -3,47 +3,41 @@ import { useNavigate } from "react-router-dom";
 import { PropieLogo } from "../components/PropieLogo";
 import { ArrowLeft, Eye, EyeOff, Check } from "lucide-react";
 import React from "react";
-
+import { useRegister } from "../../context/RegisterContext";
 export default function RegisterPropie() {
+  const { data, updateData } = useRegister();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    acceptTerms: false,
-    acceptPrivacy: false,
-  });
+
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  const isEmailValid = formData.email && validateEmail(formData.email);
-  const isPasswordValid = formData.password.length >= 8;
+  const isEmailValid = data.email && validateEmail(data.email);
+  const isPasswordValid = data.password.length >= 8;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     sessionStorage.setItem("userType", "propie");
-    console.log("Registro:", formData);
-    navigate("/registro/verificacion");
+    console.log("Registro:", data);
+    navigate("/registro/verification");
   };
 
   const handleSocialLogin = (provider: string) => {
     sessionStorage.setItem("userType", "propie");
     console.log(`Login con ${provider}`);
-    navigate("/registro/verificacion");
+    navigate("/registro/verification");
   };
 
   const isFormValid =
-    formData.firstName &&
-    formData.lastName &&
+    data.firstName &&
+    data.lastName &&
     isEmailValid &&
     isPasswordValid &&
-    formData.acceptTerms &&
-    formData.acceptPrivacy;
+    data.acceptTerms &&
+    data.acceptPrivacy;
 
   return (
     <div
@@ -241,14 +235,14 @@ export default function RegisterPropie() {
                   <input
                     id="firstName"
                     type="text"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    value={data.firstName}
+                    onChange={(e) => updateData({ ...data, firstName: e.target.value })}
                     placeholder="Tu nombre"
                     style={{
                       width: "100%",
                       padding: "14px 48px 14px 16px",
                       borderRadius: 14,
-                      border: formData.firstName ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
+                      border: data.firstName ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
                       fontSize: 15,
                       color: "#1a1a1a",
                       outline: "none",
@@ -256,19 +250,19 @@ export default function RegisterPropie() {
                       boxSizing: "border-box",
                     }}
                     onFocus={(e) => {
-                      if (!formData.firstName) {
+                      if (!data.firstName) {
                         (e.target as HTMLInputElement).style.borderColor = "#4417E6";
                         (e.target as HTMLInputElement).style.boxShadow = "0 0 0 3px rgba(68,23,230,0.08)";
                       }
                     }}
                     onBlur={(e) => {
-                      if (!formData.firstName) {
+                      if (!data.firstName) {
                         (e.target as HTMLInputElement).style.borderColor = "#e5e5ea";
                         (e.target as HTMLInputElement).style.boxShadow = "none";
                       }
                     }}
                   />
-                  {formData.firstName && (
+                  {data.firstName && (
                     <div
                       style={{
                         position: "absolute",
@@ -294,14 +288,14 @@ export default function RegisterPropie() {
                   <input
                     id="lastName"
                     type="text"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    value={data.lastName}
+                    onChange={(e) => updateData({ ...data, lastName: e.target.value })}
                     placeholder="Tu apellido"
                     style={{
                       width: "100%",
                       padding: "14px 48px 14px 16px",
                       borderRadius: 14,
-                      border: formData.lastName ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
+                      border: data.lastName ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
                       fontSize: 15,
                       color: "#1a1a1a",
                       outline: "none",
@@ -309,19 +303,19 @@ export default function RegisterPropie() {
                       boxSizing: "border-box",
                     }}
                     onFocus={(e) => {
-                      if (!formData.lastName) {
+                      if (!data.lastName) {
                         (e.target as HTMLInputElement).style.borderColor = "#4417E6";
                         (e.target as HTMLInputElement).style.boxShadow = "0 0 0 3px rgba(68,23,230,0.08)";
                       }
                     }}
                     onBlur={(e) => {
-                      if (!formData.lastName) {
+                      if (!data.lastName) {
                         (e.target as HTMLInputElement).style.borderColor = "#e5e5ea";
                         (e.target as HTMLInputElement).style.boxShadow = "none";
                       }
                     }}
                   />
-                  {formData.lastName && (
+                  {data.lastName && (
                     <div
                       style={{
                         position: "absolute",
@@ -349,8 +343,8 @@ export default function RegisterPropie() {
                 <input
                   id="email"
                   type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  value={data.email}
+                  onChange={(e) => updateData({ ...data, email: e.target.value })}
                   placeholder="tu@email.com"
                   style={{
                     width: "100%",
@@ -403,8 +397,8 @@ export default function RegisterPropie() {
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  value={data.password}
+                  onChange={(e) => updateData({ ...data, password: e.target.value })}
                   placeholder="Mínimo 8 caracteres"
                   style={{
                     width: "100%",
@@ -471,11 +465,11 @@ export default function RegisterPropie() {
               >
                 <input
                   type="checkbox"
-                  checked={formData.acceptTerms}
-                  onChange={(e) => setFormData({ ...formData, acceptTerms: e.target.checked })}
+                  checked={data.acceptTerms}
+                  onChange={(e) => updateData({ ...data, acceptTerms: e.target.checked })}
                   style={{
                     width: 18,
-                    height: 18,
+                    height: 18, 
                     marginTop: 2,
                     cursor: "pointer",
                     accentColor: "#4417E6",
@@ -501,8 +495,8 @@ export default function RegisterPropie() {
               >
                 <input
                   type="checkbox"
-                  checked={formData.acceptPrivacy}
-                  onChange={(e) => setFormData({ ...formData, acceptPrivacy: e.target.checked })}
+                  checked={data.acceptPrivacy}
+                  onChange={(e) => updateData({ ...data, acceptPrivacy: e.target.checked })}
                   style={{
                     width: 18,
                     height: 18,

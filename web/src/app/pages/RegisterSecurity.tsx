@@ -3,15 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { PropieLogo } from "../components/PropieLogo";
 import { ArrowLeft, Check, Shield, Fingerprint, Lock, Mail, Smartphone } from "lucide-react";
 import React from "react";
+import { useRegister } from "../../context/RegisterContext";
 
 export default function RegisterSecurity() {
+  const { data, updateData } = useRegister();
   const navigate = useNavigate();
-  const [enable2FA, setEnable2FA] = useState(false);
-  const [enableBiometric, setEnableBiometric] = useState(false);
-  const [enablePIN, setEnablePIN] = useState(false);
-  const [pin, setPin] = useState("");
-  const [recoveryEmail, setRecoveryEmail] = useState("");
-  const [recoveryPhone, setRecoveryPhone] = useState("");
 
   const userType = sessionStorage.getItem("userType");
   const isAgent = userType === "agente";
@@ -31,14 +27,14 @@ export default function RegisterSecurity() {
     e.preventDefault();
     // TODO: Implementar configuración de seguridad
     console.log("Seguridad:", {
-      enable2FA,
-      enableBiometric,
-      enablePIN,
-      pin,
-      recoveryEmail,
-      recoveryPhone,
+      twoFactorEnabled: data.twoFactorEnabled,
+      biometricEnabled: data.biometricEnabled,
+      pinEnabled: data.pinEnabled,
+      pin: data.pin,
+      recoveryEmail: data.recoveryEmail ,
+      recoveryPhone: data.recoveryPhone,
     });
-    navigate("/registro/foto-perfil");
+    navigate("/registro/profile-photo");
   };
 
   const validateEmail = (email: string) => {
@@ -46,12 +42,12 @@ export default function RegisterSecurity() {
     return emailRegex.test(email);
   };
 
-  const isRecoveryEmailValid = recoveryEmail && validateEmail(recoveryEmail);
-  const isRecoveryPhoneValid = recoveryPhone.length >= 10;
-  const isPinValid = pin.length === 4;
+  const isRecoveryEmailValid = data.recoveryEmail && validateEmail(data.recoveryEmail);
+  const isRecoveryPhoneValid = data.recoveryPhone.length >= 10;
+  const isPinValid = data.pin.length === 4;
 
   const isFormValid =
-    (enablePIN ? isPinValid : true) &&
+    (data.pinEnabled ? isPinValid : true) &&
     isRecoveryEmailValid &&
     isRecoveryPhoneValid;
 
@@ -190,8 +186,8 @@ export default function RegisterSecurity() {
                   <label style={{ position: "relative", display: "inline-block", width: 48, height: 28, flexShrink: 0 }}>
                     <input
                       type="checkbox"
-                      checked={enable2FA}
-                      onChange={(e) => setEnable2FA(e.target.checked)}
+                      checked={data.twoFactorEnabled}
+                      onChange={(e) => updateData({ ...data, twoFactorEnabled: e.target.checked })}
                       style={{ opacity: 0, width: 0, height: 0 }}
                     />
                     <span
@@ -202,7 +198,7 @@ export default function RegisterSecurity() {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        background: enable2FA ? colors.primary : "#e5e5ea",
+                        background: data.twoFactorEnabled ? colors.primary : "#e5e5ea",
                         transition: "0.3s",
                         borderRadius: 28,
                       }}
@@ -213,7 +209,7 @@ export default function RegisterSecurity() {
                           content: "",
                           height: 22,
                           width: 22,
-                          left: enable2FA ? 23 : 3,
+                          left: data.twoFactorEnabled ? 23 : 3,
                           bottom: 3,
                           background: "white",
                           transition: "0.3s",
@@ -263,8 +259,8 @@ export default function RegisterSecurity() {
                   <label style={{ position: "relative", display: "inline-block", width: 48, height: 28, flexShrink: 0 }}>
                     <input
                       type="checkbox"
-                      checked={enableBiometric}
-                      onChange={(e) => setEnableBiometric(e.target.checked)}
+                      checked={data.biometricEnabled}
+                      onChange={(e) => updateData({ ...data, biometricEnabled: e.target.checked })}
                       style={{ opacity: 0, width: 0, height: 0 }}
                     />
                     <span
@@ -275,7 +271,7 @@ export default function RegisterSecurity() {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        background: enableBiometric ? colors.primary : "#e5e5ea",
+                        background: data.biometricEnabled ? colors.primary : "#e5e5ea",
                         transition: "0.3s",
                         borderRadius: 28,
                       }}
@@ -286,7 +282,7 @@ export default function RegisterSecurity() {
                           content: "",
                           height: 22,
                           width: 22,
-                          left: enableBiometric ? 23 : 3,
+                          left: data.biometricEnabled ? 23 : 3,
                           bottom: 3,
                           background: "white",
                           transition: "0.3s",
@@ -335,8 +331,8 @@ export default function RegisterSecurity() {
                   <label style={{ position: "relative", display: "inline-block", width: 48, height: 28, flexShrink: 0 }}>
                     <input
                       type="checkbox"
-                      checked={enablePIN}
-                      onChange={(e) => setEnablePIN(e.target.checked)}
+                      checked={data.pinEnabled}
+                      onChange={(e) => updateData({ ...data, pinEnabled: e.target.checked })}
                       style={{ opacity: 0, width: 0, height: 0 }}
                     />
                     <span
@@ -347,7 +343,7 @@ export default function RegisterSecurity() {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        background: enablePIN ? colors.primary : "#e5e5ea",
+                        background: data.pinEnabled ? colors.primary : "#e5e5ea",
                         transition: "0.3s",
                         borderRadius: 28,
                       }}
@@ -358,7 +354,7 @@ export default function RegisterSecurity() {
                           content: "",
                           height: 22,
                           width: 22,
-                          left: enablePIN ? 23 : 3,
+                          left: data.pinEnabled ? 23 : 3,
                           bottom: 3,
                           background: "white",
                           transition: "0.3s",
@@ -370,16 +366,16 @@ export default function RegisterSecurity() {
                   </label>
                 </div>
 
-                {enablePIN && (
+                {data.pinEnabled && (
                   <div style={{ marginTop: 16 }}>
                     <div style={{ position: "relative" }}>
                       <input
                         type="password"
                         inputMode="numeric"
-                        value={pin}
+                        value={data.pin}
                         onChange={(e) => {
                           const value = e.target.value.replace(/\D/g, "").slice(0, 4);
-                          setPin(value);
+                          updateData({ ...data, pin: value });
                         }}
                         placeholder="Ingresá tu PIN de 4 dígitos"
                         style={{
@@ -455,8 +451,8 @@ export default function RegisterSecurity() {
                   <input
                     id="recoveryEmail"
                     type="email"
-                    value={recoveryEmail}
-                    onChange={(e) => setRecoveryEmail(e.target.value)}
+                    value={data.recoveryEmail}
+                    onChange={(e) => updateData({ ...data, recoveryEmail: e.target.value })}
                     placeholder="recuperacion@email.com"
                     style={{
                       width: "100%",
@@ -539,10 +535,10 @@ export default function RegisterSecurity() {
                     <input
                       id="recoveryPhone"
                       type="tel"
-                      value={recoveryPhone}
+                      value={data.recoveryPhone}
                       onChange={(e) => {
                         const value = e.target.value.replace(/\D/g, "").slice(0, 10);
-                        setRecoveryPhone(value);
+                        updateData({ ...data, recoveryPhone: value });
                       }}
                       placeholder="11 2345 6789"
                       style={{

@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import React from "react";
 import {
   Search, SlidersHorizontal, MapPin, ChevronDown,
   Heart, Home, User, LogIn, LogOut, MessageCircle,
   Bed, Bath, Maximize2, Plus,
 } from "lucide-react";
-import { useAuth } from "../Root";
+import { useAuth } from "../../context/AuthContext";
 
 // Use relative paths – these files live in src/imports/RootLayout/
 import img1 from "../../imports/RootLayout/71c2f00331e78173a8b44e4ac5fcd936694f9cec.png";
@@ -310,7 +311,12 @@ function FooterNav({
 
 // ─── Main Page ────────────────────────────────────────────────────
 export default function Explore() {
-  const { isLoggedIn, setIsLoggedIn } = useAuth();
+  const navigate = useNavigate();
+  const {
+    user,
+    logout,
+  } = useAuth();
+  const isLoggedIn = !!user;
   const [query, setQuery] = useState("");
   const [activeType, setActiveType] = useState<"todos" | "venta" | "alquiler">("todos");
   const [favorites, setFavorites] = useState<number[]>([]);
@@ -484,7 +490,10 @@ export default function Explore() {
       {/* ── FOOTER ── */}
       <FooterNav
         isLoggedIn={isLoggedIn}
-        onLogout={() => setIsLoggedIn(false)}
+        onLogout={() => {
+          logout();
+          navigate("/");
+        }}
       />
     </div>
   );

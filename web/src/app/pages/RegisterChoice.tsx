@@ -2,10 +2,25 @@ import { useNavigate } from "react-router-dom";
 import { PropieLogo } from "../components/PropieLogo";
 import { Home, Briefcase, ArrowLeft, ChevronRight } from "lucide-react";
 import React from "react";
-
+import { useRegister } from "../../context/RegisterContext";
 export default function RegisterChoice() {
   const navigate = useNavigate();
-
+  const { updateData } = useRegister();
+  function handleOwnerSelect() {
+    updateData({
+      role: "OWNER",
+    });
+  
+    navigate("/registro/owner");
+  }
+  
+  function handleAgentSelect() {
+    updateData({
+      role: "AGENT",
+    });
+  
+    navigate("/registro/agent");
+  }
   return (
     <div
       style={{
@@ -101,7 +116,7 @@ export default function RegisterChoice() {
       >
         {/* Propie card */}
         <button
-          onClick={() => navigate("/registro/propie")}
+          onClick={handleOwnerSelect}
           style={{
             width: "100%",
             maxWidth: 420,
@@ -151,7 +166,7 @@ export default function RegisterChoice() {
 
         {/* Agente card */}
         <button
-          onClick={() => navigate("/registro/agente")}
+          onClick={handleAgentSelect}
           style={{
             width: "100%",
             maxWidth: 420,
@@ -186,7 +201,7 @@ export default function RegisterChoice() {
           {/* Text */}
           <div style={{ flex: 1 }}>
             <p style={{ margin: "0 0 5px", fontSize: 20, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif", letterSpacing: "-0.5px" }}>
-              Ser Propie
+              Agente
             </p>
             <p style={{ margin: 0, fontSize: 13, color: "#6e6e73", lineHeight: 1.55 }}>
               Conectás propietarios con compradores o inquilinos y generás ingresos por cada operación.
