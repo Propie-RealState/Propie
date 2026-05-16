@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PropieLogo } from "../components/PropieLogo";
+import { PropieLogo } from "../../../components/PropieLogo";
 import { ArrowLeft, Users, Building2, UserCheck, XCircle } from "lucide-react";
 import React from "react";
-
+import { usePropertyPublish }
+from "../context/PropertyPublishContext";
 type CommercializationType = "agentes" | "inmobiliarias" | "ambos" | "sin-intermediarios" | null;
 
 export default function PublishStep4() {

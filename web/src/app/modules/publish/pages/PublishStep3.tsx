@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PropieLogo } from "../components/PropieLogo";
+import { PropieLogo } from "../../../components/PropieLogo";
 import { ArrowLeft, Check } from "lucide-react";
 import React from "react";
-
+import { usePropertyPublish }
+from "../context/PropertyPublishContext";
 type AmenityType = "pileta" | "patio" | "balcon" | "mascotas" | "seguridad";
 
 export default function PublishStep3() {

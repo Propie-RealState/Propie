@@ -1,8 +1,9 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { PropieLogo } from "../components/PropieLogo";
+import { PropieLogo } from "../../../components/PropieLogo";
 import { ArrowLeft, Camera, Image, Video, X, Star, GripVertical } from "lucide-react";
 import React from "react";
+import { usePropertyPublish } from "../context/PropertyPublishContext";
 
 interface MediaItem {
   id: string;
@@ -13,6 +14,14 @@ interface MediaItem {
 }
 
 export default function PublishStep2() {
+  const {
+    data,
+  } = usePropertyPublish();
+
+  console.log(
+    data.propertyId
+  );
+  
   const navigate = useNavigate();
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const cameraInputRef = useRef<HTMLInputElement>(null);

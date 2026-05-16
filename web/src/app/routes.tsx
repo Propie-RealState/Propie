@@ -18,14 +18,15 @@ import RegisterProfilePhoto from "./pages/RegisterProfilePhoto";
 import RegisterOwnerInfo from "./pages/RegisterOwnerInfo";
 import RegisterAgentInfo from "./pages/RegisterAgentInfo";
 
-import PublishStep1 from "./pages/PublishStep1";
-import PublishStep2 from "./pages/PublishStep2";
-import PublishStep3 from "./pages/PublishStep3";
-import PublishStep4 from "./pages/PublishStep4";
-import PublishStep5 from "./pages/PublishStep5";
+import PublishStep1 from "./modules/publish/pages/PublishStep1";
+import PublishStep2 from "./modules/publish/pages/PublishStep2";
+import PublishStep3 from "./modules/publish/pages/PublishStep3";
+import PublishStep4 from "./modules/publish/pages/PublishStep4";
+import PublishStep5 from "./modules/publish/pages/PublishStep5";
 
 import PropertyDetails from "./pages/PropertyDetails";
 import Share from "./pages/Share";
+import { PropertyPublishProvider } from "./modules/publish/context/PropertyPublishContext";
 
 export const router =
   createBrowserRouter([
@@ -127,54 +128,31 @@ export const router =
         // ==================================================
 
         {
-          path: "publicar",
-
+          path: "/publicar",
+        
           element: (
-            <ProtectedRoute>
-              <PublishStep1 />
-            </ProtectedRoute>
+            <PropertyPublishProvider>
+              <Outlet />
+            </PropertyPublishProvider>
           ),
-        },
-
-        {
-          path: "publicar/fotos-videos",
-
-          element: (
-            <ProtectedRoute>
-              <PublishStep2 />
-            </ProtectedRoute>
-          ),
-        },
-
-        {
-          path: "publicar/informacion",
-
-          element: (
-            <ProtectedRoute>
-              <PublishStep3 />
-            </ProtectedRoute>
-          ),
-        },
-
-        {
-          path: "publicar/comercializacion",
-
-          element: (
-            <ProtectedRoute>
-              <PublishStep4 />
-            </ProtectedRoute>
-          ),
-        },
-
-        {
-          path: "publicar/verificacion",
-
-          element: (
-            <ProtectedRoute>
-              <PublishStep5 />
-            </ProtectedRoute>
-          ),
-        },
+        
+          children: [
+            {
+              index: true,
+              element: <PublishStep1 />,
+            },
+        
+            {
+              path: "fotos-videos",
+              element: <PublishStep2 />,
+            },
+        
+            {
+              path: "informacion",
+              element: <PublishStep3 />,
+            },
+          ],
+        }
       ],
     },
   ]);

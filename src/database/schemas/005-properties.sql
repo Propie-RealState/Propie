@@ -7,20 +7,20 @@ CREATE TABLE IF NOT EXISTS properties (
 
     owner_id UUID NOT NULL,
 
-    title TEXT NOT NULL,
+    title TEXT,
     description TEXT,
 
     property_type TEXT NOT NULL,
     operation_type TEXT NOT NULL,
 
-    price NUMERIC(12,2) NOT NULL,
+    price NUMERIC(12,2),
 
     bedrooms INTEGER,
     bathrooms INTEGER,
 
     area_m2 NUMERIC(10,2),
 
-    is_published BOOLEAN NOT NULL DEFAULT true,
+    status TEXT NOT NULL DEFAULT 'DRAFT',
 
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -43,5 +43,5 @@ ON properties (operation_type);
 CREATE INDEX IF NOT EXISTS idx_properties_price
 ON properties (price);
 
-CREATE INDEX IF NOT EXISTS idx_properties_published
-ON properties (is_published);
+CREATE INDEX IF NOT EXISTS idx_properties_status
+ON properties (status);

@@ -1,24 +1,83 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PropieLogo } from "../components/PropieLogo";
+import { PropieLogo } from "../../../components/PropieLogo";
 import { ArrowLeft, MapPin, Search } from "lucide-react";
+import { usePropertyPublish }
+  from "../context/PropertyPublishContext";
 import React from "react";
+import { PropertyType }
+  from "../types/property-publish.types";
+import {
+  createProperty,
+} from "../services/create-property";
 type OperationType = "venta" | "alquiler" | "temporario" | null;
-type PropertyType = "casa" | "departamento" | "terreno" | "local" | "oficina" | null;
 
 export default function PublishStep1() {
   const navigate = useNavigate();
   const [operationType, setOperationType] = useState<OperationType>(null);
-  const [propertyType, setPropertyType] = useState<PropertyType>(null);
   const [address, setAddress] = useState("");
+  const {
+    data,
+    updateData,
+  } = usePropertyPublish();
 
-  const handleContinue = () => {
-    // TODO: Implementar navegación a siguiente paso
-    console.log("Publicar:", { operationType, propertyType, address });
-    navigate("/publicar/fotos-videos");
+  const handleContinue = async () => {
+
+    const listingTypeMap = {
+      venta: "SALE",
+      alquiler: "RENT",
+      temporario: "TEMPORARY",
+    } as const;
+
+    if (
+      !data.propertyType ||
+      !operationType
+    ) {
+      return;
+    }
+
+    try {
+
+      const mappedListingType =
+        listingTypeMap[
+        operationType
+        ];
+
+      const result =
+        await createProperty({
+          propertyType:
+            data.propertyType,
+
+          listingType:
+            mappedListingType,
+        });
+
+      updateData({
+
+        propertyId:
+          result.propertyId,
+
+        propertyType:
+          data.propertyType,
+
+        listingType:
+          mappedListingType,
+      });
+
+      navigate(
+        "/publicar/fotos-videos"
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Create property failed",
+        error
+      );
+    }
   };
 
-  const isFormValid = operationType && propertyType && address;
+  const isFormValid = operationType && data.propertyType && address;
 
   const operationCards = [
     { id: "venta" as OperationType, label: "Venta", emoji: "💰", desc: "Vendé tu propiedad" },
@@ -27,11 +86,31 @@ export default function PublishStep1() {
   ];
 
   const propertyCards = [
-    { id: "casa" as PropertyType, label: "Casa", emoji: "🏠" },
-    { id: "departamento" as PropertyType, label: "Departamento", emoji: "🏢" },
-    { id: "terreno" as PropertyType, label: "Terreno", emoji: "🌳" },
-    { id: "local" as PropertyType, label: "Local", emoji: "🏪" },
-    { id: "oficina" as PropertyType, label: "Oficina", emoji: "💼" },
+    {
+      id: "HOUSE" as PropertyType,
+      label: "Casa",
+      emoji: "🏠",
+    },
+    {
+      id: "APARTMENT" as PropertyType,
+      label: "Departamento",
+      emoji: "🏢",
+    },
+    {
+      id: "LAND" as PropertyType,
+      label: "Terreno",
+      emoji: "🌳",
+    },
+    {
+      id: "COMMERCIAL" as PropertyType,
+      label: "Local",
+      emoji: "🏪",
+    },
+    {
+      id: "OFFICE" as PropertyType,
+      label: "Oficina",
+      emoji: "💼",
+    },
   ];
 
   return (
@@ -215,10 +294,13 @@ export default function PublishStep1() {
               {propertyCards.map((card) => (
                 <button
                   key={card.id}
-                  onClick={() => setPropertyType(card.id)}
-                  style={{
+                  onClick={() =>
+                    updateData({
+                      propertyType: card.id as PropertyType,
+                    })
+                  } style={{
                     background: "white",
-                    border: propertyType === card.id ? "2px solid #4417E6" : "2px solid transparent",
+                    border: data.propertyType === card.id ? "2px solid #4417E6" : "2px solid transparent",
                     borderRadius: 16,
                     padding: "20px 16px",
                     cursor: "pointer",
@@ -227,16 +309,16 @@ export default function PublishStep1() {
                     alignItems: "center",
                     gap: 10,
                     transition: "all 0.15s ease",
-                    boxShadow: propertyType === card.id ? "0 4px 16px rgba(68,23,230,0.15)" : "0 1px 6px rgba(0,0,0,0.06)",
+                    boxShadow: data.propertyType === card.id ? "0 4px 16px rgba(68,23,230,0.15)" : "0 1px 6px rgba(0,0,0,0.06)",
                   }}
                   onMouseEnter={(e) => {
-                    if (propertyType !== card.id) {
+                    if (data.propertyType !== card.id) {
                       (e.currentTarget as HTMLButtonElement).style.borderColor = "#e5e5ea";
                       (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)";
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (propertyType !== card.id) {
+                    if (data.propertyType !== card.id) {
                       (e.currentTarget as HTMLButtonElement).style.borderColor = "transparent";
                       (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 1px 6px rgba(0,0,0,0.06)";
                     }
@@ -247,7 +329,7 @@ export default function PublishStep1() {
                       width: 56,
                       height: 56,
                       borderRadius: 14,
-                      background: propertyType === card.id ? "linear-gradient(135deg, #f0eeff 0%, #e4deff 100%)" : "#f8f8f8",
+                      background: data.propertyType === card.id ? "linear-gradient(135deg, #f0eeff 0%, #e4deff 100%)" : "#f8f8f8",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -259,7 +341,7 @@ export default function PublishStep1() {
                   <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a", textAlign: "center" }}>
                     {card.label}
                   </div>
-                  {propertyType === card.id && (
+                  {data.propertyType === card.id && (
                     <div
                       style={{
                         width: 20,

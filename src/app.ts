@@ -8,6 +8,8 @@ import {
 import { registerRoute }
   from "./routes/register.route";
 
+import { propertiesRoutes }
+  from "./modules/properties/routes/properties.routes";
 
 // ========================================================
 // BUILD APP
@@ -45,6 +47,12 @@ export async function buildApp() {
 
   await app.register(registerRoute);
 
+  await app.register(
+    propertiesRoutes,
+    {
+      prefix: "/properties",
+    }
+  );
 
   return app;
 }

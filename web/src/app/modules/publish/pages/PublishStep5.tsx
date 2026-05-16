@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PropieLogo } from "../components/PropieLogo";
+import { PropieLogo } from "../../../components/PropieLogo";
 import { ArrowLeft, CheckCircle2, Upload, MapPin, DollarSign, Image as ImageIcon, AlertCircle } from "lucide-react";
 import React from "react";
-
+import { usePropertyPublish }
+from "../context/PropertyPublishContext";
 export default function PublishStep5() {
   const navigate = useNavigate();
   const [checklist, setChecklist] = useState({
