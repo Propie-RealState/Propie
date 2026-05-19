@@ -22,8 +22,7 @@ import {
     reply: FastifyReply
   ) {
     try {
-      const property =
-        await updatePropertyBasicService({
+      await updatePropertyBasicService({
           propertyId:
             request.params.id,
   
@@ -38,9 +37,24 @@ import {
   
           price:
             request.body.price,
+
+          bedrooms:
+            request.body.bedrooms,
+
+          bathrooms:
+            request.body.bathrooms,
+
+          areaM2:
+            request.body.areaM2,
+
+          propertyType:
+            request.body.propertyType,
+
+          operationType:
+            request.body.operationType,
         });
   
-      return reply.send(property);
+      return reply.status(200).send({ ok: true });
   
     } catch (error) {
   

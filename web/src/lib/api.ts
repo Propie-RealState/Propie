@@ -44,8 +44,8 @@ export async function apiFetch(
   // PARSE RESPONSE
   // ====================================================
 
-  const data =
-    await response.json();
+  const text = await response.text();
+  const data = text.length > 0 ? JSON.parse(text) : null;
 
   // ====================================================
   // GLOBAL 401 DETECTION

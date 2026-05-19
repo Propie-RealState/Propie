@@ -2,10 +2,9 @@ import { createBrowserRouter, Outlet } from "react-router-dom";
 import React from "react";
 import { Root } from "./Root";
 import { RegisterProvider } from "../context/RegisterContext";
-import { ProtectedRoute } from "../components/auth/ProtectedRoute";
 
 import Home from "./pages/Home";
-import Explore from "./pages/Explore";
+import Explore from "./modules/explore/pages/Explore.tsx";
 import Login from "./pages/Login";
 
 import RegisterChoice from "./pages/RegisterChoice";
@@ -24,9 +23,13 @@ import PublishStep3 from "./modules/publish/pages/PublishStep3";
 import PublishStep4 from "./modules/publish/pages/PublishStep4";
 import PublishStep5 from "./modules/publish/pages/PublishStep5";
 
-import PropertyDetails from "./pages/PropertyDetails";
+import PropertyDetails from "./modules/explore/pages/PropertyDetails";
+import EditProperty from "./modules/explore/pages/EditProperty";
+
 import Share from "./pages/Share";
+import Profile from "./pages/Profile";
 import { PropertyPublishProvider } from "./modules/publish/context/PropertyPublishContext";
+import MyProperties from "./modules/my-properties/pages/MyProperties";
 
 export const router =
   createBrowserRouter([
@@ -127,6 +130,23 @@ export const router =
         // PROTECTED
         // ==================================================
 
+        {
+          path: "perfil",
+          Component: Profile,
+        },
+
+        {
+          path: "mis-propiedades",
+          Component: MyProperties,
+        },
+        {
+          path: "/mis-propiedades/:id/editar",
+          element: (
+            <PropertyPublishProvider>
+              <EditProperty />
+            </PropertyPublishProvider>
+          ),
+        },
         {
           path: "/publicar",
         

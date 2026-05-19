@@ -1,15 +1,17 @@
-import { db }
-from "@/database/client";
+import { db } from "@/database/client";
 
-export async function findPropertyByIdRepository(
-  propertyId: string
-) {
-
-  const result =
-    await db.query(
-      `
+export async function findPropertyByIdRepository(propertyId: string) {
+  const result = await db.query(
+    `
         SELECT
           p.*,
+          pl.country,
+          pl.province,
+          pl.city,
+          pl.neighborhood,
+          pl.address,
+          pl.latitude,
+          pl.longitude,
 
           COALESCE(
             json_agg(
@@ -29,15 +31,26 @@ export async function findPropertyByIdRepository(
 
         LEFT JOIN property_images pi
           ON pi.property_id = p.id
+          LEFT JOIN property_locations pl
+          ON pl.property_id = p.id
 
         WHERE p.id = $1
 
-        GROUP BY p.id
+       GROUP BY
+        p.id,
+
+        pl.country,
+        pl.province,
+        pl.city,
+        pl.neighborhood,
+        pl.address,
+        pl.latitude,
+        pl.longitude
 
         LIMIT 1
       `,
-      [propertyId]
-    );
+    [propertyId],
+  );
 
   return result.rows[0] ?? null;
 }

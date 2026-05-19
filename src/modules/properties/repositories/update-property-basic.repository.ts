@@ -1,28 +1,26 @@
-import { db }
-  from "@/database/client";
+import { db } from "@/database/client";
 
-import {
-  UpdatePropertyBasicInput,
-} from "../schemas/update-property-basic.schema";
+import { UpdatePropertyBasicInput } from "../schemas/update-property-basic.schema";
 
-export async function updatePropertyBasicRepository(
-  input: {
-    propertyId: string;
+export async function updatePropertyBasicRepository(input: {
+  propertyId: string;
 
-    title: string;
+  title: string;
 
-    description: string;
+  description: string;
 
-    price: number;
+  price: number;
 
-    bedrooms: number;
+  bedrooms: number;
 
-    bathrooms: number;
+  bathrooms: number;
 
-    areaM2: number;
-  }
-) {
+  areaM2: number;
 
+  propertyType: string;
+
+  operationType: string;
+}) {
   await db.query(
     `
       UPDATE properties
@@ -34,9 +32,11 @@ export async function updatePropertyBasicRepository(
         bedrooms = $4,
         bathrooms = $5,
         area_m2 = $6,
+        property_type = $7,
+        operation_type = $8,
         updated_at = now()
 
-      WHERE id = $7
+      WHERE id = $9
     `,
     [
       input.title,
@@ -51,7 +51,11 @@ export async function updatePropertyBasicRepository(
 
       input.areaM2,
 
-      input.propertyId,
-    ]
+      input.propertyType,
+
+      input.operationType,
+
+      input.propertyId
+    ],
   );
 }

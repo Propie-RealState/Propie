@@ -1,7 +1,9 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useEffect, useState } from "react";
 import React from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../../../../context/AuthContext";
+import { mapPropertyDetails } from "../mappers/property-details.mapper";
+import { getPropertyById } from "../services/property-details.service";
 import {
   ArrowLeft,
   Share2,
@@ -10,7 +12,6 @@ import {
   Bath,
   Maximize,
   Car,
-  Check,
   ChevronLeft,
   ChevronRight,
   MessageCircle,
@@ -26,77 +27,44 @@ import {
   CheckCircle,
   Clock,
   X,
-  Calendar,
   Briefcase,
-  Award,
 } from "lucide-react";
-
-// Mock property data
-const mockProperty = {
-  id: "1",
-  title: "Hermoso departamento en Palermo",
-  description: "Departamento de 2 ambientes con excelente luminosidad, balcón con vista, cocina equipada y baño completo. Ubicado en el corazón de Palermo, cerca de todos los servicios.",
-  price: "USD 285,000",
-  operationType: "venta" as const,
-  propertyType: "departamento" as const,
-  address: "Av. Córdoba 3456, Palermo, CABA",
-  rooms: 2,
-  bathrooms: 1,
-  sqm: 65,
-  garage: 0,
-  amenities: ["balcon", "cocina-equipada"],
-  photos: [
-    "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800",
-    "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
-    "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800",
-  ],
-  owner: {
-    id: "owner1",
-    name: "Juan Pérez",
-    verified: true,
-    rating: 4.8,
-  },
-  status: "activa" as const,
-  stats: {
-    views: 245,
-    agentRequests: 3,
-    activeChats: 2,
-  },
-  agents: [
-    {
-      id: "agent1",
-      name: "María González",
-      rating: 4.9,
-      zone: "Palermo/Belgrano",
-      experience: "5 años",
-      activeListings: 12,
-      status: "approved" as const,
-      photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
-    },
-  ],
-  agentRequests: [
-    {
-      id: "req1",
-      agent: {
-        id: "agent2",
-        name: "Carlos Rodríguez",
-        rating: 4.7,
-        zone: "Palermo",
-        experience: "3 años",
-        activeListings: 8,
-        photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100",
-      },
-      message: "Hola! Me especializo en Palermo y me gustaría comercializar tu propiedad.",
-      date: "Hace 2 días",
-      status: "pending" as const,
-    },
-  ],
-};
 
 type UserType = "guest" | "propie" | "agente" | null;
 
+type MappedProperty = ReturnType<typeof mapPropertyDetails>;
+
+function formatOperationType(type: string) {
+  if (type === "SALE") return "En venta";
+  if (type === "RENT") return "En alquiler";
+  return type;
+}
+
+function formatPrice(price: number) {
+  return new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(price);
+}
+
 export default function PropertyDetails() {
   const navigate = useNavigate();
+  const { id } = useParams();
+
+  const [property, setProperty] = useState<MappedProperty | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadProperty() {
+      if (!id) return;
+      const data = await getPropertyById(id);
+      setProperty(data);
+      setLoading(false);
+    }
+    loadProperty();
+  }, [id]);
+
   const { user } = useAuth();
   const isLoggedIn = !!user;
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
@@ -107,30 +75,19 @@ export default function PropertyDetails() {
   const [showChat, setShowChat] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [chatMessage, setChatMessage] = useState("");
-  const [chatMessages, setChatMessages] = useState<Array<{ from: string; message: string; time: string }>>([]);
-
-  // Simular tipo de usuario basado en sessionStorage
+  const [chatMessages, setChatMessages] = useState<
+    Array<{ from: string; message: string; time: string }>
+  >([]);
 
   const getUserType = (): UserType => {
-
-    if (!isLoggedIn) {
-      return "guest";
-    }
-
-    return user?.role === "AGENT"
-      ? "agente"
-      : "propie";
+    if (!isLoggedIn) return "guest";
+    return user?.role === "AGENT" ? "agente" : "propie";
   };
 
-
-
   const userType = getUserType();
-  const isOwner = userType === "propie"; // En producción verificar si el usuario es el dueño
+  const isOwner = userType === "propie";
   const isAgent = userType === "agente";
-  const hasApplied = false; // Mock: el agente ya aplicó
-  const isApproved = false; // Mock: el agente fue aprobado
 
-  // Dynamic colors based on user type
   const colors = {
     primary: isAgent ? "#C52E3E" : "#4417E6",
     gradient: isAgent
@@ -144,16 +101,20 @@ export default function PropertyDetails() {
       : "0 4px 16px rgba(68,23,230,0.24)",
   };
 
+  const totalPhotos = property?.images?.length || 0;
+
   const nextPhoto = () => {
-    setCurrentPhotoIndex((prev) => (prev + 1) % mockProperty.photos.length);
+    if (!totalPhotos) return;
+    setCurrentPhotoIndex((prev) => (prev + 1) % totalPhotos);
   };
 
   const prevPhoto = () => {
-    setCurrentPhotoIndex((prev) => (prev - 1 + mockProperty.photos.length) % mockProperty.photos.length);
+    if (!totalPhotos) return;
+    setCurrentPhotoIndex((prev) => (prev - 1 + totalPhotos) % totalPhotos);
   };
 
   const handleShare = () => {
-    navigate(`/compartir/${mockProperty.id}`);
+    navigate(`/compartir/${property?.id}`);
   };
 
   const handleApplyAgent = () => {
@@ -167,21 +128,17 @@ export default function PropertyDetails() {
   };
 
   const handleApproveRequest = (requestId: string, agentName: string) => {
-    setApprovedRequests([...approvedRequests, requestId]);
+    setApprovedRequests((prev) => [...prev, requestId]);
     setSelectedAgent(agentName);
-
-    // Auto-abrir chat después de 1 segundo
-    setTimeout(() => {
-      setShowChat(true);
-    }, 1000);
+    setTimeout(() => setShowChat(true), 1000);
   };
 
   const handleRejectRequest = (requestId: string) => {
-    setRejectedRequests([...rejectedRequests, requestId]);
+    setRejectedRequests((prev) => [...prev, requestId]);
   };
 
   const handleUndoReject = (requestId: string) => {
-    setRejectedRequests(rejectedRequests.filter(id => id !== requestId));
+    setRejectedRequests((prev) => prev.filter((rid) => rid !== requestId));
   };
 
   const handleOpenChat = (agentName: string) => {
@@ -194,12 +151,30 @@ export default function PropertyDetails() {
       const newMessage = {
         from: "Propie",
         message: chatMessage,
-        time: new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }),
+        time: new Date().toLocaleTimeString("es-AR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       };
-      setChatMessages([...chatMessages, newMessage]);
+      setChatMessages((prev) => [...prev, newMessage]);
       setChatMessage("");
     }
   };
+
+  if (loading) {
+    return <div>Cargando...</div>;
+  }
+
+  if (!property) {
+    return <div>Propiedad no encontrada</div>;
+  }
+
+  const locationParts = [
+    property.location.address,
+    property.location.neighborhood,
+    property.location.city,
+    property.location.province,
+  ].filter(Boolean);
 
   return (
     <div
@@ -293,7 +268,11 @@ export default function PropertyDetails() {
                 <BarChart3 size={18} color="#1a1a1a" />
               </button>
               <button
-                onClick={() => navigate("/publicar")}
+                onClick={() =>
+                  navigate(
+                    `/mis-propiedades/${property.id}/editar`
+                  )
+                }
                 style={{
                   background: "#f0f0f0",
                   border: "none",
@@ -313,18 +292,20 @@ export default function PropertyDetails() {
       </div>
 
       {/* Carrusel de fotos */}
-      <div style={{ position: "relative", width: "100%", aspectRatio: "16/10", background: "#000" }}>
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          aspectRatio: "16/10",
+          background: "#000",
+        }}
+      >
         <img
-          src={mockProperty.photos[currentPhotoIndex]}
+          src={property.images[currentPhotoIndex]?.url}
           alt="Propiedad"
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-          }}
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
         />
 
-        {/* Navigation arrows */}
         <button
           onClick={prevPhoto}
           style={{
@@ -368,7 +349,6 @@ export default function PropertyDetails() {
           <ChevronRight size={24} color="white" />
         </button>
 
-        {/* Photo counter */}
         <div
           style={{
             position: "absolute",
@@ -383,7 +363,7 @@ export default function PropertyDetails() {
             backdropFilter: "blur(8px)",
           }}
         >
-          {currentPhotoIndex + 1} / {mockProperty.photos.length}
+          {currentPhotoIndex + 1} / {totalPhotos}
         </div>
       </div>
 
@@ -398,7 +378,15 @@ export default function PropertyDetails() {
           overflowY: "auto",
         }}
       >
-        <div style={{ width: "100%", maxWidth: 640, display: "flex", flexDirection: "column", gap: 20 }}>
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 640,
+            display: "flex",
+            flexDirection: "column",
+            gap: 20,
+          }}
+        >
           {/* Price & Type */}
           <div>
             <div
@@ -414,7 +402,7 @@ export default function PropertyDetails() {
                 marginBottom: 12,
               }}
             >
-              {mockProperty.operationType}
+              {formatOperationType(property.operationType)}
             </div>
             <h1
               style={{
@@ -425,15 +413,23 @@ export default function PropertyDetails() {
                 fontFamily: "'Sora', sans-serif",
               }}
             >
-              {mockProperty.price}
+              {formatPrice(property.price)}
             </h1>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#6e6e73", fontSize: 14 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                color: "#6e6e73",
+                fontSize: 14,
+              }}
+            >
               <MapPin size={16} />
-              {mockProperty.address}
+              <span>{locationParts.join(", ")}</span>
             </div>
           </div>
 
-          {/* Title */}
+          {/* Title & Description */}
           <div>
             <h2
               style={{
@@ -444,10 +440,17 @@ export default function PropertyDetails() {
                 fontFamily: "'Sora', sans-serif",
               }}
             >
-              {mockProperty.title}
+              {property.title}
             </h2>
-            <p style={{ margin: 0, fontSize: 15, color: "#1a1a1a", lineHeight: 1.6 }}>
-              {mockProperty.description}
+            <p
+              style={{
+                margin: 0,
+                fontSize: 15,
+                color: "#1a1a1a",
+                lineHeight: 1.6,
+              }}
+            >
+              {property.description}
             </p>
           </div>
 
@@ -458,29 +461,30 @@ export default function PropertyDetails() {
               borderRadius: 16,
               padding: "20px",
               display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
+              gridTemplateColumns: "repeat(3, 1fr)",
               gap: 16,
             }}
           >
             <div style={{ textAlign: "center" }}>
               <Bed size={24} color={colors.primary} style={{ margin: "0 auto 8px" }} />
-              <div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a" }}>{mockProperty.rooms}</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a" }}>
+                {property.bedrooms}
+              </div>
               <div style={{ fontSize: 12, color: "#6e6e73" }}>Ambientes</div>
             </div>
             <div style={{ textAlign: "center" }}>
               <Bath size={24} color={colors.primary} style={{ margin: "0 auto 8px" }} />
-              <div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a" }}>{mockProperty.bathrooms}</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a" }}>
+                {property.bathrooms}
+              </div>
               <div style={{ fontSize: 12, color: "#6e6e73" }}>Baños</div>
             </div>
             <div style={{ textAlign: "center" }}>
               <Maximize size={24} color={colors.primary} style={{ margin: "0 auto 8px" }} />
-              <div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a" }}>{mockProperty.sqm}</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a" }}>
+                {property.areaM2}
+              </div>
               <div style={{ fontSize: 12, color: "#6e6e73" }}>m²</div>
-            </div>
-            <div style={{ textAlign: "center" }}>
-              <Car size={24} color={colors.primary} style={{ margin: "0 auto 8px" }} />
-              <div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a" }}>{mockProperty.garage}</div>
-              <div style={{ fontSize: 12, color: "#6e6e73" }}>Cochera</div>
             </div>
           </div>
 
@@ -505,7 +509,14 @@ export default function PropertyDetails() {
               >
                 Publicado por
               </h3>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  marginBottom: 16,
+                }}
+              >
                 <div
                   style={{
                     width: 48,
@@ -520,9 +531,12 @@ export default function PropertyDetails() {
                   <UserCheck size={24} color={colors.primary} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>Propie verificado</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>
+                    Propie verificado
+                  </div>
                   <div style={{ fontSize: 13, color: "#6e6e73", marginTop: 2 }}>
-                    {mockProperty.agents.length} agente{mockProperty.agents.length !== 1 ? "s" : ""} trabajando
+                    {property.agents.length} agente
+                    {property.agents.length !== 1 ? "s" : ""} trabajando
                   </div>
                 </div>
                 <div
@@ -536,11 +550,21 @@ export default function PropertyDetails() {
                   }}
                 >
                   <Star size={14} color="#f59e0b" fill="#f59e0b" />
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "#f59e0b" }}>{mockProperty.owner.rating}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#f59e0b" }}>
+                    5.0
+                  </span>
                 </div>
               </div>
-              <p style={{ margin: 0, fontSize: 13, color: "#6e6e73", lineHeight: 1.6 }}>
-                Esta propiedad es verificada por Propie. Registrate para contactar al propietario o agentes.
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 13,
+                  color: "#6e6e73",
+                  lineHeight: 1.6,
+                }}
+              >
+                Esta propiedad es verificada por Propie. Registrate para contactar al
+                propietario o agentes.
               </p>
             </div>
           )}
@@ -594,229 +618,53 @@ export default function PropertyDetails() {
                     marginTop: 16,
                   }}
                 >
-                  <div style={{ textAlign: "center", padding: "12px", background: "#f5f5f7", borderRadius: 12 }}>
+                  <div
+                    style={{
+                      textAlign: "center",
+                      padding: "12px",
+                      background: "#f5f5f7",
+                      borderRadius: 12,
+                    }}
+                  >
                     <Eye size={20} color={colors.primary} style={{ margin: "0 auto 6px" }} />
-                    <div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a" }}>{mockProperty.stats.views}</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a" }}>
+                      {property.views}
+                    </div>
                     <div style={{ fontSize: 11, color: "#6e6e73" }}>Vistas</div>
                   </div>
-                  <div style={{ textAlign: "center", padding: "12px", background: "#f5f5f7", borderRadius: 12 }}>
+                  <div
+                    style={{
+                      textAlign: "center",
+                      padding: "12px",
+                      background: "#f5f5f7",
+                      borderRadius: 12,
+                    }}
+                  >
                     <Users size={20} color={colors.primary} style={{ margin: "0 auto 6px" }} />
-                    <div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a" }}>{mockProperty.stats.agentRequests}</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a" }}>0</div>
                     <div style={{ fontSize: 11, color: "#6e6e73" }}>Solicitudes</div>
                   </div>
-                  <div style={{ textAlign: "center", padding: "12px", background: "#f5f5f7", borderRadius: 12 }}>
-                    <MessageCircle size={20} color={colors.primary} style={{ margin: "0 auto 6px" }} />
-                    <div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a" }}>{mockProperty.stats.activeChats}</div>
+                  <div
+                    style={{
+                      textAlign: "center",
+                      padding: "12px",
+                      background: "#f5f5f7",
+                      borderRadius: 12,
+                    }}
+                  >
+                    <MessageCircle
+                      size={20}
+                      color={colors.primary}
+                      style={{ margin: "0 auto 6px" }}
+                    />
+                    <div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a" }}>0</div>
                     <div style={{ fontSize: 11, color: "#6e6e73" }}>Chats</div>
                   </div>
                 </div>
               </div>
 
-              {/* Solicitudes de agentes */}
-              {mockProperty.agentRequests.length > 0 && (
-                <div
-                  style={{
-                    background: "white",
-                    borderRadius: 16,
-                    padding: "20px",
-                    border: "1.5px solid #e5e5ea",
-                  }}
-                >
-                  <h3
-                    style={{
-                      margin: "0 0 16px",
-                      fontSize: 16,
-                      fontWeight: 700,
-                      color: "#1a1a1a",
-                      fontFamily: "'Sora', sans-serif",
-                    }}
-                  >
-                    Solicitudes de agentes ({mockProperty.agentRequests.length})
-                  </h3>
-
-                  {mockProperty.agentRequests.map((request) => {
-                    const isApproved = approvedRequests.includes(request.id);
-                    const isRejected = rejectedRequests.includes(request.id);
-
-                    return (
-                      <div
-                        key={request.id}
-                        style={{
-                          background: isApproved
-                            ? "linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)"
-                            : isRejected
-                              ? "linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)"
-                              : "#f5f5f7",
-                          borderRadius: 14,
-                          padding: "16px",
-                          marginBottom: 12,
-                          border: isApproved
-                            ? "2px solid #10b981"
-                            : isRejected
-                              ? "2px solid #ef4444"
-                              : "none",
-                          transition: "all 0.3s ease",
-                          position: "relative",
-                          overflow: "hidden",
-                        }}
-                      >
-                        {isApproved && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: 12,
-                              right: 12,
-                              background: "#10b981",
-                              color: "white",
-                              padding: "4px 10px",
-                              borderRadius: 8,
-                              fontSize: 11,
-                              fontWeight: 700,
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 4,
-                            }}
-                          >
-                            <CheckCircle size={12} />
-                            Aprobado
-                          </div>
-                        )}
-                        {isRejected && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: 12,
-                              right: 12,
-                              background: "#ef4444",
-                              color: "white",
-                              padding: "4px 10px",
-                              borderRadius: 8,
-                              fontSize: 11,
-                              fontWeight: 700,
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 4,
-                            }}
-                          >
-                            <X size={12} />
-                            Rechazado
-                          </div>
-                        )}
-                        <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
-                          <img
-                            src={request.agent.photo}
-                            alt={request.agent.name}
-                            style={{
-                              width: 48,
-                              height: 48,
-                              borderRadius: "50%",
-                              objectFit: "cover",
-                            }}
-                          />
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a", marginBottom: 4 }}>
-                              {request.agent.name}
-                            </div>
-                            <div style={{ fontSize: 12, color: "#6e6e73", marginBottom: 6 }}>
-                              <Star size={12} color="#f59e0b" fill="#f59e0b" style={{ display: "inline", marginRight: 4 }} />
-                              {request.agent.rating} • {request.agent.zone} • {request.agent.experience}
-                            </div>
-                            <div style={{ fontSize: 13, color: "#1a1a1a", lineHeight: 1.5 }}>
-                              {request.message}
-                            </div>
-                          </div>
-                        </div>
-                        <div style={{ fontSize: 11, color: isApproved ? "#166534" : isRejected ? "#991b1b" : "#9a9aa0", marginBottom: 12 }}>
-                          {request.date}
-                        </div>
-
-                        {!isApproved && !isRejected ? (
-                          <div style={{ display: "flex", gap: 8 }}>
-                            <button
-                              onClick={() => handleApproveRequest(request.id, request.agent.name)}
-                              style={{
-                                flex: 1,
-                                background: colors.primary,
-                                border: "none",
-                                borderRadius: 10,
-                                padding: "10px",
-                                color: "white",
-                                fontSize: 14,
-                                fontWeight: 600,
-                                cursor: "pointer",
-                              }}
-                            >
-                              Aprobar
-                            </button>
-                            <button
-                              onClick={() => handleRejectRequest(request.id)}
-                              style={{
-                                flex: 1,
-                                background: "white",
-                                border: "1.5px solid #e5e5ea",
-                                borderRadius: 10,
-                                padding: "10px",
-                                color: "#1a1a1a",
-                                fontSize: 14,
-                                fontWeight: 600,
-                                cursor: "pointer",
-                              }}
-                            >
-                              Rechazar
-                            </button>
-                          </div>
-                        ) : isApproved ? (
-                          <button
-                            onClick={() => handleOpenChat(request.agent.name)}
-                            style={{
-                              width: "100%",
-                              background: "#10b981",
-                              border: "none",
-                              borderRadius: 10,
-                              padding: "12px",
-                              color: "white",
-                              fontSize: 14,
-                              fontWeight: 600,
-                              cursor: "pointer",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: 8,
-                            }}
-                          >
-                            <MessageCircle size={16} />
-                            Abrir chat
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleUndoReject(request.id)}
-                            style={{
-                              width: "100%",
-                              background: "white",
-                              border: "1.5px solid #ef4444",
-                              borderRadius: 10,
-                              padding: "12px",
-                              color: "#ef4444",
-                              fontSize: 14,
-                              fontWeight: 600,
-                              cursor: "pointer",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: 8,
-                            }}
-                          >
-                            Deshacer rechazo
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Agentes aprobados */}
-              {mockProperty.agents.length > 0 && (
+              {/* Agentes activos */}
+              {property.agents.length > 0 && (
                 <div
                   style={{
                     background: "white",
@@ -837,90 +685,123 @@ export default function PropertyDetails() {
                     Agentes activos
                   </h3>
 
-                  {mockProperty.agents.map((agent) => (
-                    <div
-                      key={agent.id}
-                      style={{
-                        background: colors.lightBg,
-                        borderRadius: 14,
-                        padding: "16px",
-                        marginBottom: 12,
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                        <img
-                          src={agent.photo}
-                          alt={agent.name}
-                          style={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: "50%",
-                            objectFit: "cover",
-                          }}
-                        />
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a", marginBottom: 2 }}>
-                            {agent.name}
-                          </div>
-                          <div style={{ fontSize: 12, color: "#6e6e73" }}>
-                            <Star size={12} color="#f59e0b" fill="#f59e0b" style={{ display: "inline", marginRight: 4 }} />
-                            {agent.rating} • {agent.activeListings} publicaciones activas
-                          </div>
-                        </div>
+                  {property.agents.map((agent) => {
+                    const a = agent as {
+                      id?: string;
+                      name?: string;
+                      photo?: string;
+                      rating?: number;
+                      activeListings?: number;
+                    };
+                    const listingCount = a.activeListings ?? 0;
+                    return (
+                      <div
+                        key={a.id ?? Math.random()}
+                        style={{
+                          background: colors.lightBg,
+                          borderRadius: 14,
+                          padding: "16px",
+                          marginBottom: 12,
+                        }}
+                      >
                         <div
                           style={{
-                            background: colors.primary,
-                            color: "white",
-                            padding: "4px 10px",
-                            borderRadius: 6,
-                            fontSize: 11,
-                            fontWeight: 600,
-                          }}
-                        >
-                          Autorizado
-                        </div>
-                      </div>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button
-                          onClick={() => handleOpenChat(agent.name)}
-                          style={{
-                            flex: 1,
-                            background: colors.primary,
-                            border: "none",
-                            borderRadius: 10,
-                            padding: "10px",
-                            color: "white",
-                            fontSize: 14,
-                            fontWeight: 600,
-                            cursor: "pointer",
                             display: "flex",
                             alignItems: "center",
-                            justifyContent: "center",
-                            gap: 6,
+                            gap: 12,
+                            marginBottom: 12,
                           }}
                         >
-                          <MessageCircle size={16} />
-                          Abrir chat
-                        </button>
-                        <button
-                          style={{
-                            background: "white",
-                            border: "1.5px solid #e5e5ea",
-                            borderRadius: 10,
-                            padding: "10px 14px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <MoreVertical size={16} color="#1a1a1a" />
-                        </button>
+                          {a.photo && (
+                            <img
+                              src={a.photo}
+                              alt={a.name}
+                              style={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: "50%",
+                                objectFit: "cover",
+                              }}
+                            />
+                          )}
+                          <div style={{ flex: 1 }}>
+                            <div
+                              style={{
+                                fontSize: 15,
+                                fontWeight: 600,
+                                color: "#1a1a1a",
+                                marginBottom: 2,
+                              }}
+                            >
+                              {a.name ?? ""}
+                            </div>
+                            <div style={{ fontSize: 12, color: "#6e6e73" }}>
+                              <Star
+                                size={12}
+                                color="#f59e0b"
+                                fill="#f59e0b"
+                                style={{ display: "inline", marginRight: 4 }}
+                              />
+                              {a.rating ?? 0} •{" "}
+                              {listingCount > 1
+                                ? `${listingCount} publicaciones activas`
+                                : "1 publicación activa"}
+                            </div>
+                          </div>
+                          <div
+                            style={{
+                              background: colors.primary,
+                              color: "white",
+                              padding: "4px 10px",
+                              borderRadius: 6,
+                              fontSize: 11,
+                              fontWeight: 600,
+                            }}
+                          >
+                            Autorizado
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button
+                            onClick={() => handleOpenChat(a.name ?? "Agente")}
+                            style={{
+                              flex: 1,
+                              background: colors.primary,
+                              border: "none",
+                              borderRadius: 10,
+                              padding: "10px",
+                              color: "white",
+                              fontSize: 14,
+                              fontWeight: 600,
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: 6,
+                            }}
+                          >
+                            <MessageCircle size={16} />
+                            Abrir chat
+                          </button>
+                          <button
+                            style={{
+                              background: "white",
+                              border: "1.5px solid #e5e5ea",
+                              borderRadius: 10,
+                              padding: "10px 14px",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <MoreVertical size={16} color="#1a1a1a" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </>
           )}
-
         </div>
       </div>
 
@@ -981,10 +862,25 @@ export default function PropertyDetails() {
                   <UserCheck size={22} color={colors.primary} />
                 </div>
                 <div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>
+                  <div
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 700,
+                      color: "#1a1a1a",
+                      fontFamily: "'Sora', sans-serif",
+                    }}
+                  >
                     {selectedAgent}
                   </div>
-                  <div style={{ fontSize: 12, color: "#10b981", display: "flex", alignItems: "center", gap: 4 }}>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "#10b981",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
                     <div
                       style={{
                         width: 6,
@@ -1021,7 +917,6 @@ export default function PropertyDetails() {
                 gap: 16,
               }}
             >
-              {/* Welcome message */}
               <div style={{ textAlign: "center", padding: "12px 0" }}>
                 <div
                   style={{
@@ -1037,7 +932,6 @@ export default function PropertyDetails() {
                 </div>
               </div>
 
-              {/* Mock initial message from agent */}
               <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                 <div
                   style={{
@@ -1063,16 +957,18 @@ export default function PropertyDetails() {
                     }}
                   >
                     <div style={{ fontSize: 14, color: "#1a1a1a", lineHeight: 1.5 }}>
-                      ¡Gracias por aprobar mi solicitud! Me encantaría coordinar una visita para conocer mejor la propiedad.
+                      ¡Gracias por aprobar mi solicitud! Me encantaría coordinar una
+                      visita para conocer mejor la propiedad.
                     </div>
                   </div>
-                  <div style={{ fontSize: 11, color: "#9a9aa0", marginTop: 4, marginLeft: 4 }}>
+                  <div
+                    style={{ fontSize: 11, color: "#9a9aa0", marginTop: 4, marginLeft: 4 }}
+                  >
                     Ahora
                   </div>
                 </div>
               </div>
 
-              {/* User messages */}
               {chatMessages.map((msg, idx) => (
                 <div
                   key={idx}
@@ -1105,14 +1001,19 @@ export default function PropertyDetails() {
                         background: msg.from === "Propie" ? colors.primary : "#f5f5f7",
                         color: msg.from === "Propie" ? "white" : "#1a1a1a",
                         padding: "12px 16px",
-                        borderRadius: msg.from === "Propie" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+                        borderRadius:
+                          msg.from === "Propie"
+                            ? "16px 16px 4px 16px"
+                            : "16px 16px 16px 4px",
                         maxWidth: 280,
                         display: "inline-block",
                       }}
                     >
                       <div style={{ fontSize: 14, lineHeight: 1.5 }}>{msg.message}</div>
                     </div>
-                    <div style={{ fontSize: 11, color: "#9a9aa0", marginTop: 4, marginLeft: 4 }}>
+                    <div
+                      style={{ fontSize: 11, color: "#9a9aa0", marginTop: 4, marginLeft: 4 }}
+                    >
                       {msg.time}
                     </div>
                   </div>
@@ -1134,7 +1035,7 @@ export default function PropertyDetails() {
                 type="text"
                 value={chatMessage}
                 onChange={(e) => setChatMessage(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                 placeholder="Escribí tu mensaje..."
                 style={{
                   flex: 1,
@@ -1207,7 +1108,14 @@ export default function PropertyDetails() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 20,
+              }}
+            >
               <h3
                 style={{
                   margin: 0,
@@ -1221,19 +1129,22 @@ export default function PropertyDetails() {
               </h3>
               <button
                 onClick={() => setShowRequestModal(false)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 4,
-                }}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
               >
                 <X size={24} color="#1a1a1a" />
               </button>
             </div>
 
-            <p style={{ margin: "0 0 20px", fontSize: 14, color: "#6e6e73", lineHeight: 1.6 }}>
-              Enviale un mensaje al propietario explicando por qué sos el agente ideal para comercializar esta propiedad.
+            <p
+              style={{
+                margin: "0 0 20px",
+                fontSize: 14,
+                color: "#6e6e73",
+                lineHeight: 1.6,
+              }}
+            >
+              Enviale un mensaje al propietario explicando por qué sos el agente ideal para
+              comercializar esta propiedad.
             </p>
 
             <textarea
@@ -1301,7 +1212,7 @@ export default function PropertyDetails() {
         </div>
       )}
 
-      {/* CTA sticky */}
+      {/* CTA sticky - Guest */}
       {userType === "guest" && (
         <div
           style={{

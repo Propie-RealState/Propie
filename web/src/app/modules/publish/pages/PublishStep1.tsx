@@ -1,91 +1,147 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PropieLogo } from "../../../components/PropieLogo";
 import { ArrowLeft, MapPin, Search } from "lucide-react";
-import { usePropertyPublish }
-  from "../context/PropertyPublishContext";
+import { usePropertyPublish } from "../context/PropertyPublishContext";
 import React from "react";
-import { PropertyType }
-  from "../types/property-publish.types";
-import {
-  createProperty,
-} from "../services/create-property";
+import { updatePropertyBasic } from "../services/updatePropertyBasic";
+import { PropertyType } from "../types/property-publish.types";
+import { createProperty } from "../services/create-property";
+import type { ListingType } from "../types/property-publish.types";
 type OperationType = "venta" | "alquiler" | "temporario" | null;
 
 export default function PublishStep1() {
   const navigate = useNavigate();
+
+  const { data, updateData } = usePropertyPublish();
+
   const [operationType, setOperationType] = useState<OperationType>(null);
+
   const [address, setAddress] = useState("");
-  const {
-    data,
-    updateData,
-  } = usePropertyPublish();
+
+  useEffect(() => {
+    if (data.listingType) {
+      const reverseListingTypeMap: Record<ListingType, OperationType> = {
+        SALE: "venta",
+        RENT: "alquiler",
+        TEMPORARY: "temporario",
+      };
+
+      setOperationType(reverseListingTypeMap[data.listingType]);
+    }
+
+    if (data.address) {
+      setAddress(data.address);
+    }
+  }, [data]);
 
   const handleContinue = async () => {
-
     const listingTypeMap = {
       venta: "SALE",
       alquiler: "RENT",
       temporario: "TEMPORARY",
     } as const;
 
-    if (
-      !data.propertyType ||
-      !operationType
-    ) {
+    if (!data.propertyType || !operationType) {
       return;
     }
 
     try {
+      const mappedListingType = listingTypeMap[operationType];
 
-      const mappedListingType =
-        listingTypeMap[
-        operationType
-        ];
+      // 🔥 EDIT MODE
+      if (data.propertyId) {
 
-      const result =
-        await createProperty({
+        await updatePropertyBasic(
+          data.propertyId,
+          {
+            title:
+              data.title ?? "",
+      
+            description:
+              data.description ?? "",
+      
+            price:
+              Number(data.price ?? 0),
+      
+            bedrooms:
+              Number(data.bedrooms ?? 0),
+      
+            bathrooms:
+              Number(data.bathrooms ?? 0),
+      
+            areaM2:
+              Number(data.areaM2 ?? 0),
+      
+            propertyType:
+              data.propertyType,
+      
+            operationType:
+              mappedListingType,
+          }
+        );
+      
+        updateData({
           propertyType:
             data.propertyType,
-
+      
           listingType:
             mappedListingType,
-        });
-
-      updateData({
-
-        propertyId:
-          result.propertyId,
-
-        propertyType:
-          data.propertyType,
-
-        listingType:
-          mappedListingType,
-          
-        address:
+      
           address,
+        });
+      
+        navigate(
+          "/publicar/fotos-videos"
+        );
+      
+        return;
+      }
+
+      // 🔥 CREATE MODE
+      const result = await createProperty({
+        propertyType: data.propertyType,
+
+        listingType: mappedListingType,
       });
 
-      navigate(
-        "/publicar/fotos-videos"
-      );
+      updateData({
+        propertyId: result.propertyId,
 
+        propertyType: data.propertyType,
+
+        listingType: mappedListingType,
+
+        address,
+      });
+
+      navigate("/publicar/fotos-videos");
     } catch (error) {
-
-      console.error(
-        "Create property failed",
-        error
-      );
+      console.error("Create property failed", error);
     }
   };
 
   const isFormValid = operationType && data.propertyType && address;
 
   const operationCards = [
-    { id: "venta" as OperationType, label: "Venta", emoji: "💰", desc: "Vendé tu propiedad" },
-    { id: "alquiler" as OperationType, label: "Alquiler", emoji: "🏘️", desc: "Alquilá largo plazo" },
-    { id: "temporario" as OperationType, label: "Temporario", emoji: "🌴", desc: "Alquiler temporario" },
+    {
+      id: "venta" as OperationType,
+      label: "Venta",
+      emoji: "💰",
+      desc: "Vendé tu propiedad",
+    },
+    {
+      id: "alquiler" as OperationType,
+      label: "Alquiler",
+      emoji: "🏘️",
+      desc: "Alquilá largo plazo",
+    },
+    {
+      id: "temporario" as OperationType,
+      label: "Temporario",
+      emoji: "🌴",
+      desc: "Alquiler temporario",
+    },
   ];
 
   const propertyCards = [
@@ -130,7 +186,8 @@ export default function PublishStep1() {
       <div
         style={{
           position: "relative",
-          background: "linear-gradient(160deg, #5A32F0 0%, #4417E6 55%, #3510B8 100%)",
+          background:
+            "linear-gradient(160deg, #5A32F0 0%, #4417E6 55%, #3510B8 100%)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -138,11 +195,42 @@ export default function PublishStep1() {
         }}
       >
         {/* Decorative blobs */}
-        <div style={{ position: "absolute", width: 300, height: 300, background: "radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%)", top: -80, right: -60, pointerEvents: "none" }} />
-        <div style={{ position: "absolute", width: 180, height: 180, background: "radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)", bottom: 40, left: -40, pointerEvents: "none" }} />
+        <div
+          style={{
+            position: "absolute",
+            width: 300,
+            height: 300,
+            background:
+              "radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%)",
+            top: -80,
+            right: -60,
+            pointerEvents: "none",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            width: 180,
+            height: 180,
+            background:
+              "radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)",
+            bottom: 40,
+            left: -40,
+            pointerEvents: "none",
+          }}
+        />
 
         {/* Nav row */}
-        <div style={{ width: "100%", maxWidth: 420, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 24px 0" }}>
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 420,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "20px 24px 0",
+          }}
+        >
           <button
             onClick={() => navigate(-1)}
             style={{
@@ -169,7 +257,15 @@ export default function PublishStep1() {
         </div>
 
         {/* Heading */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "32px 28px 12px" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+            padding: "32px 28px 12px",
+          }}
+        >
           <h1
             style={{
               color: "white",
@@ -183,15 +279,42 @@ export default function PublishStep1() {
           >
             Publicá tu propiedad
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 10, lineHeight: 1.6, maxWidth: 300 }}>
+          <p
+            style={{
+              color: "rgba(255,255,255,0.72)",
+              fontSize: 14,
+              marginTop: 10,
+              lineHeight: 1.6,
+              maxWidth: 300,
+            }}
+          >
             Comenzá completando los datos básicos
           </p>
         </div>
 
         {/* Wave */}
-        <div style={{ width: "100%", height: 44, position: "relative", marginTop: 8 }}>
-          <svg viewBox="0 0 390 44" preserveAspectRatio="none" style={{ position: "absolute", bottom: 0, width: "100%", height: 44 }}>
-            <path d="M0,24 C90,48 300,0 390,24 L390,44 L0,44 Z" fill="#f5f5f7" />
+        <div
+          style={{
+            width: "100%",
+            height: 44,
+            position: "relative",
+            marginTop: 8,
+          }}
+        >
+          <svg
+            viewBox="0 0 390 44"
+            preserveAspectRatio="none"
+            style={{
+              position: "absolute",
+              bottom: 0,
+              width: "100%",
+              height: 44,
+            }}
+          >
+            <path
+              d="M0,24 C90,48 300,0 390,24 L390,44 L0,44 Z"
+              fill="#f5f5f7"
+            />
           </svg>
         </div>
       </div>
@@ -207,10 +330,26 @@ export default function PublishStep1() {
           overflowY: "auto",
         }}
       >
-        <div style={{ width: "100%", maxWidth: 420, display: "flex", flexDirection: "column", gap: 28 }}>
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 420,
+            display: "flex",
+            flexDirection: "column",
+            gap: 28,
+          }}
+        >
           {/* Tipo de operación */}
           <div>
-            <h3 style={{ margin: "0 0 14px", fontSize: 16, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>
+            <h3
+              style={{
+                margin: "0 0 14px",
+                fontSize: 16,
+                fontWeight: 700,
+                color: "#1a1a1a",
+                fontFamily: "'Sora', sans-serif",
+              }}
+            >
               Tipo de operación
             </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -221,7 +360,10 @@ export default function PublishStep1() {
                   style={{
                     width: "100%",
                     background: "white",
-                    border: operationType === card.id ? "2px solid #4417E6" : "2px solid transparent",
+                    border:
+                      operationType === card.id
+                        ? "2px solid #4417E6"
+                        : "2px solid transparent",
                     borderRadius: 16,
                     padding: "18px 18px",
                     cursor: "pointer",
@@ -229,18 +371,25 @@ export default function PublishStep1() {
                     alignItems: "center",
                     gap: 14,
                     transition: "all 0.15s ease",
-                    boxShadow: operationType === card.id ? "0 4px 16px rgba(68,23,230,0.15)" : "0 1px 6px rgba(0,0,0,0.06)",
+                    boxShadow:
+                      operationType === card.id
+                        ? "0 4px 16px rgba(68,23,230,0.15)"
+                        : "0 1px 6px rgba(0,0,0,0.06)",
                   }}
                   onMouseEnter={(e) => {
                     if (operationType !== card.id) {
-                      (e.currentTarget as HTMLButtonElement).style.borderColor = "#e5e5ea";
-                      (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)";
+                      (e.currentTarget as HTMLButtonElement).style.borderColor =
+                        "#e5e5ea";
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                        "0 4px 12px rgba(0,0,0,0.08)";
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (operationType !== card.id) {
-                      (e.currentTarget as HTMLButtonElement).style.borderColor = "transparent";
-                      (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 1px 6px rgba(0,0,0,0.06)";
+                      (e.currentTarget as HTMLButtonElement).style.borderColor =
+                        "transparent";
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                        "0 1px 6px rgba(0,0,0,0.06)";
                     }
                   }}
                 >
@@ -249,7 +398,10 @@ export default function PublishStep1() {
                       width: 50,
                       height: 50,
                       borderRadius: 14,
-                      background: operationType === card.id ? "linear-gradient(135deg, #f0eeff 0%, #e4deff 100%)" : "#f8f8f8",
+                      background:
+                        operationType === card.id
+                          ? "linear-gradient(135deg, #f0eeff 0%, #e4deff 100%)"
+                          : "#f8f8f8",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -260,10 +412,19 @@ export default function PublishStep1() {
                     {card.emoji}
                   </div>
                   <div style={{ flex: 1, textAlign: "left" }}>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>
+                    <div
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 700,
+                        color: "#1a1a1a",
+                        fontFamily: "'Sora', sans-serif",
+                      }}
+                    >
                       {card.label}
                     </div>
-                    <div style={{ fontSize: 12, color: "#6e6e73", marginTop: 2 }}>
+                    <div
+                      style={{ fontSize: 12, color: "#6e6e73", marginTop: 2 }}
+                    >
                       {card.desc}
                     </div>
                   </div>
@@ -280,7 +441,14 @@ export default function PublishStep1() {
                         flexShrink: 0,
                       }}
                     >
-                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "white" }} />
+                      <div
+                        style={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: "50%",
+                          background: "white",
+                        }}
+                      />
                     </div>
                   )}
                 </button>
@@ -290,10 +458,24 @@ export default function PublishStep1() {
 
           {/* Tipo de propiedad */}
           <div>
-            <h3 style={{ margin: "0 0 14px", fontSize: 16, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>
+            <h3
+              style={{
+                margin: "0 0 14px",
+                fontSize: 16,
+                fontWeight: 700,
+                color: "#1a1a1a",
+                fontFamily: "'Sora', sans-serif",
+              }}
+            >
               Tipo de propiedad
             </h3>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, 1fr)",
+                gap: 10,
+              }}
+            >
               {propertyCards.map((card) => (
                 <button
                   key={card.id}
@@ -301,9 +483,13 @@ export default function PublishStep1() {
                     updateData({
                       propertyType: card.id as PropertyType,
                     })
-                  } style={{
+                  }
+                  style={{
                     background: "white",
-                    border: data.propertyType === card.id ? "2px solid #4417E6" : "2px solid transparent",
+                    border:
+                      data.propertyType === card.id
+                        ? "2px solid #4417E6"
+                        : "2px solid transparent",
                     borderRadius: 16,
                     padding: "20px 16px",
                     cursor: "pointer",
@@ -312,18 +498,25 @@ export default function PublishStep1() {
                     alignItems: "center",
                     gap: 10,
                     transition: "all 0.15s ease",
-                    boxShadow: data.propertyType === card.id ? "0 4px 16px rgba(68,23,230,0.15)" : "0 1px 6px rgba(0,0,0,0.06)",
+                    boxShadow:
+                      data.propertyType === card.id
+                        ? "0 4px 16px rgba(68,23,230,0.15)"
+                        : "0 1px 6px rgba(0,0,0,0.06)",
                   }}
                   onMouseEnter={(e) => {
                     if (data.propertyType !== card.id) {
-                      (e.currentTarget as HTMLButtonElement).style.borderColor = "#e5e5ea";
-                      (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)";
+                      (e.currentTarget as HTMLButtonElement).style.borderColor =
+                        "#e5e5ea";
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                        "0 4px 12px rgba(0,0,0,0.08)";
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (data.propertyType !== card.id) {
-                      (e.currentTarget as HTMLButtonElement).style.borderColor = "transparent";
-                      (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 1px 6px rgba(0,0,0,0.06)";
+                      (e.currentTarget as HTMLButtonElement).style.borderColor =
+                        "transparent";
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                        "0 1px 6px rgba(0,0,0,0.06)";
                     }
                   }}
                 >
@@ -332,7 +525,10 @@ export default function PublishStep1() {
                       width: 56,
                       height: 56,
                       borderRadius: 14,
-                      background: data.propertyType === card.id ? "linear-gradient(135deg, #f0eeff 0%, #e4deff 100%)" : "#f8f8f8",
+                      background:
+                        data.propertyType === card.id
+                          ? "linear-gradient(135deg, #f0eeff 0%, #e4deff 100%)"
+                          : "#f8f8f8",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -341,7 +537,14 @@ export default function PublishStep1() {
                   >
                     {card.emoji}
                   </div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a", textAlign: "center" }}>
+                  <div
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: "#1a1a1a",
+                      textAlign: "center",
+                    }}
+                  >
                     {card.label}
                   </div>
                   {data.propertyType === card.id && (
@@ -357,7 +560,14 @@ export default function PublishStep1() {
                         marginTop: -4,
                       }}
                     >
-                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: "white" }} />
+                      <div
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: "50%",
+                          background: "white",
+                        }}
+                      />
                     </div>
                   )}
                 </button>
@@ -367,7 +577,15 @@ export default function PublishStep1() {
 
           {/* Dirección */}
           <div>
-            <h3 style={{ margin: "0 0 14px", fontSize: 16, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>
+            <h3
+              style={{
+                margin: "0 0 14px",
+                fontSize: 16,
+                fontWeight: 700,
+                color: "#1a1a1a",
+                fontFamily: "'Sora', sans-serif",
+              }}
+            >
               Dirección
             </h3>
             <div style={{ position: "relative" }}>
@@ -404,7 +622,8 @@ export default function PublishStep1() {
                 }}
                 onFocus={(e) => {
                   (e.target as HTMLInputElement).style.borderColor = "#4417E6";
-                  (e.target as HTMLInputElement).style.boxShadow = "0 0 0 3px rgba(68,23,230,0.08)";
+                  (e.target as HTMLInputElement).style.boxShadow =
+                    "0 0 0 3px rgba(68,23,230,0.08)";
                 }}
                 onBlur={(e) => {
                   (e.target as HTMLInputElement).style.borderColor = "#e5e5ea";
@@ -455,20 +674,28 @@ export default function PublishStep1() {
               color: isFormValid ? "white" : "#9a9aa0",
               transition: "all 0.18s ease",
               marginTop: 8,
-              boxShadow: isFormValid ? "0 4px 16px rgba(68,23,230,0.24)" : "none",
+              boxShadow: isFormValid
+                ? "0 4px 16px rgba(68,23,230,0.24)"
+                : "none",
             }}
             onMouseEnter={(e) => {
               if (isFormValid) {
-                (e.currentTarget as HTMLButtonElement).style.background = "#3510B8";
-                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 20px rgba(68,23,230,0.32)";
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "#3510B8";
+                (e.currentTarget as HTMLButtonElement).style.transform =
+                  "translateY(-1px)";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                  "0 6px 20px rgba(68,23,230,0.32)";
               }
             }}
             onMouseLeave={(e) => {
               if (isFormValid) {
-                (e.currentTarget as HTMLButtonElement).style.background = "#4417E6";
-                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 16px rgba(68,23,230,0.24)";
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "#4417E6";
+                (e.currentTarget as HTMLButtonElement).style.transform =
+                  "translateY(0)";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                  "0 4px 16px rgba(68,23,230,0.24)";
               }
             }}
           >

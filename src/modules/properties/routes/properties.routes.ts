@@ -1,234 +1,179 @@
-import {
-  FastifyInstance,
-  FastifyRequest,
-  RouteHandlerMethod,
-} from "fastify";
+import { FastifyInstance, FastifyRequest, RouteHandlerMethod } from "fastify";
 
-import { authMiddleware }
-  from "@/middlewares/auth.middleware";
+import { authMiddleware } from "@/middlewares/auth.middleware";
 
-import { createPropertyController }
-  from "../controllers/create-property.controller";
+import { createPropertyController } from "../controllers/create-property.controller";
 
-import { findPropertyByIdController }
-  from "../controllers/find-property-by-id.controller";
+import { findPropertyByIdController } from "../controllers/find-property-by-id.controller";
 
-import { updatePropertyBasicController }
-  from "../controllers/update-property-basic.controller";
+import { updatePropertyBasicController } from "../controllers/update-property-basic.controller";
 
-import {
-  updatePropertyLocationController,
-} from "../controllers/update-property-location.controller";
+import { updatePropertyLocationController } from "../controllers/update-property-location.controller";
 
-import {
-  updatePropertyDetailsController,
-} from "../controllers/update-property-details.controller";
+import { updatePropertyDetailsController } from "../controllers/update-property-details.controller";
 
-import {
-  UpdatePropertyDetailsSchema,
-} from "../schemas/update-property-details.schema";
+import { UpdatePropertyDetailsSchema } from "../schemas/update-property-details.schema";
 
-import {
-  uploadPropertyImagesController,
-} from "../controllers/upload-property-images.controller";
+import { uploadPropertyImagesController } from "../controllers/upload-property-images.controller";
 
-import {
-  savePropertyAmenitiesController,
-} from "../controllers/save-property-amenities.controller";
+import { savePropertyAmenitiesController } from "../controllers/save-property-amenities.controller";
 
-import {
-  updatePropertyAmenitiesSchema,
-} from "../schemas/update-property-amenities.schema";
+import { updatePropertyAmenitiesSchema } from "../schemas/update-property-amenities.schema";
 
-import {
-  savePropertyCommercializationController,
-} from "../controllers/save-property-commercialization.controller";
+import { savePropertyCommercializationController } from "../controllers/save-property-commercialization.controller";
 
-import {
-  updatePropertyCommercializationSchema,
-} from "../schemas/update-property-commercialization.schema";
+import { updatePropertyCommercializationSchema } from "../schemas/update-property-commercialization.schema";
 
-import {
-  publishPropertyController,
-} from "../controllers/publish-property.controller";
+import { publishPropertyController } from "../controllers/publish-property.controller";
 
-export async function propertiesRoutes(
-  app: FastifyInstance
-) {
+import { getPropertiesController } from "../controllers/get-properties.controller";
 
+import { getMyPropertiesController } from "../controllers/get-my-properties.controller";
+
+
+export async function propertiesRoutes(app: FastifyInstance) {
   app.post(
     "/",
 
     {
-      preHandler:
-        authMiddleware,
+      preHandler: authMiddleware,
     },
 
-    createPropertyController as RouteHandlerMethod
+    createPropertyController as RouteHandlerMethod,
   );
 
+  app.get(
+    "/",
 
+    getPropertiesController as RouteHandlerMethod,
+  );
+  
+  app.get(
+    "/mine",
+    {
+      preHandler: authMiddleware,
+    },
+    getMyPropertiesController as RouteHandlerMethod,
+  );
 
   app.get(
     "/:id",
 
-    {
-      preHandler:
-        authMiddleware,
-    },
-
-    findPropertyByIdController as RouteHandlerMethod
+    findPropertyByIdController as RouteHandlerMethod,
   );
-
-
 
   app.patch(
     "/:id/basic",
 
     {
-      preHandler:
-        authMiddleware,
+      preHandler: authMiddleware,
     },
 
-    updatePropertyBasicController as RouteHandlerMethod
+    updatePropertyBasicController as RouteHandlerMethod,
   );
-
-
 
   app.patch(
     "/:id/location",
 
     {
-      preHandler:
-        authMiddleware,
+      preHandler: authMiddleware,
     },
 
-    updatePropertyLocationController as RouteHandlerMethod
+    updatePropertyLocationController as RouteHandlerMethod,
   );
-
-
 
   app.patch(
     "/:id/details",
 
     {
-      preHandler:
-        authMiddleware,
+      preHandler: authMiddleware,
     },
 
-    async (
-      request,
-      reply
-    ) => {
-
-      const body =
-        UpdatePropertyDetailsSchema.parse(
-          request.body
-        );
+    async (request, reply) => {
+      const body = UpdatePropertyDetailsSchema.parse(request.body);
 
       return updatePropertyDetailsController(
         {
           ...request,
 
           params: {
-            id:
-              (request.params as { id: string }).id,
+            id: (request.params as { id: string }).id,
           },
 
           body,
         },
 
-        reply
+        reply,
       );
-    }
+    },
   );
 
   app.post(
     "/:id/images",
 
     {
-      preHandler:
-        authMiddleware,
+      preHandler: authMiddleware,
     },
 
-    uploadPropertyImagesController as RouteHandlerMethod
+    uploadPropertyImagesController as RouteHandlerMethod,
   );
 
   app.patch(
     "/:id/amenities",
 
     {
-      preHandler:
-        authMiddleware,
+      preHandler: authMiddleware,
     },
 
-    async (
-      request,
-      reply
-    ) => {
-
-      const body =
-        updatePropertyAmenitiesSchema.parse(
-          request.body
-        );
+    async (request, reply) => {
+      const body = updatePropertyAmenitiesSchema.parse(request.body);
 
       return savePropertyAmenitiesController(
         {
           ...request,
 
           params: {
-            id:
-              (request.params as { id: string }).id,
+            id: (request.params as { id: string }).id,
           },
 
           body,
         },
-        reply
+        reply,
       );
-    }
+    },
   );
 
   app.patch(
     "/:id/commercialization",
 
     {
-      preHandler:
-        authMiddleware,
+      preHandler: authMiddleware,
     },
 
-    async (
-      request,
-      reply
-    ) => {
-
-      const body =
-        updatePropertyCommercializationSchema.parse(
-          request.body
-        );
+    async (request, reply) => {
+      const body = updatePropertyCommercializationSchema.parse(request.body);
 
       return savePropertyCommercializationController(
         {
           ...request,
 
           params: {
-            id:
-              (request.params as { id: string }).id,
+            id: (request.params as { id: string }).id,
           },
 
           body,
         },
-        reply
+        reply,
       );
-    }
+    },
   );
   app.patch(
     "/:id/publish",
 
     {
-      preHandler:
-        authMiddleware,
+      preHandler: authMiddleware,
     },
 
-    publishPropertyController as RouteHandlerMethod
+    publishPropertyController as RouteHandlerMethod,
   );
 }

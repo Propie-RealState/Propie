@@ -57,5 +57,11 @@ import {
 
       areaM2:
         input.areaM2,
+
+      propertyType:
+        input.propertyType,
+
+      operationType:
+        input.operationType,
     });
   }

@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
-import type { AuthContext } from "../Root";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import {
   ArrowLeft,
   User,
@@ -21,6 +22,7 @@ import {
   Eye,
   MessageCircle,
   ChevronRight,
+  Heart,
 } from "lucide-react";
 
 // Mock user data
@@ -48,7 +50,7 @@ const mockUser = {
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { setIsLoggedIn } = useOutletContext<AuthContext>();
+  const { logout } = useAuth();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Detect user type
@@ -67,7 +69,7 @@ export default function Profile() {
 
   const handleLogout = () => {
     sessionStorage.removeItem("userType");
-    setIsLoggedIn(false);
+    logout();
     setShowLogoutModal(false);
     navigate("/");
   };
@@ -360,6 +362,47 @@ export default function Profile() {
               border: "1.5px solid #e5e5ea",
             }}
           >
+            {/* Favorites */}
+            <button
+              onClick={() => navigate("/favoritos")}
+              style={{
+                width: "100%",
+                background: "none",
+                border: "none",
+                padding: "16px",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                cursor: "pointer",
+                borderRadius: 12,
+                transition: "background 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background = "#f5f5f7";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background = "none";
+              }}
+            >
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 10,
+                  background: colors.lightBg,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Heart size={20} color={colors.primary} />
+              </div>
+              <span style={{ flex: 1, textAlign: "left", fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>
+                Favoritos
+              </span>
+              <ChevronRight size={20} color="#9a9aa0" />
+            </button>
+
             {/* Notifications */}
             <button
               onClick={() => navigate("/notificaciones")}
