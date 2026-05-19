@@ -31,6 +31,15 @@ import {
   
         ownerId:
           request.user.id,
+
+        title:
+          request.body.title,
+
+        description:
+          request.body.description,
+
+        price:
+          request.body.price,
   
         bedrooms:
           request.body.bedrooms,

@@ -62,6 +62,9 @@ export default function PublishStep1() {
 
         listingType:
           mappedListingType,
+          
+        address:
+          address,
       });
 
       navigate(

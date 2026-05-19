@@ -40,6 +40,7 @@ import {
     price: null,
   
     images: [],
+    commercializationType: "",
   };
   
   const PropertyPublishContext =
@@ -47,40 +48,68 @@ import {
       PropertyPublishContextValue | undefined
     >(undefined);
   
-  export function PropertyPublishProvider({
-    children,
-  }: {
-    children: ReactNode;
-  }) {
-    const [data, setData] =
-      useState<PropertyPublishData>(initialData);
-  
-    function updateData(
-      values: Partial<PropertyPublishData>
-    ) {
-      setData((prev) => ({
-        ...prev,
-        ...values,
-      }));
+    export function PropertyPublishProvider({
+      children,
+    }: {
+      children: ReactNode;
+    }) {
+    
+      const [data, setData] =
+        useState<PropertyPublishData>(() => {
+    
+          const stored =
+            localStorage.getItem(
+              "property-publish"
+            );
+    
+          if (stored) {
+            return JSON.parse(stored);
+          }
+    
+          return initialData;
+        });
+    
+      function updateData(
+        values: Partial<PropertyPublishData>
+      ) {
+    
+        setData((prev) => {
+    
+          const updated = {
+            ...prev,
+            ...values,
+          };
+    
+          localStorage.setItem(
+            "property-publish",
+            JSON.stringify(updated)
+          );
+    
+          return updated;
+        });
+      }
+    
+      function reset() {
+    
+        localStorage.removeItem(
+          "property-publish"
+        );
+    
+        setData(initialData);
+      }
+    
+      return (
+        <PropertyPublishContext.Provider
+          value={{
+            data,
+            updateData,
+            reset,
+          }}
+        >
+          {children}
+        </PropertyPublishContext.Provider>
+      );
     }
-  
-    function reset() {
-      setData(initialData);
-    }
-  
-    return (
-      <PropertyPublishContext.Provider
-        value={{
-          data,
-          updateData,
-          reset,
-        }}
-      >
-        {children}
-      </PropertyPublishContext.Provider>
-    );
-  }
-  
   export function usePropertyPublish() {
     const context = useContext(
       PropertyPublishContext

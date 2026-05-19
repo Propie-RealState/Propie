@@ -48,5 +48,14 @@ import {
   
       price:
         input.price,
+
+      bedrooms:
+        input.bedrooms,
+
+      bathrooms:
+        input.bathrooms,
+
+      areaM2:
+        input.areaM2,
     });
   }

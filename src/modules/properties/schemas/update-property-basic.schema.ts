@@ -1,18 +1,28 @@
 import { z } from "zod";
 
-export const UpdatePropertyBasicSchema =
+export const updatePropertyBasicSchema =
   z.object({
+
     title:
-      z.string().min(5),
+      z.string(),
 
     description:
-      z.string().min(20),
+      z.string(),
 
     price:
-      z.number().positive(),
+      z.number(),
+
+    bedrooms:
+      z.number(),
+
+    bathrooms:
+      z.number(),
+
+    areaM2:
+      z.number(),
   });
 
 export type UpdatePropertyBasicInput =
   z.infer<
-    typeof UpdatePropertyBasicSchema
+    typeof updatePropertyBasicSchema
   >;

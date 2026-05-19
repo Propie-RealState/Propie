@@ -32,4 +32,6 @@ export interface PropertyPublishData {
   price: number | null;
 
   images: string[];
+
+  commercializationType?: string;
 }

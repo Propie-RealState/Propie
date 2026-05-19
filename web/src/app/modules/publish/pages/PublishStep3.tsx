@@ -3,11 +3,22 @@ import { useNavigate } from "react-router-dom";
 import { PropieLogo } from "../../../components/PropieLogo";
 import { ArrowLeft, Check } from "lucide-react";
 import React from "react";
+import {
+  updatePropertyAmenities,
+} from "../services/update-property-amenities.ts";
 import { usePropertyPublish }
-from "../context/PropertyPublishContext";
+  from "../context/PropertyPublishContext";
+import {
+  updatePropertyDetails,
+} from "../services/update-property-details";
 type AmenityType = "pileta" | "patio" | "balcon" | "mascotas" | "seguridad";
 
 export default function PublishStep3() {
+
+  const {
+    data,
+    updateData,
+  } = usePropertyPublish();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: "",
@@ -20,10 +31,92 @@ export default function PublishStep3() {
   });
   const [amenities, setAmenities] = useState<AmenityType[]>([]);
 
-  const handleContinue = () => {
-    console.log("Información:", { ...formData, amenities });
-    navigate("/publicar/comercializacion");
+  const handleContinue = async () => {
+    console.log("HANDLE CONTINUE");
+
+    console.log("PROPERTY ID", data.propertyId);
+
+    console.log("FORM DATA", formData);
+
+    if (!data.propertyId) {
+
+      console.log("NO PROPERTY ID");
+
+      return;
+    }
+    
+    if (!data.propertyId) {
+      return;
+    }
+    const amenitiesMap = {
+      pileta: "POOL",
+      patio: "PATIO",
+      balcon: "BALCONY",
+      mascotas: "PETS",
+      seguridad: "SECURITY",
+    } as const;
+    
+    try {
+
+      await updatePropertyDetails(
+        data.propertyId,
+        {
+          title:
+            formData.title,
+
+          description:
+            formData.description,
+
+          price:
+            Number(formData.price),
+
+          bedrooms:
+            Number(formData.rooms),
+
+          bathrooms:
+            Number(formData.bathrooms),
+
+          areaM2:
+            Number(formData.sqm),
+            
+        }
+      );
+      await updatePropertyAmenities(
+        data.propertyId,
+        amenities.map((amenity) => amenitiesMap[amenity])
+      );
+      updateData({
+        title:
+          formData.title,
+      
+        description:
+          formData.description,
+      
+        price:
+          Number(formData.price),
+      
+        bedrooms:
+          Number(formData.rooms),
+      
+        bathrooms:
+          Number(formData.bathrooms),
+      
+        areaM2:
+          Number(formData.sqm),
+      });
+      navigate(
+        "/publicar/comercializacion"
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Update property details failed",
+        error
+      );
+    }
   };
+
 
   const toggleAmenity = (amenity: AmenityType) => {
     if (amenities.includes(amenity)) {

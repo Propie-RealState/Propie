@@ -1,12 +1,36 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PropieLogo } from "../../../components/PropieLogo";
-import { ArrowLeft, CheckCircle2, Upload, MapPin, DollarSign, Image as ImageIcon, AlertCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Upload, MapPin, DollarSign, Image as ImageIcon, AlertCircle, Home, Tag, BedDouble, Bath, Maximize2, Users } from "lucide-react";
 import React from "react";
-import { usePropertyPublish }
-from "../context/PropertyPublishContext";
+import {
+  usePropertyPublish,
+} from "../context/PropertyPublishContext";
+import {
+  publishProperty,
+} from "../services/publish-property";
+import PublishSuccessModal from "./PublishSuccess";
+
+const propertyTypeLabel: Record<string, string> = {
+  HOUSE:      "Casa",
+  APARTMENT:  "Departamento",
+  LAND:       "Terreno",
+  COMMERCIAL: "Local comercial",
+  OFFICE:     "Oficina",
+};
+
+const listingTypeLabel: Record<string, string> = {
+  SALE:      "Venta",
+  RENT:      "Alquiler",
+  TEMPORARY: "Temporario",
+};
+
 export default function PublishStep5() {
   const navigate = useNavigate();
+
+  const {
+    data,
+  } = usePropertyPublish();
   const [checklist, setChecklist] = useState({
     autorizado: false,
     terminos: false,
@@ -14,6 +38,7 @@ export default function PublishStep5() {
   });
   const [escritura, setEscritura] = useState<File | null>(null);
   const [autorizacion, setAutorizacion] = useState<File | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleCheckboxChange = (key: keyof typeof checklist) => {
     setChecklist((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -27,22 +52,44 @@ export default function PublishStep5() {
     }
   };
 
-  const handlePublish = () => {
-    // TODO: Submit property data to backend
-    console.log("Publicando propiedad...");
-    // Navigate to success page or explore
-    navigate("/explorar");
-  };
+  const handlePublish =
+    async () => {
+
+      if (
+        !data.propertyId
+      ) {
+        return;
+      }
+
+      try {
+
+        await publishProperty(
+          data.propertyId
+        );
+
+        setShowSuccess(true);
+
+      } catch (error) {
+
+        console.error(
+          "Publish failed",
+          error
+        );
+      }
+    };
 
   const isFormValid = checklist.autorizado && checklist.terminos && checklist.identidad;
 
-  // Mock data for preview
-  const mockProperty = {
-    photos: 8,
-    price: "USD 285,000",
-    address: "Av. Corrientes 1234, CABA",
-    description: "Hermoso departamento de 2 ambientes con vista...",
-  };
+  const previewPrice = data.price
+    ? `USD ${data.price.toLocaleString("es-AR")}`
+    : "Sin precio";
+
+  const previewAddress = data.address || data.city || "Sin ubicación";
+
+  const canPublish =
+    checklist.autorizado &&
+    checklist.terminos &&
+    checklist.identidad;
 
   return (
     <div
@@ -371,105 +418,114 @@ export default function PublishStep5() {
                 gap: 14,
               }}
             >
-              {/* Photos */}
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 12,
-                    background: "linear-gradient(135deg, #f0eeff 0%, #e4deff 100%)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <ImageIcon size={20} color="#4417E6" />
-                </div>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>
-                    {mockProperty.photos} fotos cargadas
+              {/* Title */}
+              {data.title && (
+                <>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 12, background: "linear-gradient(135deg, #f0eeff 0%, #e4deff 100%)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <ImageIcon size={20} color="#4417E6" />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>{data.title}</div>
+                      <div style={{ fontSize: 12, color: "#6e6e73", marginTop: 2 }}>Título</div>
+                    </div>
                   </div>
-                  <div style={{ fontSize: 12, color: "#6e6e73", marginTop: 2 }}>
-                    Imágenes y videos
-                  </div>
-                </div>
-              </div>
-
-              {/* Divider */}
-              <div style={{ height: 1, background: "#f0f0f0" }} />
+                  <div style={{ height: 1, background: "#f0f0f0" }} />
+                </>
+              )}
 
               {/* Price */}
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 12,
-                    background: "linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: "linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <DollarSign size={20} color="#16a34a" />
                 </div>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>
-                    {mockProperty.price}
-                  </div>
-                  <div style={{ fontSize: 12, color: "#6e6e73", marginTop: 2 }}>
-                    Precio de venta
-                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>{previewPrice}</div>
+                  <div style={{ fontSize: 12, color: "#6e6e73", marginTop: 2 }}>Precio</div>
                 </div>
               </div>
 
-              {/* Divider */}
               <div style={{ height: 1, background: "#f0f0f0" }} />
 
               {/* Location */}
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 12,
-                    background: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <MapPin size={20} color="#ca8a04" />
                 </div>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>
-                    {mockProperty.address}
-                  </div>
-                  <div style={{ fontSize: 12, color: "#6e6e73", marginTop: 2 }}>
-                    Ubicación
-                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>{previewAddress}</div>
+                  <div style={{ fontSize: 12, color: "#6e6e73", marginTop: 2 }}>Ubicación</div>
                 </div>
               </div>
 
-              {/* Divider */}
               <div style={{ height: 1, background: "#f0f0f0" }} />
 
-              {/* Description */}
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>
-                  Descripción
+              {/* Property type */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: "linear-gradient(135deg, #f0eeff 0%, #e4deff 100%)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Home size={20} color="#4417E6" />
                 </div>
-                <div style={{ fontSize: 13, color: "#6e6e73", lineHeight: 1.6 }}>
-                  {mockProperty.description}
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>
+                    {data.propertyType ? propertyTypeLabel[data.propertyType] ?? data.propertyType : "—"}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#6e6e73", marginTop: 2 }}>Tipo de propiedad</div>
                 </div>
               </div>
+
+              <div style={{ height: 1, background: "#f0f0f0" }} />
+
+              {/* Operation type */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: "linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Tag size={20} color="#be185d" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>
+                    {data.listingType ? listingTypeLabel[data.listingType] ?? data.listingType : "—"}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#6e6e73", marginTop: 2 }}>Operación</div>
+                </div>
+              </div>
+
+              {/* Bedrooms / Bathrooms / m² — only show if at least one is set */}
+              {(data.bedrooms || data.bathrooms || data.areaM2) ? (
+                <>
+                  <div style={{ height: 1, background: "#f0f0f0" }} />
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, background: "#f8f8fb", borderRadius: 12, padding: "12px 8px" }}>
+                      <BedDouble size={18} color="#4417E6" />
+                      <div style={{ fontSize: 15, fontWeight: 700, color: "#1a1a1a" }}>{data.bedrooms ?? "—"}</div>
+                      <div style={{ fontSize: 11, color: "#6e6e73" }}>Hab.</div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, background: "#f8f8fb", borderRadius: 12, padding: "12px 8px" }}>
+                      <Bath size={18} color="#4417E6" />
+                      <div style={{ fontSize: 15, fontWeight: 700, color: "#1a1a1a" }}>{data.bathrooms ?? "—"}</div>
+                      <div style={{ fontSize: 11, color: "#6e6e73" }}>Baños</div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, background: "#f8f8fb", borderRadius: 12, padding: "12px 8px" }}>
+                      <Maximize2 size={18} color="#4417E6" />
+                      <div style={{ fontSize: 15, fontWeight: 700, color: "#1a1a1a" }}>{data.areaM2 ?? "—"}</div>
+                      <div style={{ fontSize: 11, color: "#6e6e73" }}>m²</div>
+                    </div>
+                  </div>
+                </>
+              ) : null}
+
+              {/* Description */}
+              {data.description && (
+                <>
+                  <div style={{ height: 1, background: "#f0f0f0" }} />
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>Descripción</div>
+                    <div style={{ fontSize: 13, color: "#6e6e73", lineHeight: 1.6 }}>
+                      {data.description.length > 120 ? `${data.description.slice(0, 120)}...` : data.description}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
-
           {/* Warning */}
           {!isFormValid && (
             <div
@@ -493,40 +549,47 @@ export default function PublishStep5() {
           {/* Publish button */}
           <button
             onClick={handlePublish}
-            disabled={!isFormValid}
+
+            disabled={!canPublish}
+
             style={{
               width: "100%",
-              background: isFormValid ? "#4417E6" : "#e5e5ea",
+
+              height: 56,
+
               border: "none",
-              borderRadius: 16,
-              padding: "16px 18px",
-              cursor: isFormValid ? "pointer" : "not-allowed",
-              fontSize: 16,
+
+              borderRadius: 18,
+
+              fontSize: 18,
+
               fontWeight: 700,
-              color: isFormValid ? "white" : "#9a9aa0",
-              transition: "all 0.18s ease",
-              marginTop: 8,
-              boxShadow: isFormValid ? "0 4px 16px rgba(68,23,230,0.24)" : "none",
-            }}
-            onMouseEnter={(e) => {
-              if (isFormValid) {
-                (e.currentTarget as HTMLButtonElement).style.background = "#3510B8";
-                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 20px rgba(68,23,230,0.32)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (isFormValid) {
-                (e.currentTarget as HTMLButtonElement).style.background = "#4417E6";
-                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 16px rgba(68,23,230,0.24)";
-              }
+
+              cursor:
+                canPublish
+                  ? "pointer"
+                  : "not-allowed",
+
+              background:
+                canPublish
+                  ? "#4417E6"
+                  : "#d9d9df",
+
+              color: "white",
+
+              transition:
+                "all 0.15s ease",
             }}
           >
             Publicar propiedad
           </button>
         </div>
       </div>
+
+      <PublishSuccessModal
+        isOpen={showSuccess}
+        onClose={() => setShowSuccess(false)}
+      />
     </div>
   );
 }

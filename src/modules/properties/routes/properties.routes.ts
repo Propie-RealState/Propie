@@ -28,6 +28,30 @@ import {
   UpdatePropertyDetailsSchema,
 } from "../schemas/update-property-details.schema";
 
+import {
+  uploadPropertyImagesController,
+} from "../controllers/upload-property-images.controller";
+
+import {
+  savePropertyAmenitiesController,
+} from "../controllers/save-property-amenities.controller";
+
+import {
+  updatePropertyAmenitiesSchema,
+} from "../schemas/update-property-amenities.schema";
+
+import {
+  savePropertyCommercializationController,
+} from "../controllers/save-property-commercialization.controller";
+
+import {
+  updatePropertyCommercializationSchema,
+} from "../schemas/update-property-commercialization.schema";
+
+import {
+  publishPropertyController,
+} from "../controllers/publish-property.controller";
+
 export async function propertiesRoutes(
   app: FastifyInstance
 ) {
@@ -117,5 +141,94 @@ export async function propertiesRoutes(
         reply
       );
     }
+  );
+
+  app.post(
+    "/:id/images",
+
+    {
+      preHandler:
+        authMiddleware,
+    },
+
+    uploadPropertyImagesController as RouteHandlerMethod
+  );
+
+  app.patch(
+    "/:id/amenities",
+
+    {
+      preHandler:
+        authMiddleware,
+    },
+
+    async (
+      request,
+      reply
+    ) => {
+
+      const body =
+        updatePropertyAmenitiesSchema.parse(
+          request.body
+        );
+
+      return savePropertyAmenitiesController(
+        {
+          ...request,
+
+          params: {
+            id:
+              (request.params as { id: string }).id,
+          },
+
+          body,
+        },
+        reply
+      );
+    }
+  );
+
+  app.patch(
+    "/:id/commercialization",
+
+    {
+      preHandler:
+        authMiddleware,
+    },
+
+    async (
+      request,
+      reply
+    ) => {
+
+      const body =
+        updatePropertyCommercializationSchema.parse(
+          request.body
+        );
+
+      return savePropertyCommercializationController(
+        {
+          ...request,
+
+          params: {
+            id:
+              (request.params as { id: string }).id,
+          },
+
+          body,
+        },
+        reply
+      );
+    }
+  );
+  app.patch(
+    "/:id/publish",
+
+    {
+      preHandler:
+        authMiddleware,
+    },
+
+    publishPropertyController as RouteHandlerMethod
   );
 }

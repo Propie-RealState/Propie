@@ -5,6 +5,12 @@ export async function updatePropertyDetailsRepository(
   input: {
     propertyId: string;
 
+    title: string;
+
+    description: string;
+
+    price: number;
+
     bedrooms: number;
 
     bathrooms: number;
@@ -12,19 +18,29 @@ export async function updatePropertyDetailsRepository(
     areaM2: number;
   }
 ) {
+
   const result =
     await db.query(
       `
         UPDATE properties
+
         SET
-          bedrooms = $1,
-          bathrooms = $2,
-          area_m2 = $3,
+          title = $1,
+          description = $2,
+          price = $3,
+          bedrooms = $4,
+          bathrooms = $5,
+          area_m2 = $6,
           updated_at = now()
-        WHERE id = $4
+
+        WHERE id = $7
+
         RETURNING *
       `,
       [
+        input.title,
+        input.description,
+        input.price,
         input.bedrooms,
         input.bathrooms,
         input.areaM2,

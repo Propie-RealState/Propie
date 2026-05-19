@@ -3,54 +3,153 @@ import { useNavigate } from "react-router-dom";
 import { PropieLogo } from "../../../components/PropieLogo";
 import { ArrowLeft, Users, Building2, UserCheck, XCircle } from "lucide-react";
 import React from "react";
-import { usePropertyPublish }
-from "../context/PropertyPublishContext";
-type CommercializationType = "agentes" | "inmobiliarias" | "ambos" | "sin-intermediarios" | null;
+import {
+  savePropertyCommercialization,
+} from "../services/save-property-commercialization.ts";
+import {
+  usePropertyPublish,
+} from "../context/PropertyPublishContext";
+
+type CommercializationType =
+  | "AGENTS"
+  | "AGENCIES"
+  | "BOTH"
+  | "DIRECT";
 
 export default function PublishStep4() {
+
   const navigate = useNavigate();
-  const [commercializationType, setCommercializationType] = useState<CommercializationType>(null);
+  const {
+    data,
+    updateData,
+  } = usePropertyPublish();
+
+  const [
+    commercializationType,
+
+    setCommercializationType,
+  ] =
+    useState<
+      CommercializationType | null
+    >(null);
   const [manualApproval, setManualApproval] = useState(false);
-  const [showChats, setShowChats] = useState(true);
+  const [allowChat, setAllowChat] = useState(true);
   const [sharedCalendar, setSharedCalendar] = useState(false);
 
-  const handleContinue = () => {
-    // TODO: Implementar navegación a siguiente paso
-    console.log("Comercialización:", {
-      commercializationType,
-      manualApproval,
-      showChats,
-      sharedCalendar,
-    });
-    navigate("/publicar/verificacion");
-  };
+  const handleContinue =
+    async () => {
 
-  const isFormValid = commercializationType !== null;
+      if (
+        !commercializationType
+      ) {
+        return;
+      }
+
+      if (
+        !data.propertyId
+      ) {
+        return;
+      }
+
+      try {
+
+        updateData({
+          commercializationType,
+        });
+
+        await savePropertyCommercialization(
+          {
+            propertyId:
+              data.propertyId,
+
+            commercializationType,
+
+            manualApproval,
+
+            allowChat,
+
+            sharedCalendar,
+          }
+        );
+
+        navigate(
+          "/publicar/revision"
+        );
+
+      } catch (error) {
+
+        console.error(
+          "Save commercialization failed",
+          error
+        );
+      }
+    };
 
   const commercializationOptions = [
     {
-      id: "agentes" as CommercializationType,
+      id: "AGENTS" as CommercializationType,
+
       title: "Aceptar agentes",
-      desc: "Agentes independientes pueden promocionar tu propiedad",
-      icon: <Users size={24} color="#4417E6" strokeWidth={2} />,
+
+      desc:
+        "Agentes independientes pueden promocionar tu propiedad",
+
+      icon:
+        <Users
+          size={24}
+          color="#4417E6"
+          strokeWidth={2}
+        />,
     },
+
     {
-      id: "inmobiliarias" as CommercializationType,
-      title: "Aceptar inmobiliarias",
-      desc: "Inmobiliarias registradas pueden gestionar tu propiedad",
-      icon: <Building2 size={24} color="#4417E6" strokeWidth={2} />,
+      id: "AGENCIES" as CommercializationType,
+
+      title:
+        "Aceptar inmobiliarias",
+
+      desc:
+        "Inmobiliarias registradas pueden gestionar tu propiedad",
+
+      icon:
+        <Building2
+          size={24}
+          color="#4417E6"
+          strokeWidth={2}
+        />,
     },
+
     {
-      id: "ambos" as CommercializationType,
+      id: "BOTH" as CommercializationType,
+
       title: "Ambos",
-      desc: "Tanto agentes como inmobiliarias pueden participar",
-      icon: <UserCheck size={24} color="#4417E6" strokeWidth={2} />,
+
+      desc:
+        "Tanto agentes como inmobiliarias pueden participar",
+
+      icon:
+        <UserCheck
+          size={24}
+          color="#4417E6"
+          strokeWidth={2}
+        />,
     },
+
     {
-      id: "sin-intermediarios" as CommercializationType,
-      title: "Sin intermediarios",
-      desc: "Gestiono todo directamente sin ayuda externa",
-      icon: <XCircle size={24} color="#4417E6" strokeWidth={2} />,
+      id: "DIRECT" as CommercializationType,
+
+      title:
+        "Sin intermediarios",
+
+      desc:
+        "Gestiono todo directamente sin ayuda externa",
+
+      icon:
+        <XCircle
+          size={24}
+          color="#4417E6"
+          strokeWidth={2}
+        />,
     },
   ];
 
@@ -226,7 +325,7 @@ export default function PublishStep4() {
           </div>
 
           {/* Settings toggles */}
-          {commercializationType && commercializationType !== "sin-intermediarios" && (
+          {commercializationType && commercializationType !== "DIRECT" && (
             <div>
               <h3 style={{ margin: "0 0 14px", fontSize: 16, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>
                 Configuración
@@ -313,8 +412,8 @@ export default function PublishStep4() {
                   <label style={{ position: "relative", display: "inline-block", width: 48, height: 28, flexShrink: 0, marginLeft: 12 }}>
                     <input
                       type="checkbox"
-                      checked={showChats}
-                      onChange={(e) => setShowChats(e.target.checked)}
+                      checked={allowChat}
+                      onChange={(e) => setAllowChat(e.target.checked)}
                       style={{ opacity: 0, width: 0, height: 0 }}
                     />
                     <span
@@ -325,7 +424,7 @@ export default function PublishStep4() {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        background: showChats ? "#4417E6" : "#e5e5ea",
+                        background: allowChat ? "#4417E6" : "#e5e5ea",
                         transition: "0.3s",
                         borderRadius: 28,
                       }}
@@ -336,7 +435,7 @@ export default function PublishStep4() {
                           content: "",
                           height: 22,
                           width: 22,
-                          left: showChats ? 23 : 3,
+                          left: allowChat ? 23 : 3,
                           bottom: 3,
                           background: "white",
                           transition: "0.3s",
@@ -410,7 +509,7 @@ export default function PublishStep4() {
           )}
 
           {/* Info box */}
-          {commercializationType === "sin-intermediarios" && (
+          {commercializationType === "DIRECT" && (
             <div
               style={{
                 background: "linear-gradient(135deg, #f0eeff 0%, #e4deff 100%)",
@@ -427,34 +526,40 @@ export default function PublishStep4() {
           {/* Continue button */}
           <button
             onClick={handleContinue}
-            disabled={!isFormValid}
+
+            disabled={
+              !commercializationType
+            }
+
             style={{
               width: "100%",
-              background: isFormValid ? "#4417E6" : "#e5e5ea",
+
+              height: 56,
+
               border: "none",
-              borderRadius: 16,
-              padding: "16px 18px",
-              cursor: isFormValid ? "pointer" : "not-allowed",
-              fontSize: 16,
+
+              borderRadius: 18,
+
+              fontSize: 18,
+
               fontWeight: 700,
-              color: isFormValid ? "white" : "#9a9aa0",
-              transition: "all 0.18s ease",
-              marginTop: 8,
-              boxShadow: isFormValid ? "0 4px 16px rgba(68,23,230,0.24)" : "none",
-            }}
-            onMouseEnter={(e) => {
-              if (isFormValid) {
-                (e.currentTarget as HTMLButtonElement).style.background = "#3510B8";
-                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 20px rgba(68,23,230,0.32)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (isFormValid) {
-                (e.currentTarget as HTMLButtonElement).style.background = "#4417E6";
-                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 16px rgba(68,23,230,0.24)";
-              }
+
+              cursor:
+                commercializationType
+                  ? "pointer"
+                  : "not-allowed",
+
+              background:
+                commercializationType
+                  ? "#4417E6"
+                  : "#d9d9df",
+
+              color: "white",
+
+              transition:
+                "all 0.15s ease",
+
+              marginTop: 24,
             }}
           >
             Continuar

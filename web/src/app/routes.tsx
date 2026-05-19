@@ -151,6 +151,14 @@ export const router =
               path: "informacion",
               element: <PublishStep3 />,
             },
+            {
+              path: "comercializacion",
+              element: <PublishStep4 />,
+            },
+            {
+              path: "revision",
+              element: <PublishStep5 />,
+            },
           ],
         }
       ],

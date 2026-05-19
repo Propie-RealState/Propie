@@ -1,9 +1,15 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PropieLogo } from "../../../components/PropieLogo";
 import { ArrowLeft, Camera, Image, Video, X, Star, GripVertical } from "lucide-react";
 import React from "react";
 import { usePropertyPublish } from "../context/PropertyPublishContext";
+import {
+  uploadPropertyImages,
+} from "../services/upload-property-images";
+import {
+  findPropertyById,
+} from "../services/find-property-by-id";
 
 interface MediaItem {
   id: string;
@@ -17,29 +23,127 @@ export default function PublishStep2() {
   const {
     data,
   } = usePropertyPublish();
-
+  console.log(data);
   console.log(
     data.propertyId
   );
-  
+
   const navigate = useNavigate();
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
 
-  const handleFileSelect = (files: FileList | null, type: "image" | "video") => {
+    async function loadProperty() {
+  
+      if (!data.propertyId) {
+        return;
+      }
+  
+      try {
+  
+        const property =
+          await findPropertyById(
+            data.propertyId
+          );
+  
+        const images: MediaItem[] =
+          property.images.map(
+            (image: any) => ({
+              id: image.id,
+  
+              type: "image",
+  
+              url:
+                `http://localhost:3000${image.image_url}`,
+  
+              isCover:
+                image.is_cover,
+  
+              file:
+                {} as File,
+            })
+          );
+  
+        setMediaItems(images);
+  
+      } catch (error) {
+  
+        console.error(
+          "Load property failed",
+          error
+        );
+      }
+    }
+  
+    loadProperty();
+  
+  }, [
+    data.propertyId,
+  ]);
+  
+  const handleFileSelect = async (
+    files: FileList | null,
+    type: "image" | "video"
+  ) => {
+  
     if (!files) return;
-
-    const newItems: MediaItem[] = Array.from(files).map((file, index) => ({
-      id: `${Date.now()}-${index}`,
-      type,
-      url: URL.createObjectURL(file),
-      file,
-      isCover: mediaItems.length === 0 && index === 0, // Primera foto es portada por defecto
-    }));
-
-    setMediaItems([...mediaItems, ...newItems]);
+  
+    if (!data.propertyId) {
+      return;
+    }
+  
+    try {
+  
+      // ============================================
+      // IMAGES
+      // ============================================
+  
+      if (type === "image") {
+  
+        const uploaded =
+          await uploadPropertyImages(
+            data.propertyId,
+            Array.from(files)
+          );
+  
+        const newItems: MediaItem[] =
+          uploaded.images.map(
+            (
+              image: any,
+              index: number
+            ) => ({
+              id: image.id,
+  
+              type: "image",
+  
+              url:
+                `http://localhost:3000${image.image_url}`,
+  
+              isCover:
+                image.is_cover,
+  
+              file:
+                Array.from(files)[index],
+            })
+          );
+  
+        setMediaItems(
+          [
+            ...mediaItems,
+            ...newItems,
+          ]
+        );
+      }
+  
+    } catch (error) {
+  
+      console.error(
+        "Upload failed",
+        error
+      );
+    }
   };
 
   const handleRemove = (id: string) => {

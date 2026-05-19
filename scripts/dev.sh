@@ -40,25 +40,45 @@ print_success () {
 }
 
 # =========================================
-# KILL PORT
+# KILL PORT (dev servers only — never Docker)
 # =========================================
 
-kill_port () {
+kill_dev_port () {
   PORT=$1
 
   PID=$(
-    netstat -ano |
-    grep ":$PORT" |
+    netstat -ano 2>/dev/null |
+    grep ":$PORT " |
     grep LISTENING |
     awk '{print $5}' |
     head -n 1
   )
 
-  if [ ! -z "$PID" ]; then
-    echo "Killing process on port $PORT (PID $PID)"
-
-    taskkill //F //PID $PID > /dev/null 2>&1 || true
+  if [ -z "$PID" ] || [ "$PID" = "0" ]; then
+    return
   fi
+
+  # On Windows, port 5432 is often held by Docker's proxy — killing it breaks Docker Desktop.
+  PROC=$(
+    tasklist //FI "PID eq $PID" //NH 2>/dev/null |
+    awk '{print $1}' |
+    head -n 1
+  )
+
+  case "$PROC" in
+    node.exe|tsx.exe|Code.exe)
+      echo "Killing $PROC on port $PORT (PID $PID)"
+      taskkill //F //PID $PID > /dev/null 2>&1 || true
+      ;;
+    com.docker.backend.exe|wslrelay.exe|vpnkit.exe|docker.exe)
+      echo "Skipping port $PORT — used by Docker ($PROC)"
+      ;;
+    *)
+      if [ -n "$PROC" ]; then
+        echo "Skipping port $PORT — unexpected process $PROC (PID $PID)"
+      fi
+      ;;
+  esac
 }
 
 # =========================================
@@ -66,11 +86,10 @@ kill_port () {
 # =========================================
 
 clean_ports () {
-  echo "Checking ports..."
+  echo "Checking dev server ports..."
 
-  kill_port $WEB_PORT
-  kill_port $API_PORT
-  kill_port $DB_PORT
+  kill_dev_port $WEB_PORT
+  kill_dev_port $API_PORT
 
   echo "Ports cleaned"
   echo ""
@@ -83,7 +102,11 @@ clean_ports () {
 start_postgres () {
   echo "Starting postgres..."
 
-  docker compose up -d postgres
+  if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$POSTGRES_CONTAINER"; then
+    echo "Postgres container already running"
+  else
+    docker compose up -d postgres
+  fi
 
   echo ""
 

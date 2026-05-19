@@ -12,6 +12,12 @@ import {
   
       ownerId: string;
   
+      title: string;
+  
+      description: string;
+  
+      price: number;
+  
       bedrooms: number;
   
       bathrooms: number;
@@ -43,6 +49,15 @@ import {
     return updatePropertyDetailsRepository({
       propertyId:
         input.propertyId,
+  
+      title:
+        input.title,
+  
+      description:
+        input.description,
+  
+      price:
+        input.price,
   
       bedrooms:
         input.bedrooms,
