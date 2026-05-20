@@ -33,7 +33,7 @@ export default function PublishStep1() {
     if (data.address) {
       setAddress(data.address);
     }
-  }, [data]);
+  }, []);
 
   const handleContinue = async () => {
     const listingTypeMap = {

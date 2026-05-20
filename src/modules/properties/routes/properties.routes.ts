@@ -30,6 +30,9 @@ import { getPropertiesController } from "../controllers/get-properties.controlle
 
 import { getMyPropertiesController } from "../controllers/get-my-properties.controller";
 
+import { deletePropertyImageController } from "../controllers/delete-property-image.controller";
+
+import { updatePropertyImageCoverController } from "../controllers/update-property-image-cover.controller";
 
 export async function propertiesRoutes(app: FastifyInstance) {
   app.post(
@@ -175,5 +178,21 @@ export async function propertiesRoutes(app: FastifyInstance) {
     },
 
     publishPropertyController as RouteHandlerMethod,
+  );
+
+  app.delete(
+    "/:propertyId/images/:imageId",
+    {
+      preHandler: authMiddleware,
+    },
+    deletePropertyImageController as RouteHandlerMethod,
+  );
+
+  app.patch(
+    "/:propertyId/images/:imageId/cover",
+    {
+      preHandler: authMiddleware,
+    },
+    updatePropertyImageCoverController as RouteHandlerMethod,
   );
 }

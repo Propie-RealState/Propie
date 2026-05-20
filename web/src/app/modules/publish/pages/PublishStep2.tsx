@@ -1,32 +1,39 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PropieLogo } from "../../../components/PropieLogo";
-import { ArrowLeft, Camera, Image, Video, X, Star, GripVertical } from "lucide-react";
+import {
+  ArrowLeft,
+  Camera,
+  Image,
+  Video,
+  X,
+  Star,
+  GripVertical,
+} from "lucide-react";
 import React from "react";
 import { usePropertyPublish } from "../context/PropertyPublishContext";
-import {
-  uploadPropertyImages,
-} from "../services/upload-property-images";
-import {
-  findPropertyById,
-} from "../services/find-property-by-id";
+import { uploadPropertyImages } from "../services/upload-property-images";
+import { findPropertyById } from "../services/find-property-by-id";
+import { updatePropertyImageCover } from "../services/update-property-image-cover";
 
 interface MediaItem {
-  id: string;
+  id?: string;
+
   type: "image" | "video";
+
   url: string;
-  file: File;
+
+  file?: File;
+
   isCover: boolean;
+
+  isExisting?: boolean;
 }
 
 export default function PublishStep2() {
-  const {
-    data,
-  } = usePropertyPublish();
+  const { data } = usePropertyPublish();
   console.log(data);
-  console.log(
-    data.propertyId
-  );
+  console.log(data.propertyId);
 
   const navigate = useNavigate();
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
@@ -34,115 +41,74 @@ export default function PublishStep2() {
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
-
     async function loadProperty() {
-  
       if (!data.propertyId) {
         return;
       }
-  
+
       try {
-  
-        const property =
-          await findPropertyById(
-            data.propertyId
-          );
-  
-        const images: MediaItem[] =
-          property.images.map(
-            (image: any) => ({
-              id: image.id,
-  
-              type: "image",
-  
-              url:
-                `http://localhost:3000${image.image_url}`,
-  
-              isCover:
-                image.is_cover,
-  
-              file:
-                {} as File,
-            })
-          );
-  
+        const property = await findPropertyById(data.propertyId);
+
+        const images: MediaItem[] = property.images.map((image: any) => ({
+          id: image.id,
+
+          type: "image",
+
+          url: `http://localhost:3000${image.image_url}`,
+
+          isCover: image.is_cover,
+
+          isExisting: true,
+        }));
+
         setMediaItems(images);
-  
       } catch (error) {
-  
-        console.error(
-          "Load property failed",
-          error
-        );
+        console.error("Load property failed", error);
       }
     }
-  
+
     loadProperty();
-  
-  }, [
-    data.propertyId,
-  ]);
-  
+  }, [data.propertyId]);
+
   const handleFileSelect = async (
     files: FileList | null,
-    type: "image" | "video"
+    type: "image" | "video",
   ) => {
-  
     if (!files) return;
-  
+
     if (!data.propertyId) {
       return;
     }
-  
+
     try {
-  
       // ============================================
       // IMAGES
       // ============================================
-  
+
       if (type === "image") {
-  
-        const uploaded =
-          await uploadPropertyImages(
-            data.propertyId,
-            Array.from(files)
-          );
-  
-        const newItems: MediaItem[] =
-          uploaded.images.map(
-            (
-              image: any,
-              index: number
-            ) => ({
-              id: image.id,
-  
-              type: "image",
-  
-              url:
-                `http://localhost:3000${image.image_url}`,
-  
-              isCover:
-                image.is_cover,
-  
-              file:
-                Array.from(files)[index],
-            })
-          );
-  
-        setMediaItems(
-          [
-            ...mediaItems,
-            ...newItems,
-          ]
+        const uploaded = await uploadPropertyImages(
+          data.propertyId,
+          Array.from(files),
         );
+
+        const newItems: MediaItem[] = uploaded.images.map(
+          (image: any, index: number) => ({
+            id: image.id,
+
+            type: "image",
+
+            url: `http://localhost:3000${image.image_url}`,
+
+            isCover: image.is_cover,
+
+            isExisting: true,
+          }),
+        );
+
+        setMediaItems((prev) => [...prev, ...newItems]);
       }
-  
     } catch (error) {
-  
-      console.error(
-        "Upload failed",
-        error
-      );
+      console.error("Upload failed", error);
     }
   };
 
@@ -160,26 +126,23 @@ export default function PublishStep2() {
     setMediaItems(updatedItems);
   };
 
-  const handleSetCover = (id: string) => {
-    setMediaItems(
-      mediaItems.map((item) => ({
-        ...item,
-        isCover: item.id === id,
-      }))
-    );
-  };
-
   const handleMoveUp = (index: number) => {
     if (index === 0) return;
     const newItems = [...mediaItems];
-    [newItems[index], newItems[index - 1]] = [newItems[index - 1], newItems[index]];
+    [newItems[index], newItems[index - 1]] = [
+      newItems[index - 1],
+      newItems[index],
+    ];
     setMediaItems(newItems);
   };
 
   const handleMoveDown = (index: number) => {
     if (index === mediaItems.length - 1) return;
     const newItems = [...mediaItems];
-    [newItems[index], newItems[index + 1]] = [newItems[index + 1], newItems[index]];
+    [newItems[index], newItems[index + 1]] = [
+      newItems[index + 1],
+      newItems[index],
+    ];
     setMediaItems(newItems);
   };
 
@@ -188,7 +151,35 @@ export default function PublishStep2() {
     console.log("Fotos y videos:", mediaItems);
     navigate("/publicar/informacion");
   };
-
+  const handleSetCover = async (
+    imageId: string,
+  ) => {
+    if (!data.propertyId) {
+      return;
+    }
+  
+    try {
+      await updatePropertyImageCover(
+        data.propertyId,
+        imageId,
+      );
+  
+      setMediaItems((prev) =>
+        prev.map((item) => ({
+          ...item,
+  
+          isCover:
+            item.id === imageId,
+        })),
+      );
+    } catch (error) {
+      console.error(
+        "Update cover failed",
+        error,
+      );
+    }
+  };
+  
   const isFormValid = mediaItems.length > 0;
 
   return (
@@ -205,7 +196,8 @@ export default function PublishStep2() {
       <div
         style={{
           position: "relative",
-          background: "linear-gradient(160deg, #5A32F0 0%, #4417E6 55%, #3510B8 100%)",
+          background:
+            "linear-gradient(160deg, #5A32F0 0%, #4417E6 55%, #3510B8 100%)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -213,11 +205,42 @@ export default function PublishStep2() {
         }}
       >
         {/* Decorative blobs */}
-        <div style={{ position: "absolute", width: 300, height: 300, background: "radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%)", top: -80, right: -60, pointerEvents: "none" }} />
-        <div style={{ position: "absolute", width: 180, height: 180, background: "radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)", bottom: 40, left: -40, pointerEvents: "none" }} />
+        <div
+          style={{
+            position: "absolute",
+            width: 300,
+            height: 300,
+            background:
+              "radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%)",
+            top: -80,
+            right: -60,
+            pointerEvents: "none",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            width: 180,
+            height: 180,
+            background:
+              "radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)",
+            bottom: 40,
+            left: -40,
+            pointerEvents: "none",
+          }}
+        />
 
         {/* Nav row */}
-        <div style={{ width: "100%", maxWidth: 420, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 24px 0" }}>
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 420,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "20px 24px 0",
+          }}
+        >
           <button
             onClick={() => navigate(-1)}
             style={{
@@ -244,7 +267,15 @@ export default function PublishStep2() {
         </div>
 
         {/* Heading */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "32px 28px 12px" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+            padding: "32px 28px 12px",
+          }}
+        >
           <h1
             style={{
               color: "white",
@@ -258,15 +289,42 @@ export default function PublishStep2() {
           >
             Fotos y videos
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 10, lineHeight: 1.6, maxWidth: 300 }}>
+          <p
+            style={{
+              color: "rgba(255,255,255,0.72)",
+              fontSize: 14,
+              marginTop: 10,
+              lineHeight: 1.6,
+              maxWidth: 300,
+            }}
+          >
             Agregá imágenes y videos de tu propiedad
           </p>
         </div>
 
         {/* Wave */}
-        <div style={{ width: "100%", height: 44, position: "relative", marginTop: 8 }}>
-          <svg viewBox="0 0 390 44" preserveAspectRatio="none" style={{ position: "absolute", bottom: 0, width: "100%", height: 44 }}>
-            <path d="M0,24 C90,48 300,0 390,24 L390,44 L0,44 Z" fill="#f5f5f7" />
+        <div
+          style={{
+            width: "100%",
+            height: 44,
+            position: "relative",
+            marginTop: 8,
+          }}
+        >
+          <svg
+            viewBox="0 0 390 44"
+            preserveAspectRatio="none"
+            style={{
+              position: "absolute",
+              bottom: 0,
+              width: "100%",
+              height: 44,
+            }}
+          >
+            <path
+              d="M0,24 C90,48 300,0 390,24 L390,44 L0,44 Z"
+              fill="#f5f5f7"
+            />
           </svg>
         </div>
       </div>
@@ -282,7 +340,15 @@ export default function PublishStep2() {
           overflowY: "auto",
         }}
       >
-        <div style={{ width: "100%", maxWidth: 420, display: "flex", flexDirection: "column", gap: 24 }}>
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 420,
+            display: "flex",
+            flexDirection: "column",
+            gap: 24,
+          }}
+        >
           {/* Upload buttons */}
           <div style={{ display: "flex", gap: 10 }}>
             {/* Camera */}
@@ -312,16 +378,22 @@ export default function PublishStep2() {
                 boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "#4417E6";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 12px rgba(68,23,230,0.1)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor =
+                  "#4417E6";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                  "0 4px 12px rgba(68,23,230,0.1)";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "#e5e5ea";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor =
+                  "#e5e5ea";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                  "0 1px 4px rgba(0,0,0,0.04)";
               }}
             >
               <Camera size={24} color="#4417E6" />
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>Cámara</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>
+                Cámara
+              </span>
             </button>
 
             {/* Gallery */}
@@ -350,16 +422,22 @@ export default function PublishStep2() {
                 boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "#4417E6";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 12px rgba(68,23,230,0.1)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor =
+                  "#4417E6";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                  "0 4px 12px rgba(68,23,230,0.1)";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "#e5e5ea";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor =
+                  "#e5e5ea";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                  "0 1px 4px rgba(0,0,0,0.04)";
               }}
             >
               <Image size={24} color="#4417E6" />
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>Galería</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>
+                Galería
+              </span>
             </button>
 
             {/* Videos */}
@@ -388,26 +466,46 @@ export default function PublishStep2() {
                 boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "#4417E6";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 12px rgba(68,23,230,0.1)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor =
+                  "#4417E6";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                  "0 4px 12px rgba(68,23,230,0.1)";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "#e5e5ea";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor =
+                  "#e5e5ea";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                  "0 1px 4px rgba(0,0,0,0.04)";
               }}
             >
               <Video size={24} color="#4417E6" />
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>Videos</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>
+                Videos
+              </span>
             </button>
           </div>
 
           {/* Media grid */}
           {mediaItems.length > 0 ? (
             <div>
-              <h3 style={{ margin: "0 0 12px", fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>
-                {mediaItems.length} {mediaItems.length === 1 ? "archivo" : "archivos"} subidos
+              <h3
+                style={{
+                  margin: "0 0 12px",
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: "#1a1a1a",
+                }}
+              >
+                {mediaItems.length}{" "}
+                {mediaItems.length === 1 ? "archivo" : "archivos"} subidos
               </h3>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(2, 1fr)",
+                  gap: 12,
+                }}
+              >
                 {mediaItems.map((item, index) => (
                   <div
                     key={item.id}
@@ -417,7 +515,9 @@ export default function PublishStep2() {
                       borderRadius: 14,
                       overflow: "hidden",
                       background: "#f0f0f0",
-                      border: item.isCover ? "3px solid #4417E6" : "1px solid #e5e5ea",
+                      border: item.isCover
+                        ? "3px solid #4417E6"
+                        : "1px solid #e5e5ea",
                     }}
                   >
                     {/* Media */}
@@ -459,7 +559,15 @@ export default function PublishStep2() {
                         }}
                       >
                         <Star size={12} color="white" fill="white" />
-                        <span style={{ fontSize: 11, fontWeight: 700, color: "white" }}>Portada</span>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: "white",
+                          }}
+                        >
+                          Portada
+                        </span>
                       </div>
                     )}
 
@@ -496,7 +604,7 @@ export default function PublishStep2() {
                     >
                       {/* Delete */}
                       <button
-                        onClick={() => handleRemove(item.id)}
+                        onClick={() => handleRemove(item.id ?? "")}
                         style={{
                           width: 28,
                           height: 28,
@@ -527,7 +635,7 @@ export default function PublishStep2() {
                       {/* Set as cover */}
                       {!item.isCover && item.type === "image" && (
                         <button
-                          onClick={() => handleSetCover(item.id)}
+                          onClick={() => handleSetCover(item.id!)}
                           style={{
                             padding: "6px 10px",
                             borderRadius: 8,
@@ -541,7 +649,15 @@ export default function PublishStep2() {
                           }}
                         >
                           <Star size={12} color="white" />
-                          <span style={{ fontSize: 10, fontWeight: 600, color: "white" }}>Portada</span>
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontWeight: 600,
+                              color: "white",
+                            }}
+                          >
+                            Portada
+                          </span>
                         </button>
                       )}
                     </div>
@@ -573,7 +689,11 @@ export default function PublishStep2() {
                             backdropFilter: "blur(8px)",
                           }}
                         >
-                          <GripVertical size={14} color="white" style={{ transform: "rotate(180deg)" }} />
+                          <GripVertical
+                            size={14}
+                            color="white"
+                            style={{ transform: "rotate(180deg)" }}
+                          />
                         </button>
                       )}
                       {index < mediaItems.length - 1 && (
@@ -610,8 +730,19 @@ export default function PublishStep2() {
                 background: "white",
               }}
             >
-              <Image size={48} color="#d0d0d0" style={{ margin: "0 auto 12px" }} />
-              <p style={{ margin: 0, fontSize: 14, color: "#6e6e73", lineHeight: 1.6 }}>
+              <Image
+                size={48}
+                color="#d0d0d0"
+                style={{ margin: "0 auto 12px" }}
+              />
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 14,
+                  color: "#6e6e73",
+                  lineHeight: 1.6,
+                }}
+              >
                 Aún no agregaste fotos ni videos
               </p>
               <p style={{ margin: "6px 0 0", fontSize: 12, color: "#9a9aa0" }}>
@@ -629,8 +760,17 @@ export default function PublishStep2() {
                 padding: "14px 16px",
               }}
             >
-              <p style={{ margin: 0, fontSize: 12, color: "#4417E6", lineHeight: 1.6, fontWeight: 500 }}>
-                💡 Usá los controles para reordenar las fotos y marcar la portada
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 12,
+                  color: "#4417E6",
+                  lineHeight: 1.6,
+                  fontWeight: 500,
+                }}
+              >
+                💡 Usá los controles para reordenar las fotos y marcar la
+                portada
               </p>
             </div>
           )}
@@ -651,20 +791,28 @@ export default function PublishStep2() {
               color: isFormValid ? "white" : "#9a9aa0",
               transition: "all 0.18s ease",
               marginTop: 8,
-              boxShadow: isFormValid ? "0 4px 16px rgba(68,23,230,0.24)" : "none",
+              boxShadow: isFormValid
+                ? "0 4px 16px rgba(68,23,230,0.24)"
+                : "none",
             }}
             onMouseEnter={(e) => {
               if (isFormValid) {
-                (e.currentTarget as HTMLButtonElement).style.background = "#3510B8";
-                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 20px rgba(68,23,230,0.32)";
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "#3510B8";
+                (e.currentTarget as HTMLButtonElement).style.transform =
+                  "translateY(-1px)";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                  "0 6px 20px rgba(68,23,230,0.32)";
               }
             }}
             onMouseLeave={(e) => {
               if (isFormValid) {
-                (e.currentTarget as HTMLButtonElement).style.background = "#4417E6";
-                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 16px rgba(68,23,230,0.24)";
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "#4417E6";
+                (e.currentTarget as HTMLButtonElement).style.transform =
+                  "translateY(0)";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                  "0 4px 16px rgba(68,23,230,0.24)";
               }
             }}
           >
