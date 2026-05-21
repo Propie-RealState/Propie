@@ -3,42 +3,63 @@ import { db } from "@/database/client";
 export async function findPropertyByIdRepository(propertyId: string) {
   const result = await db.query(
     `
-        SELECT
-          p.*,
-          pl.country,
-          pl.province,
-          pl.city,
-          pl.neighborhood,
-          pl.address,
-          pl.latitude,
-          pl.longitude,
+      SELECT
+        p.*,
 
-          COALESCE(
-            json_agg(
-              json_build_object(
-                'id', pi.id,
-                'image_url', pi.image_url,
-                'is_cover', pi.is_cover,
-                'created_at', pi.created_at
-              )
-            ) FILTER (
-              WHERE pi.id IS NOT NULL
-            ),
-            '[]'
-          ) AS images
+        pl.country,
+        pl.province,
+        pl.city,
+        pl.neighborhood,
+        pl.address,
+        pl.latitude,
+        pl.longitude,
 
-        FROM properties p
+        COALESCE(
+          json_agg(
+            DISTINCT jsonb_build_object(
+              'id', pi.id,
+              'type', 'image',
+              'image_url', pi.image_url,
+              'is_cover', pi.is_cover,
+              'display_order', pi.display_order,
+              'created_at', pi.created_at
+            )
+          ) FILTER (
+            WHERE pi.id IS NOT NULL
+          ),
+          '[]'
+        ) AS images,
 
-        LEFT JOIN property_images pi
-          ON pi.property_id = p.id
-          LEFT JOIN property_locations pl
-          ON pl.property_id = p.id
+        COALESCE(
+          json_agg(
+            DISTINCT jsonb_build_object(
+              'id', pv.id,
+              'type', 'video',
+              'video_url', pv.video_url,
+              'display_order', pv.display_order,
+              'created_at', pv.created_at
+            )
+          ) FILTER (
+            WHERE pv.id IS NOT NULL
+          ),
+          '[]'
+        ) AS videos
 
-        WHERE p.id = $1
+      FROM properties p
 
-       GROUP BY
+      LEFT JOIN property_images pi
+        ON pi.property_id = p.id
+
+      LEFT JOIN property_videos pv
+        ON pv.property_id = p.id
+
+      LEFT JOIN property_locations pl
+        ON pl.property_id = p.id
+
+      WHERE p.id = $1
+
+      GROUP BY
         p.id,
-
         pl.country,
         pl.province,
         pl.city,
@@ -47,10 +68,21 @@ export async function findPropertyByIdRepository(propertyId: string) {
         pl.latitude,
         pl.longitude
 
-        LIMIT 1
-      `,
+      LIMIT 1
+    `,
     [propertyId],
   );
+  const property = result.rows[0];
 
-  return result.rows[0] ?? null;
+  if (!property) {
+    return null;
+  }
+
+  const media = [...property.images, ...property.videos].sort(
+    (a: any, b: any) => a.display_order - b.display_order,
+  );
+
+  property.media = media;
+
+  return property;
 }

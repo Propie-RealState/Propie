@@ -1,19 +1,15 @@
-import { db }
-from "@/database/client";
+import { db } from "@/database/client";
 
-interface Input {
+interface CreatePropertyVideoRepositoryRequest {
   propertyId: string;
 
-  imageUrl: string;
-
-  isCover?: boolean;
+  videoUrl: string;
 }
 
-export async function createPropertyImageRepository({
+export async function createPropertyVideoRepository({
   propertyId,
-  imageUrl,
-  isCover = false,
-}: Input) {
+  videoUrl,
+}: CreatePropertyVideoRepositoryRequest) {
 
   // ============================================
   // GET NEXT GLOBAL DISPLAY ORDER
@@ -48,35 +44,31 @@ export async function createPropertyImageRepository({
     ) + 1;
 
   // ============================================
-  // INSERT IMAGE
+  // INSERT VIDEO
   // ============================================
 
-  const result =
-    await db.query(
-      `
-        INSERT INTO property_images (
-          property_id,
-          image_url,
-          is_cover,
-          display_order
-        )
+  const result = await db.query(
+    `
+      INSERT INTO property_videos (
+        property_id,
+        video_url,
+        display_order
+      )
 
-        VALUES (
-          $1,
-          $2,
-          $3,
-          $4
-        )
+      VALUES (
+        $1,
+        $2,
+        $3
+      )
 
-        RETURNING *
-      `,
-      [
-        propertyId,
-        imageUrl,
-        isCover,
-        nextOrder,
-      ]
-    );
+      RETURNING *
+    `,
+    [
+      propertyId,
+      videoUrl,
+      nextOrder,
+    ],
+  );
 
   return result.rows[0];
 }

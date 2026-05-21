@@ -13,8 +13,29 @@ import {
 import React from "react";
 import { usePropertyPublish } from "../context/PropertyPublishContext";
 import { uploadPropertyImages } from "../services/upload-property-images";
+import { uploadPropertyVideos } from "../services/upload-property-videos";
 import { findPropertyById } from "../services/find-property-by-id";
 import { updatePropertyImageCover } from "../services/update-property-image-cover";
+import { updatePropertyMediaOrder } from "../services/update-property-media-order";
+import { deletePropertyImage } from "../services/delete-property-image";
+import { deletePropertyVideo } from "../services/delete-property-video";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+
+import {
+  SortableContext,
+  rectSortingStrategy,
+  arrayMove,
+  useSortable,
+} from "@dnd-kit/sortable";
+
+import { CSS } from "@dnd-kit/utilities";
 
 interface MediaItem {
   id?: string;
@@ -30,16 +51,250 @@ interface MediaItem {
   isExisting?: boolean;
 }
 
+const API_BASE =
+  import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+
+type PropertyMediaRow = {
+  id: string;
+  type: "image" | "video";
+  image_url?: string;
+  video_url?: string;
+  is_cover?: boolean;
+  display_order?: number;
+};
+
+function mapPropertyMediaToItems(
+  property: {
+    media?: PropertyMediaRow[];
+    images?: PropertyMediaRow[];
+    videos?: PropertyMediaRow[];
+  },
+): MediaItem[] {
+  const rows: PropertyMediaRow[] =
+    property.media?.length
+      ? [...property.media].sort(
+          (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0),
+        )
+      : [
+          ...(property.images ?? []).map((image) => ({
+            ...image,
+            type: "image" as const,
+          })),
+          ...(property.videos ?? []).map((video) => ({
+            ...video,
+            type: "video" as const,
+          })),
+        ].sort(
+          (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0),
+        );
+
+  return rows.map((row) => ({
+    id: row.id,
+    type: row.type,
+    url: `${API_BASE}${row.type === "image" ? row.image_url : row.video_url}`,
+    isCover: row.type === "image" ? Boolean(row.is_cover) : false,
+    isExisting: true,
+  }));
+}
+
+function SortableMediaCard({
+  item,
+  onRemove,
+  onSetCover,
+}: {
+  item: MediaItem;
+  onRemove: (id: string) => void;
+  onSetCover: (id: string) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id! });
+
+  const style: React.CSSProperties = {
+    position: "relative",
+    aspectRatio: "1",
+    borderRadius: 14,
+    overflow: "hidden",
+    background: "#e5e5ea",
+    border: item.isCover ? "2px solid #4417E6" : "2px solid transparent",
+    boxShadow: isDragging
+      ? "0 8px 24px rgba(0,0,0,0.2)"
+      : "0 2px 8px rgba(0,0,0,0.06)",
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.85 : 1,
+    zIndex: isDragging ? 1 : 0,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      {item.type === "image" ? (
+        <img
+          src={item.url}
+          alt="Preview"
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            pointerEvents: "none",
+          }}
+        />
+      ) : (
+        <video
+          src={item.url}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            pointerEvents: "none",
+          }}
+        />
+      )}
+
+      {item.isCover && (
+        <div
+          style={{
+            position: "absolute",
+            top: 8,
+            left: 8,
+            background: "#4417E6",
+            borderRadius: 8,
+            padding: "4px 10px",
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            boxShadow: "0 2px 8px rgba(68,23,230,0.3)",
+          }}
+        >
+          <Star size={12} color="white" fill="white" />
+          <span style={{ fontSize: 11, fontWeight: 700, color: "white" }}>
+            Portada
+          </span>
+        </div>
+      )}
+
+      {item.type === "video" && !item.isCover && (
+        <div
+          style={{
+            position: "absolute",
+            top: 8,
+            left: 8,
+            background: "rgba(0,0,0,0.6)",
+            borderRadius: 8,
+            padding: "4px 8px",
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          <Video size={12} color="white" />
+        </div>
+      )}
+
+      <div
+        style={{
+          position: "absolute",
+          top: 8,
+          right: 8,
+          display: "flex",
+          flexDirection: "column",
+          gap: 6,
+        }}
+      >
+        <button
+          onClick={() => onRemove(item.id!)}
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: 8,
+            background: "rgba(0,0,0,0.6)",
+            border: "none",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          <X size={16} color="white" />
+        </button>
+      </div>
+
+      <div
+        style={{
+          position: "absolute",
+          bottom: 8,
+          right: 8,
+          display: "flex",
+          gap: 6,
+        }}
+      >
+        {!item.isCover && item.type === "image" && (
+          <button
+            onClick={() => onSetCover(item.id!)}
+            style={{
+              padding: "6px 10px",
+              borderRadius: 8,
+              background: "rgba(0,0,0,0.6)",
+              border: "none",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              backdropFilter: "blur(8px)",
+            }}
+          >
+            <Star size={12} color="white" />
+            <span style={{ fontSize: 10, fontWeight: 600, color: "white" }}>
+              Portada
+            </span>
+          </button>
+        )}
+      </div>
+
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        style={{
+          position: "absolute",
+          bottom: 8,
+          left: 8,
+          width: 28,
+          height: 28,
+          borderRadius: 8,
+          background: "rgba(0,0,0,0.6)",
+          border: "none",
+          cursor: isDragging ? "grabbing" : "grab",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backdropFilter: "blur(8px)",
+          touchAction: "none",
+        }}
+      >
+        <GripVertical size={14} color="white" />
+      </button>
+    </div>
+  );
+}
+
+
 export default function PublishStep2() {
   const { data } = usePropertyPublish();
-  console.log(data);
-  console.log(data.propertyId);
 
   const navigate = useNavigate();
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     async function loadProperty() {
       if (!data.propertyId) {
@@ -49,19 +304,7 @@ export default function PublishStep2() {
       try {
         const property = await findPropertyById(data.propertyId);
 
-        const images: MediaItem[] = property.images.map((image: any) => ({
-          id: image.id,
-
-          type: "image",
-
-          url: `http://localhost:3000${image.image_url}`,
-
-          isCover: image.is_cover,
-
-          isExisting: true,
-        }));
-
-        setMediaItems(images);
+        setMediaItems(mapPropertyMediaToItems(property));
       } catch (error) {
         console.error("Load property failed", error);
       }
@@ -97,10 +340,30 @@ export default function PublishStep2() {
 
             type: "image",
 
-            url: `http://localhost:3000${image.image_url}`,
+            url: `${API_BASE}${image.image_url}`,
 
             isCover: image.is_cover,
 
+            isExisting: true,
+          }),
+        );
+
+        setMediaItems((prev) => [...prev, ...newItems]);
+        return;
+      }
+
+      if (type === "video") {
+        const uploaded = await uploadPropertyVideos(
+          data.propertyId,
+          Array.from(files),
+        );
+
+        const newItems: MediaItem[] = uploaded.videos.map(
+          (video: { id: string; video_url: string }) => ({
+            id: video.id,
+            type: "video",
+            url: `${API_BASE}${video.video_url}`,
+            isCover: false,
             isExisting: true,
           }),
         );
@@ -112,74 +375,137 @@ export default function PublishStep2() {
     }
   };
 
-  const handleRemove = (id: string) => {
+  const handleRemove = async (id: string) => {
     const itemToRemove = mediaItems.find((item) => item.id === id);
-    const wasFirstCover = itemToRemove?.isCover;
 
-    const updatedItems = mediaItems.filter((item) => item.id !== id);
-
-    // Si se eliminó la portada, hacer que la primera imagen sea la nueva portada
-    if (wasFirstCover && updatedItems.length > 0) {
-      updatedItems[0].isCover = true;
+    if (!itemToRemove || !data.propertyId) {
+      return;
     }
 
-    setMediaItems(updatedItems);
+    const previousItems = mediaItems;
+
+    try {
+      if (itemToRemove.isExisting) {
+        if (itemToRemove.type === "image") {
+          await deletePropertyImage(data.propertyId, id);
+        } else {
+          await deletePropertyVideo(data.propertyId, id);
+        }
+      }
+
+      let updatedItems = mediaItems.filter((item) => item.id !== id);
+
+      if (itemToRemove.isCover && itemToRemove.type === "image") {
+        const nextCover = updatedItems.find((item) => item.type === "image");
+
+        if (nextCover?.id) {
+          await updatePropertyImageCover(data.propertyId, nextCover.id);
+
+          updatedItems = updatedItems.map((item) => ({
+            ...item,
+            isCover: item.id === nextCover.id,
+          }));
+        }
+      }
+
+      setMediaItems(updatedItems);
+
+      const persistedMedia = updatedItems
+        .filter((item) => item.id)
+        .map((item) => ({
+          id: item.id!,
+          type: item.type,
+        }));
+
+      if (persistedMedia.length > 0) {
+        await updatePropertyMediaOrder(
+          data.propertyId,
+          persistedMedia,
+        );
+      }
+    } catch (error) {
+      console.error("Remove media failed", error);
+      setMediaItems(previousItems);
+    }
   };
 
-  const handleMoveUp = (index: number) => {
-    if (index === 0) return;
-    const newItems = [...mediaItems];
-    [newItems[index], newItems[index - 1]] = [
-      newItems[index - 1],
-      newItems[index],
-    ];
-    setMediaItems(newItems);
-  };
-
-  const handleMoveDown = (index: number) => {
-    if (index === mediaItems.length - 1) return;
-    const newItems = [...mediaItems];
-    [newItems[index], newItems[index + 1]] = [
-      newItems[index + 1],
-      newItems[index],
-    ];
-    setMediaItems(newItems);
-  };
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+  );
 
   const handleContinue = () => {
     // TODO: Implementar navegación a siguiente paso
     console.log("Fotos y videos:", mediaItems);
     navigate("/publicar/informacion");
   };
-  const handleSetCover = async (
-    imageId: string,
-  ) => {
+  const handleSetCover = async (imageId: string) => {
     if (!data.propertyId) {
       return;
     }
-  
+
     try {
-      await updatePropertyImageCover(
-        data.propertyId,
-        imageId,
-      );
-  
+      await updatePropertyImageCover(data.propertyId, imageId);
+
       setMediaItems((prev) =>
         prev.map((item) => ({
           ...item,
-  
-          isCover:
-            item.id === imageId,
+
+          isCover: item.id === imageId,
         })),
       );
     } catch (error) {
-      console.error(
-        "Update cover failed",
-        error,
-      );
+      console.error("Update cover failed", error);
     }
   };
-  
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = mediaItems.findIndex((item) => item.id === active.id);
+    const newIndex = mediaItems.findIndex((item) => item.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) {
+      return;
+    }
+
+    const reordered = arrayMove(mediaItems, oldIndex, newIndex);
+    const previousItems = mediaItems;
+
+    setMediaItems(reordered);
+
+    if (!data.propertyId) {
+      return;
+    }
+
+    try {
+
+      await updatePropertyMediaOrder(
+        data.propertyId,
+        reordered
+          .filter((item) => item.id)
+          .map((item) => ({
+            id: item.id!,
+            type: item.type,
+          })),
+      );
+    
+    } catch (error) {
+    
+      console.error(
+        "Update media order failed",
+        error,
+      );
+    
+      setMediaItems(previousItems);
+    }
+  };
+
   const isFormValid = mediaItems.length > 0;
 
   return (
@@ -499,226 +825,33 @@ export default function PublishStep2() {
                 {mediaItems.length}{" "}
                 {mediaItems.length === 1 ? "archivo" : "archivos"} subidos
               </h3>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(2, 1fr)",
-                  gap: 12,
-                }}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
               >
-                {mediaItems.map((item, index) => (
+                <SortableContext
+                  items={mediaItems.map((item) => item.id!)}
+                  strategy={rectSortingStrategy}
+                >
                   <div
-                    key={item.id}
                     style={{
-                      position: "relative",
-                      aspectRatio: "1",
-                      borderRadius: 14,
-                      overflow: "hidden",
-                      background: "#f0f0f0",
-                      border: item.isCover
-                        ? "3px solid #4417E6"
-                        : "1px solid #e5e5ea",
+                      display: "grid",
+                      gridTemplateColumns: "repeat(2, 1fr)",
+                      gap: 12,
                     }}
                   >
-                    {/* Media */}
-                    {item.type === "image" ? (
-                      <img
-                        src={item.url}
-                        alt="Preview"
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
+                    {mediaItems.map((item) => (
+                      <SortableMediaCard
+                        key={item.id}
+                        item={item}
+                        onRemove={handleRemove}
+                        onSetCover={handleSetCover}
                       />
-                    ) : (
-                      <video
-                        src={item.url}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                      />
-                    )}
-
-                    {/* Cover badge */}
-                    {item.isCover && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: 8,
-                          left: 8,
-                          background: "#4417E6",
-                          borderRadius: 8,
-                          padding: "4px 10px",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 4,
-                          boxShadow: "0 2px 8px rgba(68,23,230,0.3)",
-                        }}
-                      >
-                        <Star size={12} color="white" fill="white" />
-                        <span
-                          style={{
-                            fontSize: 11,
-                            fontWeight: 700,
-                            color: "white",
-                          }}
-                        >
-                          Portada
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Video indicator */}
-                    {item.type === "video" && !item.isCover && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: 8,
-                          left: 8,
-                          background: "rgba(0,0,0,0.6)",
-                          borderRadius: 8,
-                          padding: "4px 8px",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 4,
-                          backdropFilter: "blur(8px)",
-                        }}
-                      >
-                        <Video size={12} color="white" />
-                      </div>
-                    )}
-
-                    {/* Actions */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: 8,
-                        right: 8,
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 6,
-                      }}
-                    >
-                      {/* Delete */}
-                      <button
-                        onClick={() => handleRemove(item.id ?? "")}
-                        style={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: 8,
-                          background: "rgba(0,0,0,0.6)",
-                          border: "none",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          backdropFilter: "blur(8px)",
-                        }}
-                      >
-                        <X size={16} color="white" />
-                      </button>
-                    </div>
-
-                    {/* Reorder controls */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: 8,
-                        right: 8,
-                        display: "flex",
-                        gap: 6,
-                      }}
-                    >
-                      {/* Set as cover */}
-                      {!item.isCover && item.type === "image" && (
-                        <button
-                          onClick={() => handleSetCover(item.id!)}
-                          style={{
-                            padding: "6px 10px",
-                            borderRadius: 8,
-                            background: "rgba(0,0,0,0.6)",
-                            border: "none",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 4,
-                            backdropFilter: "blur(8px)",
-                          }}
-                        >
-                          <Star size={12} color="white" />
-                          <span
-                            style={{
-                              fontSize: 10,
-                              fontWeight: 600,
-                              color: "white",
-                            }}
-                          >
-                            Portada
-                          </span>
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Move controls */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: 8,
-                        left: 8,
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 4,
-                      }}
-                    >
-                      {index > 0 && (
-                        <button
-                          onClick={() => handleMoveUp(index)}
-                          style={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: 8,
-                            background: "rgba(0,0,0,0.6)",
-                            border: "none",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            backdropFilter: "blur(8px)",
-                          }}
-                        >
-                          <GripVertical
-                            size={14}
-                            color="white"
-                            style={{ transform: "rotate(180deg)" }}
-                          />
-                        </button>
-                      )}
-                      {index < mediaItems.length - 1 && (
-                        <button
-                          onClick={() => handleMoveDown(index)}
-                          style={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: 8,
-                            background: "rgba(0,0,0,0.6)",
-                            border: "none",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            backdropFilter: "blur(8px)",
-                          }}
-                        >
-                          <GripVertical size={14} color="white" />
-                        </button>
-                      )}
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </SortableContext>
+              </DndContext>
             </div>
           ) : (
             <div
@@ -769,8 +902,7 @@ export default function PublishStep2() {
                   fontWeight: 500,
                 }}
               >
-                💡 Usá los controles para reordenar las fotos y marcar la
-                portada
+                💡 Arrastrá las fotos para reordenarlas y marcá la portada
               </p>
             </div>
           )}

@@ -14,7 +14,7 @@ export async function getPropertyImagesRepository(
 
         WHERE property_id = $1
 
-        ORDER BY created_at ASC
+        ORDER BY display_order ASC
       `,
       [propertyId]
     );

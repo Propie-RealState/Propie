@@ -11,7 +11,7 @@ export async function deletePropertyImageRepository({
   propertyId,
   userId,
 }: DeletePropertyImageRepositoryRequest) {
-  await db.query(
+  const result = await db.query(
     `
       DELETE FROM property_images
       WHERE id = $1
@@ -24,4 +24,8 @@ export async function deletePropertyImageRepository({
     `,
     [imageId, propertyId, userId],
   );
+
+  if (result.rowCount === 0) {
+    throw new Error("IMAGE_NOT_FOUND");
+  }
 }

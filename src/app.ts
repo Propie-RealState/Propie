@@ -31,6 +31,8 @@ export async function buildApp() {
   const app =
     Fastify({
       logger: true,
+      bodyLimit: 104_857_600,
+      requestTimeout: 300_000,
     });
 
   // ======================================================
@@ -62,8 +64,8 @@ export async function buildApp() {
     multipart,
     {
       limits: {
-        fileSize:
-          10 * 1024 * 1024,
+        fileSize: 100 * 1024 * 1024,
+        files: 10,
       },
     }
   );

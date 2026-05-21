@@ -34,6 +34,14 @@ import { deletePropertyImageController } from "../controllers/delete-property-im
 
 import { updatePropertyImageCoverController } from "../controllers/update-property-image-cover.controller";
 
+import { updatePropertyImagesOrderController } from "../controllers/update-property-images-order.controller";
+
+import { uploadPropertyVideosController } from "../controllers/upload-property-videos.controller";
+
+import { updatePropertyMediaOrderController } from "../controllers/update-property-media-order.controller";
+
+import { deletePropertyVideoController } from "../controllers/delete-property-video.controller";
+
 export async function propertiesRoutes(app: FastifyInstance) {
   app.post(
     "/",
@@ -180,6 +188,14 @@ export async function propertiesRoutes(app: FastifyInstance) {
     publishPropertyController as RouteHandlerMethod,
   );
 
+  app.patch(
+    "/:propertyId/images/order",
+    {
+      preHandler: authMiddleware,
+    },
+    updatePropertyImagesOrderController as RouteHandlerMethod,
+  );
+
   app.delete(
     "/:propertyId/images/:imageId",
     {
@@ -194,5 +210,29 @@ export async function propertiesRoutes(app: FastifyInstance) {
       preHandler: authMiddleware,
     },
     updatePropertyImageCoverController as RouteHandlerMethod,
+  );
+
+  app.post(
+    "/:propertyId/videos",
+    {
+      preHandler: authMiddleware,
+    },
+    uploadPropertyVideosController as RouteHandlerMethod,
+  );
+
+  app.patch(
+    "/:propertyId/media/order",
+    {
+      preHandler: authMiddleware,
+    },
+    updatePropertyMediaOrderController as RouteHandlerMethod,
+  );
+
+  app.delete(
+    "/:propertyId/videos/:videoId",
+    {
+      preHandler: authMiddleware,
+    },
+    deletePropertyVideoController as RouteHandlerMethod,
   );
 }
