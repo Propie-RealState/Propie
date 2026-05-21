@@ -35,9 +35,13 @@ export const router =
   createBrowserRouter([
     {
       path: "/",
-
-      Component: Root,
-
+    
+      element: (
+        <PropertyPublishProvider>
+          <Root />
+        </PropertyPublishProvider>
+      ),
+    
       children: [
 
         // ==================================================
@@ -141,20 +145,11 @@ export const router =
         },
         {
           path: "/mis-propiedades/:id/editar",
-          element: (
-            <PropertyPublishProvider>
-              <EditProperty />
-            </PropertyPublishProvider>
-          ),
+          element: <EditProperty />,
         },
         {
           path: "/publicar",
-        
-          element: (
-            <PropertyPublishProvider>
-              <Outlet />
-            </PropertyPublishProvider>
-          ),
+          element: <Outlet />,
         
           children: [
             {

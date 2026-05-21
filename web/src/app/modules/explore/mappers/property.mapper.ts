@@ -26,23 +26,10 @@ export function mapPropertyDtoToProperty(
       ? `http://localhost:3000${property.cover_image}`
       : null,
 
-    image: property.cover_image
-      ? `http://localhost:3000${property.cover_image}`
-      : "",
-
     rooms: property.bedrooms || 0,
 
     bathrooms: property.bathrooms || 0,
 
     sqm: property.area_m2 || 0,
-
-    isNew: false,
-
-    type:
-      property.operation_type === "SALE"
-        ? "venta"
-        : "alquiler",
-
-    distance: "",
   };
 }

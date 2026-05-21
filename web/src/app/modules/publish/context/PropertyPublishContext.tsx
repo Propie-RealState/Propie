@@ -41,6 +41,7 @@ import {
   
     images: [],
     commercializationType: "",
+    amenities: [],
   };
   
   const PropertyPublishContext =

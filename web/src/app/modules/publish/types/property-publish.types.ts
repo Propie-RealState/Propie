@@ -34,4 +34,6 @@ export interface PropertyPublishData {
   images: string[];
 
   commercializationType?: string;
+
+  amenities: string[];
 }

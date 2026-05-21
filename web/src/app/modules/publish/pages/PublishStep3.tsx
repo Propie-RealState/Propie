@@ -1,24 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PropieLogo } from "../../../components/PropieLogo";
 import { ArrowLeft, Check } from "lucide-react";
 import React from "react";
-import {
-  updatePropertyAmenities,
-} from "../services/update-property-amenities.ts";
-import { usePropertyPublish }
-  from "../context/PropertyPublishContext";
-import {
-  updatePropertyDetails,
-} from "../services/update-property-details";
+import { updatePropertyAmenities } from "../services/update-property-amenities.ts";
+import { usePropertyPublish } from "../context/PropertyPublishContext";
+import { updatePropertyDetails } from "../services/update-property-details";
+import { amenitiesMap }
+  from "../mappers/map-amenities-to-api";
+  
 type AmenityType = "pileta" | "patio" | "balcon" | "mascotas" | "seguridad";
 
 export default function PublishStep3() {
-
-  const {
-    data,
-    updateData,
-  } = usePropertyPublish();
+  const { data, updateData } = usePropertyPublish();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: "",
@@ -31,6 +25,61 @@ export default function PublishStep3() {
   });
   const [amenities, setAmenities] = useState<AmenityType[]>([]);
 
+  useEffect(() => {
+    if (!data.title && !data.description) {
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      title: data.title || "",
+      description: data.description || "",
+      price: data.price?.toString() || "",
+      rooms: data.bedrooms?.toString() || "",
+      bathrooms: data.bathrooms?.toString() || "",
+      sqm: data.areaM2?.toString() || "",
+    }));
+  }, [
+    data.title,
+    data.description,
+    data.price,
+    data.bedrooms,
+    data.bathrooms,
+    data.areaM2,
+  ]);
+
+  useEffect(() => {
+    if (!data.amenities?.length) {
+      return;
+    }
+
+    const mappedAmenities = data.amenities
+      .map((amenity) => {
+        switch (amenity) {
+          case "POOL":
+            return "pileta";
+
+          case "PATIO":
+            return "patio";
+
+          case "BALCONY":
+            return "balcon";
+
+          case "PETS":
+            return "mascotas";
+
+          case "SECURITY":
+            return "seguridad";
+
+          default:
+            return null;
+        }
+      })
+      .filter(Boolean) as AmenityType[];
+
+    setAmenities(mappedAmenities);
+  }, [data.amenities]);
+
   const handleContinue = async () => {
     console.log("HANDLE CONTINUE");
 
@@ -39,84 +88,52 @@ export default function PublishStep3() {
     console.log("FORM DATA", formData);
 
     if (!data.propertyId) {
-
       console.log("NO PROPERTY ID");
 
       return;
     }
-    
-    if (!data.propertyId) {
-      return;
-    }
-    const amenitiesMap = {
-      pileta: "POOL",
-      patio: "PATIO",
-      balcon: "BALCONY",
-      mascotas: "PETS",
-      seguridad: "SECURITY",
-    } as const;
-    
+
     try {
+      await updatePropertyDetails(data.propertyId, {
+        title: formData.title,
 
-      await updatePropertyDetails(
-        data.propertyId,
-        {
-          title:
-            formData.title,
+        description: formData.description,
 
-          description:
-            formData.description,
+        price: Number(formData.price),
 
-          price:
-            Number(formData.price),
+        bedrooms: Number(formData.rooms),
 
-          bedrooms:
-            Number(formData.rooms),
+        bathrooms: Number(formData.bathrooms),
 
-          bathrooms:
-            Number(formData.bathrooms),
+        areaM2: Number(formData.sqm),
+      });
 
-          areaM2:
-            Number(formData.sqm),
-            
-        }
-      );
       await updatePropertyAmenities(
         data.propertyId,
-        amenities.map((amenity) => amenitiesMap[amenity])
+        amenities.map((amenity) => amenitiesMap[amenity]),
       );
+
       updateData({
-        title:
-          formData.title,
-      
-        description:
-          formData.description,
-      
-        price:
-          Number(formData.price),
-      
-        bedrooms:
-          Number(formData.rooms),
-      
-        bathrooms:
-          Number(formData.bathrooms),
-      
-        areaM2:
-          Number(formData.sqm),
+        title: formData.title,
+
+        description: formData.description,
+
+        price: Number(formData.price),
+
+        bedrooms: Number(formData.rooms),
+
+        bathrooms: Number(formData.bathrooms),
+
+        areaM2: Number(formData.sqm),
+
+        amenities,
       });
-      navigate(
-        "/publicar/comercializacion"
-      );
 
+      navigate("/publicar/comercializacion");
     } catch (error) {
-
-      console.error(
-        "Update property details failed",
-        error
-      );
+      console.error("Update property details failed", error);
     }
   };
-
 
   const toggleAmenity = (amenity: AmenityType) => {
     if (amenities.includes(amenity)) {
@@ -159,7 +176,8 @@ export default function PublishStep3() {
       <div
         style={{
           position: "relative",
-          background: "linear-gradient(160deg, #5A32F0 0%, #4417E6 55%, #3510B8 100%)",
+          background:
+            "linear-gradient(160deg, #5A32F0 0%, #4417E6 55%, #3510B8 100%)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -167,11 +185,42 @@ export default function PublishStep3() {
         }}
       >
         {/* Decorative blobs */}
-        <div style={{ position: "absolute", width: 300, height: 300, background: "radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%)", top: -80, right: -60, pointerEvents: "none" }} />
-        <div style={{ position: "absolute", width: 180, height: 180, background: "radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)", bottom: 40, left: -40, pointerEvents: "none" }} />
+        <div
+          style={{
+            position: "absolute",
+            width: 300,
+            height: 300,
+            background:
+              "radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%)",
+            top: -80,
+            right: -60,
+            pointerEvents: "none",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            width: 180,
+            height: 180,
+            background:
+              "radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)",
+            bottom: 40,
+            left: -40,
+            pointerEvents: "none",
+          }}
+        />
 
         {/* Nav row */}
-        <div style={{ width: "100%", maxWidth: 420, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 24px 0" }}>
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 420,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "20px 24px 0",
+          }}
+        >
           <button
             onClick={() => navigate(-1)}
             style={{
@@ -198,7 +247,15 @@ export default function PublishStep3() {
         </div>
 
         {/* Heading */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "32px 28px 12px" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+            padding: "32px 28px 12px",
+          }}
+        >
           <h1
             style={{
               color: "white",
@@ -212,15 +269,42 @@ export default function PublishStep3() {
           >
             Información
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 10, lineHeight: 1.6, maxWidth: 300 }}>
+          <p
+            style={{
+              color: "rgba(255,255,255,0.72)",
+              fontSize: 14,
+              marginTop: 10,
+              lineHeight: 1.6,
+              maxWidth: 300,
+            }}
+          >
             Agregá los detalles de tu propiedad
           </p>
         </div>
 
         {/* Wave */}
-        <div style={{ width: "100%", height: 44, position: "relative", marginTop: 8 }}>
-          <svg viewBox="0 0 390 44" preserveAspectRatio="none" style={{ position: "absolute", bottom: 0, width: "100%", height: 44 }}>
-            <path d="M0,24 C90,48 300,0 390,24 L390,44 L0,44 Z" fill="#f5f5f7" />
+        <div
+          style={{
+            width: "100%",
+            height: 44,
+            position: "relative",
+            marginTop: 8,
+          }}
+        >
+          <svg
+            viewBox="0 0 390 44"
+            preserveAspectRatio="none"
+            style={{
+              position: "absolute",
+              bottom: 0,
+              width: "100%",
+              height: 44,
+            }}
+          >
+            <path
+              d="M0,24 C90,48 300,0 390,24 L390,44 L0,44 Z"
+              fill="#f5f5f7"
+            />
           </svg>
         </div>
       </div>
@@ -236,10 +320,27 @@ export default function PublishStep3() {
           overflowY: "auto",
         }}
       >
-        <div style={{ width: "100%", maxWidth: 420, display: "flex", flexDirection: "column", gap: 20 }}>
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 420,
+            display: "flex",
+            flexDirection: "column",
+            gap: 20,
+          }}
+        >
           {/* Title */}
           <div>
-            <label htmlFor="title" style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>
+            <label
+              htmlFor="title"
+              style={{
+                display: "block",
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#1a1a1a",
+                marginBottom: 8,
+              }}
+            >
               Título
             </label>
             <div style={{ position: "relative" }}>
@@ -247,13 +348,17 @@ export default function PublishStep3() {
                 id="title"
                 type="text"
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
                 placeholder="Ej: Departamento luminoso en Palermo"
                 style={{
                   width: "100%",
                   padding: "14px 48px 14px 16px",
                   borderRadius: 14,
-                  border: formData.title ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
+                  border: formData.title
+                    ? "1.5px solid #34C759"
+                    : "1.5px solid #e5e5ea",
                   fontSize: 15,
                   color: "#1a1a1a",
                   outline: "none",
@@ -262,13 +367,16 @@ export default function PublishStep3() {
                 }}
                 onFocus={(e) => {
                   if (!formData.title) {
-                    (e.target as HTMLInputElement).style.borderColor = "#4417E6";
-                    (e.target as HTMLInputElement).style.boxShadow = "0 0 0 3px rgba(68,23,230,0.08)";
+                    (e.target as HTMLInputElement).style.borderColor =
+                      "#4417E6";
+                    (e.target as HTMLInputElement).style.boxShadow =
+                      "0 0 0 3px rgba(68,23,230,0.08)";
                   }
                 }}
                 onBlur={(e) => {
                   if (!formData.title) {
-                    (e.target as HTMLInputElement).style.borderColor = "#e5e5ea";
+                    (e.target as HTMLInputElement).style.borderColor =
+                      "#e5e5ea";
                     (e.target as HTMLInputElement).style.boxShadow = "none";
                   }
                 }}
@@ -293,7 +401,16 @@ export default function PublishStep3() {
 
           {/* Description */}
           <div>
-            <label htmlFor="description" style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>
+            <label
+              htmlFor="description"
+              style={{
+                display: "block",
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#1a1a1a",
+                marginBottom: 8,
+              }}
+            >
               Descripción
             </label>
             <div style={{ position: "relative" }}>
@@ -311,7 +428,9 @@ export default function PublishStep3() {
                   width: "100%",
                   padding: "14px 16px",
                   borderRadius: 14,
-                  border: formData.description ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
+                  border: formData.description
+                    ? "1.5px solid #34C759"
+                    : "1.5px solid #e5e5ea",
                   fontSize: 15,
                   color: "#1a1a1a",
                   outline: "none",
@@ -323,13 +442,16 @@ export default function PublishStep3() {
                 }}
                 onFocus={(e) => {
                   if (!formData.description) {
-                    (e.target as HTMLTextAreaElement).style.borderColor = "#4417E6";
-                    (e.target as HTMLTextAreaElement).style.boxShadow = "0 0 0 3px rgba(68,23,230,0.08)";
+                    (e.target as HTMLTextAreaElement).style.borderColor =
+                      "#4417E6";
+                    (e.target as HTMLTextAreaElement).style.boxShadow =
+                      "0 0 0 3px rgba(68,23,230,0.08)";
                   }
                 }}
                 onBlur={(e) => {
                   if (!formData.description) {
-                    (e.target as HTMLTextAreaElement).style.borderColor = "#e5e5ea";
+                    (e.target as HTMLTextAreaElement).style.borderColor =
+                      "#e5e5ea";
                     (e.target as HTMLTextAreaElement).style.boxShadow = "none";
                   }
                 }}
@@ -351,7 +473,16 @@ export default function PublishStep3() {
 
           {/* Price */}
           <div>
-            <label htmlFor="price" style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>
+            <label
+              htmlFor="price"
+              style={{
+                display: "block",
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#1a1a1a",
+                marginBottom: 8,
+              }}
+            >
               Precio
             </label>
             <div style={{ position: "relative" }}>
@@ -381,7 +512,9 @@ export default function PublishStep3() {
                   width: "100%",
                   padding: "14px 48px 14px 56px",
                   borderRadius: 14,
-                  border: formData.price ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
+                  border: formData.price
+                    ? "1.5px solid #34C759"
+                    : "1.5px solid #e5e5ea",
                   fontSize: 15,
                   color: "#1a1a1a",
                   outline: "none",
@@ -390,13 +523,16 @@ export default function PublishStep3() {
                 }}
                 onFocus={(e) => {
                   if (!formData.price) {
-                    (e.target as HTMLInputElement).style.borderColor = "#4417E6";
-                    (e.target as HTMLInputElement).style.boxShadow = "0 0 0 3px rgba(68,23,230,0.08)";
+                    (e.target as HTMLInputElement).style.borderColor =
+                      "#4417E6";
+                    (e.target as HTMLInputElement).style.boxShadow =
+                      "0 0 0 3px rgba(68,23,230,0.08)";
                   }
                 }}
                 onBlur={(e) => {
                   if (!formData.price) {
-                    (e.target as HTMLInputElement).style.borderColor = "#e5e5ea";
+                    (e.target as HTMLInputElement).style.borderColor =
+                      "#e5e5ea";
                     (e.target as HTMLInputElement).style.boxShadow = "none";
                   }
                 }}
@@ -421,13 +557,36 @@ export default function PublishStep3() {
 
           {/* Quick data */}
           <div>
-            <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>
+            <h3
+              style={{
+                margin: "0 0 12px",
+                fontSize: 16,
+                fontWeight: 700,
+                color: "#1a1a1a",
+                fontFamily: "'Sora', sans-serif",
+              }}
+            >
               Datos rápidos
             </h3>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, 1fr)",
+                gap: 10,
+              }}
+            >
               {/* Rooms */}
               <div>
-                <label htmlFor="rooms" style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#6e6e73", marginBottom: 6 }}>
+                <label
+                  htmlFor="rooms"
+                  style={{
+                    display: "block",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "#6e6e73",
+                    marginBottom: 6,
+                  }}
+                >
                   Habitaciones
                 </label>
                 <input
@@ -444,7 +603,9 @@ export default function PublishStep3() {
                     width: "100%",
                     padding: "12px 14px",
                     borderRadius: 12,
-                    border: formData.rooms ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
+                    border: formData.rooms
+                      ? "1.5px solid #34C759"
+                      : "1.5px solid #e5e5ea",
                     fontSize: 15,
                     color: "#1a1a1a",
                     outline: "none",
@@ -455,13 +616,16 @@ export default function PublishStep3() {
                   }}
                   onFocus={(e) => {
                     if (!formData.rooms) {
-                      (e.target as HTMLInputElement).style.borderColor = "#4417E6";
-                      (e.target as HTMLInputElement).style.boxShadow = "0 0 0 3px rgba(68,23,230,0.08)";
+                      (e.target as HTMLInputElement).style.borderColor =
+                        "#4417E6";
+                      (e.target as HTMLInputElement).style.boxShadow =
+                        "0 0 0 3px rgba(68,23,230,0.08)";
                     }
                   }}
                   onBlur={(e) => {
                     if (!formData.rooms) {
-                      (e.target as HTMLInputElement).style.borderColor = "#e5e5ea";
+                      (e.target as HTMLInputElement).style.borderColor =
+                        "#e5e5ea";
                       (e.target as HTMLInputElement).style.boxShadow = "none";
                     }
                   }}
@@ -470,7 +634,16 @@ export default function PublishStep3() {
 
               {/* Bathrooms */}
               <div>
-                <label htmlFor="bathrooms" style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#6e6e73", marginBottom: 6 }}>
+                <label
+                  htmlFor="bathrooms"
+                  style={{
+                    display: "block",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "#6e6e73",
+                    marginBottom: 6,
+                  }}
+                >
                   Baños
                 </label>
                 <input
@@ -487,7 +660,9 @@ export default function PublishStep3() {
                     width: "100%",
                     padding: "12px 14px",
                     borderRadius: 12,
-                    border: formData.bathrooms ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
+                    border: formData.bathrooms
+                      ? "1.5px solid #34C759"
+                      : "1.5px solid #e5e5ea",
                     fontSize: 15,
                     color: "#1a1a1a",
                     outline: "none",
@@ -498,13 +673,16 @@ export default function PublishStep3() {
                   }}
                   onFocus={(e) => {
                     if (!formData.bathrooms) {
-                      (e.target as HTMLInputElement).style.borderColor = "#4417E6";
-                      (e.target as HTMLInputElement).style.boxShadow = "0 0 0 3px rgba(68,23,230,0.08)";
+                      (e.target as HTMLInputElement).style.borderColor =
+                        "#4417E6";
+                      (e.target as HTMLInputElement).style.boxShadow =
+                        "0 0 0 3px rgba(68,23,230,0.08)";
                     }
                   }}
                   onBlur={(e) => {
                     if (!formData.bathrooms) {
-                      (e.target as HTMLInputElement).style.borderColor = "#e5e5ea";
+                      (e.target as HTMLInputElement).style.borderColor =
+                        "#e5e5ea";
                       (e.target as HTMLInputElement).style.boxShadow = "none";
                     }
                   }}
@@ -513,7 +691,16 @@ export default function PublishStep3() {
 
               {/* Square meters */}
               <div>
-                <label htmlFor="sqm" style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#6e6e73", marginBottom: 6 }}>
+                <label
+                  htmlFor="sqm"
+                  style={{
+                    display: "block",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "#6e6e73",
+                    marginBottom: 6,
+                  }}
+                >
                   m²
                 </label>
                 <input
@@ -530,7 +717,9 @@ export default function PublishStep3() {
                     width: "100%",
                     padding: "12px 14px",
                     borderRadius: 12,
-                    border: formData.sqm ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
+                    border: formData.sqm
+                      ? "1.5px solid #34C759"
+                      : "1.5px solid #e5e5ea",
                     fontSize: 15,
                     color: "#1a1a1a",
                     outline: "none",
@@ -541,13 +730,16 @@ export default function PublishStep3() {
                   }}
                   onFocus={(e) => {
                     if (!formData.sqm) {
-                      (e.target as HTMLInputElement).style.borderColor = "#4417E6";
-                      (e.target as HTMLInputElement).style.boxShadow = "0 0 0 3px rgba(68,23,230,0.08)";
+                      (e.target as HTMLInputElement).style.borderColor =
+                        "#4417E6";
+                      (e.target as HTMLInputElement).style.boxShadow =
+                        "0 0 0 3px rgba(68,23,230,0.08)";
                     }
                   }}
                   onBlur={(e) => {
                     if (!formData.sqm) {
-                      (e.target as HTMLInputElement).style.borderColor = "#e5e5ea";
+                      (e.target as HTMLInputElement).style.borderColor =
+                        "#e5e5ea";
                       (e.target as HTMLInputElement).style.boxShadow = "none";
                     }
                   }}
@@ -556,7 +748,16 @@ export default function PublishStep3() {
 
               {/* Garage */}
               <div>
-                <label htmlFor="garage" style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#6e6e73", marginBottom: 6 }}>
+                <label
+                  htmlFor="garage"
+                  style={{
+                    display: "block",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "#6e6e73",
+                    marginBottom: 6,
+                  }}
+                >
                   Cochera
                 </label>
                 <input
@@ -573,7 +774,9 @@ export default function PublishStep3() {
                     width: "100%",
                     padding: "12px 14px",
                     borderRadius: 12,
-                    border: formData.garage ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
+                    border: formData.garage
+                      ? "1.5px solid #34C759"
+                      : "1.5px solid #e5e5ea",
                     fontSize: 15,
                     color: "#1a1a1a",
                     outline: "none",
@@ -584,13 +787,16 @@ export default function PublishStep3() {
                   }}
                   onFocus={(e) => {
                     if (!formData.garage) {
-                      (e.target as HTMLInputElement).style.borderColor = "#4417E6";
-                      (e.target as HTMLInputElement).style.boxShadow = "0 0 0 3px rgba(68,23,230,0.08)";
+                      (e.target as HTMLInputElement).style.borderColor =
+                        "#4417E6";
+                      (e.target as HTMLInputElement).style.boxShadow =
+                        "0 0 0 3px rgba(68,23,230,0.08)";
                     }
                   }}
                   onBlur={(e) => {
                     if (!formData.garage) {
-                      (e.target as HTMLInputElement).style.borderColor = "#e5e5ea";
+                      (e.target as HTMLInputElement).style.borderColor =
+                        "#e5e5ea";
                       (e.target as HTMLInputElement).style.boxShadow = "none";
                     }
                   }}
@@ -601,7 +807,15 @@ export default function PublishStep3() {
 
           {/* Amenities */}
           <div>
-            <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>
+            <h3
+              style={{
+                margin: "0 0 12px",
+                fontSize: 16,
+                fontWeight: 700,
+                color: "#1a1a1a",
+                fontFamily: "'Sora', sans-serif",
+              }}
+            >
               Amenities
             </h3>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
@@ -610,8 +824,12 @@ export default function PublishStep3() {
                   key={amenity.id}
                   onClick={() => toggleAmenity(amenity.id)}
                   style={{
-                    background: amenities.includes(amenity.id) ? "#4417E6" : "white",
-                    border: amenities.includes(amenity.id) ? "2px solid #4417E6" : "2px solid #e5e5ea",
+                    background: amenities.includes(amenity.id)
+                      ? "#4417E6"
+                      : "white",
+                    border: amenities.includes(amenity.id)
+                      ? "2px solid #4417E6"
+                      : "2px solid #e5e5ea",
                     borderRadius: 12,
                     padding: "10px 16px",
                     cursor: "pointer",
@@ -619,18 +837,24 @@ export default function PublishStep3() {
                     alignItems: "center",
                     gap: 8,
                     transition: "all 0.15s ease",
-                    boxShadow: amenities.includes(amenity.id) ? "0 4px 12px rgba(68,23,230,0.2)" : "0 1px 4px rgba(0,0,0,0.04)",
+                    boxShadow: amenities.includes(amenity.id)
+                      ? "0 4px 12px rgba(68,23,230,0.2)"
+                      : "0 1px 4px rgba(0,0,0,0.04)",
                   }}
                   onMouseEnter={(e) => {
                     if (!amenities.includes(amenity.id)) {
-                      (e.currentTarget as HTMLButtonElement).style.borderColor = "#4417E6";
-                      (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 12px rgba(68,23,230,0.1)";
+                      (e.currentTarget as HTMLButtonElement).style.borderColor =
+                        "#4417E6";
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                        "0 4px 12px rgba(68,23,230,0.1)";
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!amenities.includes(amenity.id)) {
-                      (e.currentTarget as HTMLButtonElement).style.borderColor = "#e5e5ea";
-                      (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)";
+                      (e.currentTarget as HTMLButtonElement).style.borderColor =
+                        "#e5e5ea";
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                        "0 1px 4px rgba(0,0,0,0.04)";
                     }
                   }}
                 >
@@ -639,7 +863,9 @@ export default function PublishStep3() {
                     style={{
                       fontSize: 14,
                       fontWeight: 600,
-                      color: amenities.includes(amenity.id) ? "white" : "#1a1a1a",
+                      color: amenities.includes(amenity.id)
+                        ? "white"
+                        : "#1a1a1a",
                     }}
                   >
                     {amenity.label}
@@ -665,20 +891,28 @@ export default function PublishStep3() {
               color: isFormValid ? "white" : "#9a9aa0",
               transition: "all 0.18s ease",
               marginTop: 8,
-              boxShadow: isFormValid ? "0 4px 16px rgba(68,23,230,0.24)" : "none",
+              boxShadow: isFormValid
+                ? "0 4px 16px rgba(68,23,230,0.24)"
+                : "none",
             }}
             onMouseEnter={(e) => {
               if (isFormValid) {
-                (e.currentTarget as HTMLButtonElement).style.background = "#3510B8";
-                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 20px rgba(68,23,230,0.32)";
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "#3510B8";
+                (e.currentTarget as HTMLButtonElement).style.transform =
+                  "translateY(-1px)";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                  "0 6px 20px rgba(68,23,230,0.32)";
               }
             }}
             onMouseLeave={(e) => {
               if (isFormValid) {
-                (e.currentTarget as HTMLButtonElement).style.background = "#4417E6";
-                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 16px rgba(68,23,230,0.24)";
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "#4417E6";
+                (e.currentTarget as HTMLButtonElement).style.transform =
+                  "translateY(0)";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                  "0 4px 16px rgba(68,23,230,0.24)";
               }
             }}
           >

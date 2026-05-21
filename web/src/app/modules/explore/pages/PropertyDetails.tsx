@@ -30,6 +30,11 @@ import {
   Briefcase,
 } from "lucide-react";
 
+import { findPropertyById } from "../../publish/services/find-property-by-id";
+
+import { mapPropertyToPublishData } from "../mappers/map-property-to-publish-data";
+
+import { usePropertyPublish } from "../../publish/context/PropertyPublishContext";
 type UserType = "guest" | "propie" | "agente" | null;
 
 type MappedProperty = ReturnType<typeof mapPropertyDetails>;
@@ -50,6 +55,10 @@ function formatPrice(price: number) {
 
 export default function PropertyDetails() {
   const navigate = useNavigate();
+  const {
+    updateData,
+    reset,
+  } = usePropertyPublish();
   const { id } = useParams();
 
   const [property, setProperty] = useState<MappedProperty | null>(null);
@@ -161,6 +170,33 @@ export default function PropertyDetails() {
     }
   };
 
+  const handleEdit = async () => {
+    if (!property?.id) {
+      return;
+    }
+  
+    try {
+      reset();
+  
+      const propertyData =
+        await findPropertyById(property.id);
+  
+      const mappedProperty =
+        mapPropertyToPublishData(
+          propertyData
+        );
+  
+      updateData(mappedProperty);
+  
+      navigate("/publicar");
+    } catch (error) {
+      console.error(
+        "Error hydrating property edit:",
+        error
+      );
+    }
+  };
+
   if (loading) {
     return <div>Cargando...</div>;
   }
@@ -268,11 +304,7 @@ export default function PropertyDetails() {
                 <BarChart3 size={18} color="#1a1a1a" />
               </button>
               <button
-                onClick={() =>
-                  navigate(
-                    `/mis-propiedades/${property.id}/editar`
-                  )
-                }
+                onClick={handleEdit}
                 style={{
                   background: "#f0f0f0",
                   border: "none",
