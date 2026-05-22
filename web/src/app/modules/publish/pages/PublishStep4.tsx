@@ -6,9 +6,8 @@ import React from "react";
 import {
   savePropertyCommercialization,
 } from "../services/save-property-commercialization.ts";
-import {
-  usePropertyPublish,
-} from "../context/PropertyPublishContext";
+import { useAppTheme } from "../../../../theme/useAppTheme";
+import { usePropertyPublish } from "../context/PropertyPublishContext";
 
 type CommercializationType =
   | "AGENTS"
@@ -17,6 +16,7 @@ type CommercializationType =
   | "DIRECT";
 
 export default function PublishStep4() {
+  const theme = useAppTheme();
 
   const navigate = useNavigate();
   const {
@@ -97,7 +97,7 @@ export default function PublishStep4() {
       icon:
         <Users
           size={24}
-          color="#4417E6"
+          color={theme.primary}
           strokeWidth={2}
         />,
     },
@@ -114,7 +114,7 @@ export default function PublishStep4() {
       icon:
         <Building2
           size={24}
-          color="#4417E6"
+          color={theme.primary}
           strokeWidth={2}
         />,
     },
@@ -130,7 +130,7 @@ export default function PublishStep4() {
       icon:
         <UserCheck
           size={24}
-          color="#4417E6"
+          color={theme.primary}
           strokeWidth={2}
         />,
     },
@@ -147,7 +147,7 @@ export default function PublishStep4() {
       icon:
         <XCircle
           size={24}
-          color="#4417E6"
+          color={theme.primary}
           strokeWidth={2}
         />,
     },
@@ -167,7 +167,7 @@ export default function PublishStep4() {
       <div
         style={{
           position: "relative",
-          background: "linear-gradient(160deg, #5A32F0 0%, #4417E6 55%, #3510B8 100%)",
+          background: theme.heroGradient,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -258,7 +258,7 @@ export default function PublishStep4() {
                   style={{
                     width: "100%",
                     background: "white",
-                    border: commercializationType === option.id ? "2px solid #4417E6" : "2px solid transparent",
+                    border: commercializationType === option.id ? `2px solid ${theme.primary}` : "2px solid transparent",
                     borderRadius: 16,
                     padding: "18px 18px",
                     cursor: "pointer",
@@ -266,7 +266,7 @@ export default function PublishStep4() {
                     alignItems: "center",
                     gap: 14,
                     transition: "all 0.15s ease",
-                    boxShadow: commercializationType === option.id ? "0 4px 16px rgba(68,23,230,0.15)" : "0 1px 6px rgba(0,0,0,0.06)",
+                    boxShadow: commercializationType === option.id ? "0 4px 16px rgba(197,46,62,0.15)" : "0 1px 6px rgba(0,0,0,0.06)",
                   }}
                   onMouseEnter={(e) => {
                     if (commercializationType !== option.id) {
@@ -309,7 +309,7 @@ export default function PublishStep4() {
                         width: 24,
                         height: 24,
                         borderRadius: "50%",
-                        background: "#4417E6",
+                        background: theme.primary,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -366,7 +366,7 @@ export default function PublishStep4() {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        background: manualApproval ? "#4417E6" : "#e5e5ea",
+                        background: manualApproval ? theme.primary : "#e5e5ea",
                         transition: "0.3s",
                         borderRadius: 28,
                       }}
@@ -424,7 +424,7 @@ export default function PublishStep4() {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        background: allowChat ? "#4417E6" : "#e5e5ea",
+                        background: allowChat ? theme.primary : "#e5e5ea",
                         transition: "0.3s",
                         borderRadius: 28,
                       }}
@@ -482,7 +482,7 @@ export default function PublishStep4() {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        background: sharedCalendar ? "#4417E6" : "#e5e5ea",
+                        background: sharedCalendar ? theme.primary : "#e5e5ea",
                         transition: "0.3s",
                         borderRadius: 28,
                       }}
@@ -517,7 +517,7 @@ export default function PublishStep4() {
                 padding: "16px 18px",
               }}
             >
-              <p style={{ margin: 0, fontSize: 13, color: "#4417E6", lineHeight: 1.6, fontWeight: 500 }}>
+              <p style={{ margin: 0, fontSize: 13, color: theme.primary, lineHeight: 1.6, fontWeight: 500 }}>
                 💡 Vas a gestionar todas las consultas y visitas de forma directa
               </p>
             </div>
@@ -551,7 +551,7 @@ export default function PublishStep4() {
 
               background:
                 commercializationType
-                  ? "#4417E6"
+                  ? theme.primary
                   : "#d9d9df",
 
               color: "white",

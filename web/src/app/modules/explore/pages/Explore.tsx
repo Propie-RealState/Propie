@@ -20,9 +20,16 @@ import {
 import { useAuth } from "../../../../context/AuthContext";
 import type { Property } from "../types/property.types";
 import { getPublishedProperties } from "../services/explore.service";
+import { useAppTheme } from "../../../../theme/useAppTheme";
 
 // ─── Footer Nav ───────────────────────────────────────────────────
-function FooterNav({ isLoggedIn }: { isLoggedIn: boolean }) {
+function FooterNav({
+  isLoggedIn,
+  theme,
+}: {
+  isLoggedIn: boolean;
+  theme: ReturnType<typeof useAppTheme>;
+}) {
   const navigate = useNavigate();
   const currentPath = window.location.pathname;
 
@@ -32,7 +39,7 @@ function FooterNav({ isLoggedIn }: { isLoggedIn: boolean }) {
     path: string,
   ) => {
     const isActive = currentPath === path || currentPath.startsWith(path + "/");
-    const color = isActive ? "#4417E6" : "#6e6e73";
+    const color = isActive ? theme.primary : "#6e6e73";
     return (
       <button
         key={path}
@@ -154,6 +161,7 @@ function FooterNav({ isLoggedIn }: { isLoggedIn: boolean }) {
 // ─── Main Page ────────────────────────────────────────────────────
 export default function Explore() {
   const navigate = useNavigate();
+  const theme = useAppTheme();
 
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -199,7 +207,7 @@ export default function Explore() {
     padding: "8px 18px",
     borderRadius: 20,
     border: active ? "none" : "1.5px solid #e5e5ea",
-    background: active ? "#4417E6" : "white",
+    background: active ? theme.primary : "white",
     color: active ? "white" : "#1a1a1a",
     fontSize: 13,
     fontWeight: 600,
@@ -306,7 +314,7 @@ export default function Explore() {
               alignItems: "center",
               justifyContent: "center",
               gap: 6,
-              background: "#f0eeff",
+              background: theme.lightBgSolid,
               border: "none",
               cursor: "pointer",
               borderRadius: 16,
@@ -314,11 +322,11 @@ export default function Explore() {
               width: "100%",
             }}
           >
-            <MapPin size={14} color="#4417E6" />
-            <span style={{ fontSize: 14, fontWeight: 600, color: "#4417E6" }}>
+            <MapPin size={14} color={theme.primary} />
+            <span style={{ fontSize: 14, fontWeight: 600, color: theme.primary }}>
               Ubicación
             </span>
-            <ChevronDown size={14} color="#4417E6" />
+            <ChevronDown size={14} color={theme.primary} />
           </button>
 
           {/* Row 2 — Todos · Alquiler · Venta · Más filtros (same horizontal margin) */}
@@ -447,7 +455,7 @@ export default function Explore() {
       </div>
 
       {/* ── FOOTER ── */}
-      <FooterNav isLoggedIn={isLoggedIn} />
+      <FooterNav isLoggedIn={isLoggedIn} theme={theme} />
     </div>
   );
 }

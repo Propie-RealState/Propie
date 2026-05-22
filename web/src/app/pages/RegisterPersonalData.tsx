@@ -54,7 +54,7 @@ export default function RegisterPersonalData() {
     data.birthDate &&
     data.nationality &&
     isCuitCuilValid &&
-    data.address;
+    data.location;
 
   const isFormValid =
     isAgent
@@ -378,23 +378,28 @@ export default function RegisterPersonalData() {
               </div>
             </div>
 
-            {/* Address */}
+            {/* Localización real */}
             <div>
-              <label htmlFor="address" style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>
-                Dirección real
+              <label htmlFor="location" style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>
+                Localización real
               </label>
               <div style={{ position: "relative" }}>
                 <input
-                  id="address"
+                  id="location"
                   type="text"
-                  value={data.address}
-                  onChange={(e) => updateData({ ...data, address: e.target.value })}
+                  value={data.location}
+                  onChange={(e) =>
+                    updateData({
+                      location: e.target.value,
+                      address: e.target.value,
+                    })
+                  }
                   placeholder="Calle 123, Ciudad, Provincia"
                   style={{
                     width: "100%",
                     padding: "14px 48px 14px 16px",
                     borderRadius: 14,
-                    border: data.address ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
+                    border: data.location ? "1.5px solid #34C759" : "1.5px solid #e5e5ea",
                     fontSize: 15,
                     color: "#1a1a1a",
                     outline: "none",
@@ -402,19 +407,19 @@ export default function RegisterPersonalData() {
                     boxSizing: "border-box",
                   }}
                   onFocus={(e) => {
-                    if (!data.address) {
+                    if (!data.location) {
                       (e.target as HTMLInputElement).style.borderColor = colors.primary;
                       (e.target as HTMLInputElement).style.boxShadow = colors.focusShadow;
                     }
                   }}
                   onBlur={(e) => {
-                    if (!data.address) {
+                    if (!data.location) {
                       (e.target as HTMLInputElement).style.borderColor = "#e5e5ea";
                       (e.target as HTMLInputElement).style.boxShadow = "none";
                     }
                   }}
                 />
-                {data.address && (
+                {data.location && (
                   <div
                     style={{
                       position: "absolute",

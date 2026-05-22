@@ -6,12 +6,13 @@ import React from "react";
 import { updatePropertyAmenities } from "../services/update-property-amenities.ts";
 import { usePropertyPublish } from "../context/PropertyPublishContext";
 import { updatePropertyDetails } from "../services/update-property-details";
-import { amenitiesMap }
-  from "../mappers/map-amenities-to-api";
+import { useAppTheme } from "../../../../theme/useAppTheme";
+import { amenitiesMap } from "../mappers/map-amenities-to-api";
   
 type AmenityType = "pileta" | "patio" | "balcon" | "mascotas" | "seguridad";
 
 export default function PublishStep3() {
+  const theme = useAppTheme();
   const { data, updateData } = usePropertyPublish();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -177,7 +178,7 @@ export default function PublishStep3() {
         style={{
           position: "relative",
           background:
-            "linear-gradient(160deg, #5A32F0 0%, #4417E6 55%, #3510B8 100%)",
+            theme.heroGradient,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -368,9 +369,9 @@ export default function PublishStep3() {
                 onFocus={(e) => {
                   if (!formData.title) {
                     (e.target as HTMLInputElement).style.borderColor =
-                      "#4417E6";
+                      theme.primary;
                     (e.target as HTMLInputElement).style.boxShadow =
-                      "0 0 0 3px rgba(68,23,230,0.08)";
+                      "0 0 0 3px rgba(197,46,62,0.08)";
                   }
                 }}
                 onBlur={(e) => {
@@ -443,9 +444,9 @@ export default function PublishStep3() {
                 onFocus={(e) => {
                   if (!formData.description) {
                     (e.target as HTMLTextAreaElement).style.borderColor =
-                      "#4417E6";
+                      theme.primary;
                     (e.target as HTMLTextAreaElement).style.boxShadow =
-                      "0 0 0 3px rgba(68,23,230,0.08)";
+                      "0 0 0 3px rgba(197,46,62,0.08)";
                   }
                 }}
                 onBlur={(e) => {
@@ -524,9 +525,9 @@ export default function PublishStep3() {
                 onFocus={(e) => {
                   if (!formData.price) {
                     (e.target as HTMLInputElement).style.borderColor =
-                      "#4417E6";
+                      theme.primary;
                     (e.target as HTMLInputElement).style.boxShadow =
-                      "0 0 0 3px rgba(68,23,230,0.08)";
+                      "0 0 0 3px rgba(197,46,62,0.08)";
                   }
                 }}
                 onBlur={(e) => {
@@ -617,9 +618,9 @@ export default function PublishStep3() {
                   onFocus={(e) => {
                     if (!formData.rooms) {
                       (e.target as HTMLInputElement).style.borderColor =
-                        "#4417E6";
+                        theme.primary;
                       (e.target as HTMLInputElement).style.boxShadow =
-                        "0 0 0 3px rgba(68,23,230,0.08)";
+                        "0 0 0 3px rgba(197,46,62,0.08)";
                     }
                   }}
                   onBlur={(e) => {
@@ -674,9 +675,9 @@ export default function PublishStep3() {
                   onFocus={(e) => {
                     if (!formData.bathrooms) {
                       (e.target as HTMLInputElement).style.borderColor =
-                        "#4417E6";
+                        theme.primary;
                       (e.target as HTMLInputElement).style.boxShadow =
-                        "0 0 0 3px rgba(68,23,230,0.08)";
+                        "0 0 0 3px rgba(197,46,62,0.08)";
                     }
                   }}
                   onBlur={(e) => {
@@ -731,9 +732,9 @@ export default function PublishStep3() {
                   onFocus={(e) => {
                     if (!formData.sqm) {
                       (e.target as HTMLInputElement).style.borderColor =
-                        "#4417E6";
+                        theme.primary;
                       (e.target as HTMLInputElement).style.boxShadow =
-                        "0 0 0 3px rgba(68,23,230,0.08)";
+                        "0 0 0 3px rgba(197,46,62,0.08)";
                     }
                   }}
                   onBlur={(e) => {
@@ -788,9 +789,9 @@ export default function PublishStep3() {
                   onFocus={(e) => {
                     if (!formData.garage) {
                       (e.target as HTMLInputElement).style.borderColor =
-                        "#4417E6";
+                        theme.primary;
                       (e.target as HTMLInputElement).style.boxShadow =
-                        "0 0 0 3px rgba(68,23,230,0.08)";
+                        "0 0 0 3px rgba(197,46,62,0.08)";
                     }
                   }}
                   onBlur={(e) => {
@@ -825,10 +826,10 @@ export default function PublishStep3() {
                   onClick={() => toggleAmenity(amenity.id)}
                   style={{
                     background: amenities.includes(amenity.id)
-                      ? "#4417E6"
+                      ? theme.primary
                       : "white",
                     border: amenities.includes(amenity.id)
-                      ? "2px solid #4417E6"
+                      ? `2px solid ${theme.primary}`
                       : "2px solid #e5e5ea",
                     borderRadius: 12,
                     padding: "10px 16px",
@@ -838,15 +839,15 @@ export default function PublishStep3() {
                     gap: 8,
                     transition: "all 0.15s ease",
                     boxShadow: amenities.includes(amenity.id)
-                      ? "0 4px 12px rgba(68,23,230,0.2)"
+                      ? "0 4px 12px rgba(197,46,62,0.2)"
                       : "0 1px 4px rgba(0,0,0,0.04)",
                   }}
                   onMouseEnter={(e) => {
                     if (!amenities.includes(amenity.id)) {
                       (e.currentTarget as HTMLButtonElement).style.borderColor =
-                        "#4417E6";
+                        theme.primary;
                       (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                        "0 4px 12px rgba(68,23,230,0.1)";
+                        "0 4px 12px rgba(197,46,62,0.1)";
                     }
                   }}
                   onMouseLeave={(e) => {
@@ -881,7 +882,7 @@ export default function PublishStep3() {
             disabled={!isFormValid}
             style={{
               width: "100%",
-              background: isFormValid ? "#4417E6" : "#e5e5ea",
+              background: isFormValid ? theme.primary : "#e5e5ea",
               border: "none",
               borderRadius: 16,
               padding: "16px 18px",
@@ -892,27 +893,27 @@ export default function PublishStep3() {
               transition: "all 0.18s ease",
               marginTop: 8,
               boxShadow: isFormValid
-                ? "0 4px 16px rgba(68,23,230,0.24)"
+                ? "0 4px 16px rgba(197,46,62,0.24)"
                 : "none",
             }}
             onMouseEnter={(e) => {
               if (isFormValid) {
                 (e.currentTarget as HTMLButtonElement).style.background =
-                  "#3510B8";
+                  theme.primaryDark;
                 (e.currentTarget as HTMLButtonElement).style.transform =
                   "translateY(-1px)";
                 (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                  "0 6px 20px rgba(68,23,230,0.32)";
+                  "0 6px 20px rgba(197,46,62,0.32)";
               }
             }}
             onMouseLeave={(e) => {
               if (isFormValid) {
                 (e.currentTarget as HTMLButtonElement).style.background =
-                  "#4417E6";
+                  theme.primary;
                 (e.currentTarget as HTMLButtonElement).style.transform =
                   "translateY(0)";
                 (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                  "0 4px 16px rgba(68,23,230,0.24)";
+                  "0 4px 16px rgba(197,46,62,0.24)";
               }
             }}
           >

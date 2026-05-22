@@ -29,6 +29,7 @@ export type RegisterData = {
   nationality: string;
   cuitCuil: string;
   address: string;
+  location: string;
 
   twoFactorEnabled: boolean;
   biometricEnabled: boolean;
@@ -77,6 +78,7 @@ const initialData: RegisterData = {
   nationality: "",
   cuitCuil: "",
   address: "",
+  location: "",
 
   twoFactorEnabled: false,
   biometricEnabled: false,
@@ -129,8 +131,12 @@ export function RegisterProvider({ children }: Props) {
   );
 }
 
+export function useRegisterOptional() {
+  return useContext(RegisterContext);
+}
+
 export function useRegister() {
-  const context = useContext(RegisterContext);
+  const context = useRegisterOptional();
 
   if (!context) {
     throw new Error(

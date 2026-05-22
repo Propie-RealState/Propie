@@ -10,6 +10,7 @@ import {
   publishProperty,
 } from "../services/publish-property";
 import PublishSuccessModal from "./PublishSuccess";
+import { useAppTheme } from "../../../../theme/useAppTheme";
 
 const propertyTypeLabel: Record<string, string> = {
   HOUSE:      "Casa",
@@ -26,6 +27,7 @@ const listingTypeLabel: Record<string, string> = {
 };
 
 export default function PublishStep5() {
+  const theme = useAppTheme();
   const navigate = useNavigate();
 
   const {
@@ -105,7 +107,7 @@ export default function PublishStep5() {
       <div
         style={{
           position: "relative",
-          background: "linear-gradient(160deg, #5A32F0 0%, #4417E6 55%, #3510B8 100%)",
+          background: theme.heroGradient,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -214,8 +216,8 @@ export default function PublishStep5() {
                     width: 24,
                     height: 24,
                     borderRadius: 8,
-                    border: checklist.autorizado ? "2px solid #4417E6" : "2px solid #d1d1d6",
-                    background: checklist.autorizado ? "#4417E6" : "white",
+                    border: checklist.autorizado ? `2px solid ${theme.primary}` : "2px solid #d1d1d6",
+                    background: checklist.autorizado ? theme.primary : "white",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -255,8 +257,8 @@ export default function PublishStep5() {
                     width: 24,
                     height: 24,
                     borderRadius: 8,
-                    border: checklist.terminos ? "2px solid #4417E6" : "2px solid #d1d1d6",
-                    background: checklist.terminos ? "#4417E6" : "white",
+                    border: checklist.terminos ? `2px solid ${theme.primary}` : "2px solid #d1d1d6",
+                    background: checklist.terminos ? theme.primary : "white",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -344,7 +346,7 @@ export default function PublishStep5() {
                     flexShrink: 0,
                   }}
                 >
-                  {escritura ? <CheckCircle2 size={20} color="#4417E6" /> : <Upload size={20} color="#9a9aa0" />}
+                  {escritura ? <CheckCircle2 size={20} color={theme.primary} /> : <Upload size={20} color="#9a9aa0" />}
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>
@@ -388,7 +390,7 @@ export default function PublishStep5() {
                     flexShrink: 0,
                   }}
                 >
-                  {autorizacion ? <CheckCircle2 size={20} color="#4417E6" /> : <Upload size={20} color="#9a9aa0" />}
+                  {autorizacion ? <CheckCircle2 size={20} color={theme.primary} /> : <Upload size={20} color="#9a9aa0" />}
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>
@@ -423,7 +425,7 @@ export default function PublishStep5() {
                 <>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <div style={{ width: 48, height: 48, borderRadius: 12, background: "linear-gradient(135deg, #f0eeff 0%, #e4deff 100%)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <ImageIcon size={20} color="#4417E6" />
+                      <ImageIcon size={20} color={theme.primary} />
                     </div>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>{data.title}</div>
@@ -463,7 +465,7 @@ export default function PublishStep5() {
               {/* Property type */}
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{ width: 48, height: 48, borderRadius: 12, background: "linear-gradient(135deg, #f0eeff 0%, #e4deff 100%)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Home size={20} color="#4417E6" />
+                  <Home size={20} color={theme.primary} />
                 </div>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>
@@ -494,17 +496,17 @@ export default function PublishStep5() {
                   <div style={{ height: 1, background: "#f0f0f0" }} />
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, background: "#f8f8fb", borderRadius: 12, padding: "12px 8px" }}>
-                      <BedDouble size={18} color="#4417E6" />
+                      <BedDouble size={18} color={theme.primary} />
                       <div style={{ fontSize: 15, fontWeight: 700, color: "#1a1a1a" }}>{data.bedrooms ?? "—"}</div>
                       <div style={{ fontSize: 11, color: "#6e6e73" }}>Hab.</div>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, background: "#f8f8fb", borderRadius: 12, padding: "12px 8px" }}>
-                      <Bath size={18} color="#4417E6" />
+                      <Bath size={18} color={theme.primary} />
                       <div style={{ fontSize: 15, fontWeight: 700, color: "#1a1a1a" }}>{data.bathrooms ?? "—"}</div>
                       <div style={{ fontSize: 11, color: "#6e6e73" }}>Baños</div>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, background: "#f8f8fb", borderRadius: 12, padding: "12px 8px" }}>
-                      <Maximize2 size={18} color="#4417E6" />
+                      <Maximize2 size={18} color={theme.primary} />
                       <div style={{ fontSize: 15, fontWeight: 700, color: "#1a1a1a" }}>{data.areaM2 ?? "—"}</div>
                       <div style={{ fontSize: 11, color: "#6e6e73" }}>m²</div>
                     </div>
@@ -572,7 +574,7 @@ export default function PublishStep5() {
 
               background:
                 canPublish
-                  ? "#4417E6"
+                  ? theme.primary
                   : "#d9d9df",
 
               color: "white",

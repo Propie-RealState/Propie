@@ -34,6 +34,10 @@ export function buildRegisterPayload(
 
     address: data.address,
 
+    location: data.location || data.address,
+
+    phone: data.recoveryPhone || undefined,
+
     bio: data.bio || undefined,
 
     mainGoal,

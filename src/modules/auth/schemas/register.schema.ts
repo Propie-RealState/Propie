@@ -1,98 +1,51 @@
-import { z } from 'zod';
-
-
+import { z } from "zod";
 
 // ========================================================
 // ENUMS
 // ========================================================
 
-export const RegisterRoleSchema =
-  z.enum([
-    'OWNER',
-    'AGENT',
-  ]);
+export const RegisterRoleSchema = z.enum(["OWNER", "AGENT"]);
 
-export const MainGoalSchema =
-  z.enum([
-    'PUBLISH',
-    'EXPLORE',
-  ]);
-
-
+export const MainGoalSchema = z.enum(["PUBLISH", "EXPLORE"]);
 
 // ========================================================
 // REGISTER
 // ========================================================
 
-export const RegisterSchema =
-  z.object({
-    role:
-      RegisterRoleSchema,
+export const RegisterSchema = z.object({
+  role: RegisterRoleSchema,
 
-    firstName:
-      z.string()
-        .min(2)
-        .max(100),
+  firstName: z.string().min(2).max(100),
 
-    lastName:
-      z.string()
-        .min(2)
-        .max(100),
+  lastName: z.string().min(2).max(100),
 
-    email:
-      z.string()
-        .email(),
+  email: z.string().email(),
 
-    password:
-      z.string()
-        .min(8)
-        .max(100),
+  password: z.string().min(8).max(100),
 
-    dni:
-      z.string()
-        .min(7)
-        .max(12),
+  dni: z.string().min(7).max(12),
 
-    birthDate:
-      z.string(),
+  birthDate: z.string(),
 
-    nationality:
-      z.string()
-        .min(2)
-        .max(100),
+  nationality: z.string().min(2).max(100),
 
-    cuitCuil:
-      z.string()
-        .min(10)
-        .max(15),
+  cuitCuil: z.string().min(10).max(15),
 
-    address:
-      z.string()
-        .min(5)
-        .max(255),
+  address: z.string().min(5).max(255),
 
-    bio:
-      z.string()
-        .max(300)
-        .optional(),
+  location: z.string().min(2).max(255).optional(),
 
-    mainGoal:
-      MainGoalSchema
-        .nullable(),
+  phone: z.string().min(8).max(20).optional(),
 
-    profilePhoto:
-      z.string()
-        .nullable()
-        .optional(),
-  });
+  bio: z.string().max(300).optional(),
 
+  mainGoal: z.enum(["PUBLISH", "EXPLORE"]),
 
+  profilePhoto: z.string().nullable().optional(),
+});
 
 // ========================================================
 // TYPES
 // ========================================================
 
-export type RegisterInput =
-  z.infer<
-    typeof RegisterSchema
-  >;
+export type RegisterInput = z.infer<typeof RegisterSchema>;

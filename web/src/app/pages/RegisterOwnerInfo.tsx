@@ -39,7 +39,7 @@ export default function RegisterOwnerInfo() {
         "OWNER",
         "EXPLORE"
       );
-
+      console.log(JSON.stringify(payload, null, 2));
       const response = await apiFetch("/auth/register", {
         method: "POST",
         body: JSON.stringify(payload),

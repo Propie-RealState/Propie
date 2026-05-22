@@ -3,25 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { PropieLogo } from "../components/PropieLogo";
 import { ArrowLeft, Mail, Check } from "lucide-react";
 import React from "react";
+import { useRegister } from "../../context/RegisterContext";
+import { getAppTheme } from "../../theme/app-theme";
 
 export default function RegisterVerification() {
   const navigate = useNavigate();
+  const { data } = useRegister();
   const [emailCode, setEmailCode] = useState("");
   const [emailTimer, setEmailTimer] = useState(60);
   const [emailVerified, setEmailVerified] = useState(false);
 
-  const userType = sessionStorage.getItem("userType");
-  const isAgent = userType === "agente";
-
-  const colors = {
-    gradient: isAgent
-      ? "linear-gradient(160deg, #FF8C5B 0%, #C52E3E 55%, #A82534 100%)"
-      : "linear-gradient(160deg, #5A32F0 0%, #4417E6 55%, #3510B8 100%)",
-    primary: isAgent ? "#C52E3E" : "#4417E6",
-    lightBg: isAgent
-      ? "linear-gradient(135deg, #fff4ed 0%, #ffe8d6 100%)"
-      : "linear-gradient(135deg, #f0eeff 0%, #e4deff 100%)",
-  };
+  const theme = getAppTheme(data.role === "AGENT");
 
   // Email Timer
   useEffect(() => {
@@ -73,7 +65,7 @@ export default function RegisterVerification() {
       <div
         style={{
           position: "relative",
-          background: colors.gradient,
+          background: theme.heroGradient,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -167,14 +159,14 @@ export default function RegisterVerification() {
                   width: 48,
                   height: 48,
                   borderRadius: 14,
-                  background: colors.lightBg,
+                  background: theme.lightBg,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   transition: "all 0.3s ease",
                 }}
               >
-                <Mail size={22} color={colors.primary} strokeWidth={1.8} />
+                <Mail size={22} color={theme.primary} strokeWidth={1.8} />
               </div>
               <div style={{ flex: 1 }}>
                 <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>
@@ -228,10 +220,8 @@ export default function RegisterVerification() {
                 }}
                 onFocus={(e) => {
                   if (!emailVerified) {
-                    (e.target as HTMLInputElement).style.borderColor = colors.primary;
-                    (e.target as HTMLInputElement).style.boxShadow = isAgent
-                      ? "0 0 0 3px rgba(197,46,62,0.08)"
-                      : "0 0 0 3px rgba(68,23,230,0.08)";
+                    (e.target as HTMLInputElement).style.borderColor = theme.primary;
+                    (e.target as HTMLInputElement).style.boxShadow = theme.focusShadow;
                   }
                 }}
                 onBlur={(e) => {
@@ -263,7 +253,7 @@ export default function RegisterVerification() {
                 {emailTimer > 0 ? (
                   <span style={{ color: "#9a9aa0" }}>
                     Reenviar código en{" "}
-                    <span style={{ fontWeight: 600, color: colors.primary }}>{formatTime(emailTimer)}</span>
+                    <span style={{ fontWeight: 600, color: theme.primary }}>{formatTime(emailTimer)}</span>
                   </span>
                 ) : (
                   <button
@@ -271,7 +261,7 @@ export default function RegisterVerification() {
                     style={{
                       background: "transparent",
                       border: "none",
-                      color: colors.primary,
+                      color: theme.primary,
                       fontWeight: 600,
                       cursor: "pointer",
                       fontSize: 13,
@@ -287,7 +277,7 @@ export default function RegisterVerification() {
 
           {/* Helper text */}
           <p style={{ marginTop: 16, textAlign: "center", color: "#9a9aa0", fontSize: 12, lineHeight: 1.6 }}>
-            Para probar, usá el código <span style={{ fontWeight: 600, color: colors.primary }}>123456</span>
+            Para probar, usá el código <span style={{ fontWeight: 600, color: theme.primary }}>123456</span>
           </p>
         </div>
       </div>

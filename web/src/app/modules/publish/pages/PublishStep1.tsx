@@ -8,9 +8,11 @@ import { updatePropertyBasic } from "../services/updatePropertyBasic";
 import { PropertyType } from "../types/property-publish.types";
 import { createProperty } from "../services/create-property";
 import type { ListingType } from "../types/property-publish.types";
+import { useAppTheme } from "../../../../theme/useAppTheme";
 type OperationType = "venta" | "alquiler" | "temporario" | null;
 
 export default function PublishStep1() {
+  const theme = useAppTheme();
   const navigate = useNavigate();
 
   const { data, updateData } = usePropertyPublish();
@@ -187,7 +189,7 @@ export default function PublishStep1() {
         style={{
           position: "relative",
           background:
-            "linear-gradient(160deg, #5A32F0 0%, #4417E6 55%, #3510B8 100%)",
+            theme.heroGradient,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -362,7 +364,7 @@ export default function PublishStep1() {
                     background: "white",
                     border:
                       operationType === card.id
-                        ? "2px solid #4417E6"
+                        ? `2px solid ${theme.primary}`
                         : "2px solid transparent",
                     borderRadius: 16,
                     padding: "18px 18px",
@@ -373,7 +375,7 @@ export default function PublishStep1() {
                     transition: "all 0.15s ease",
                     boxShadow:
                       operationType === card.id
-                        ? "0 4px 16px rgba(68,23,230,0.15)"
+                        ? "0 4px 16px rgba(197,46,62,0.15)"
                         : "0 1px 6px rgba(0,0,0,0.06)",
                   }}
                   onMouseEnter={(e) => {
@@ -434,7 +436,7 @@ export default function PublishStep1() {
                         width: 24,
                         height: 24,
                         borderRadius: "50%",
-                        background: "#4417E6",
+                        background: theme.primary,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -488,7 +490,7 @@ export default function PublishStep1() {
                     background: "white",
                     border:
                       data.propertyType === card.id
-                        ? "2px solid #4417E6"
+                        ? `2px solid ${theme.primary}`
                         : "2px solid transparent",
                     borderRadius: 16,
                     padding: "20px 16px",
@@ -500,7 +502,7 @@ export default function PublishStep1() {
                     transition: "all 0.15s ease",
                     boxShadow:
                       data.propertyType === card.id
-                        ? "0 4px 16px rgba(68,23,230,0.15)"
+                        ? "0 4px 16px rgba(197,46,62,0.15)"
                         : "0 1px 6px rgba(0,0,0,0.06)",
                   }}
                   onMouseEnter={(e) => {
@@ -553,7 +555,7 @@ export default function PublishStep1() {
                         width: 20,
                         height: 20,
                         borderRadius: "50%",
-                        background: "#4417E6",
+                        background: theme.primary,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -621,9 +623,9 @@ export default function PublishStep1() {
                   background: "white",
                 }}
                 onFocus={(e) => {
-                  (e.target as HTMLInputElement).style.borderColor = "#4417E6";
+                  (e.target as HTMLInputElement).style.borderColor = theme.primary;
                   (e.target as HTMLInputElement).style.boxShadow =
-                    "0 0 0 3px rgba(68,23,230,0.08)";
+                    "0 0 0 3px rgba(197,46,62,0.08)";
                 }}
                 onBlur={(e) => {
                   (e.target as HTMLInputElement).style.borderColor = "#e5e5ea";
@@ -664,7 +666,7 @@ export default function PublishStep1() {
             disabled={!isFormValid}
             style={{
               width: "100%",
-              background: isFormValid ? "#4417E6" : "#e5e5ea",
+              background: isFormValid ? theme.primary : "#e5e5ea",
               border: "none",
               borderRadius: 16,
               padding: "16px 18px",
@@ -675,27 +677,27 @@ export default function PublishStep1() {
               transition: "all 0.18s ease",
               marginTop: 8,
               boxShadow: isFormValid
-                ? "0 4px 16px rgba(68,23,230,0.24)"
+                ? "0 4px 16px rgba(197,46,62,0.24)"
                 : "none",
             }}
             onMouseEnter={(e) => {
               if (isFormValid) {
                 (e.currentTarget as HTMLButtonElement).style.background =
-                  "#3510B8";
+                  theme.primaryDark;
                 (e.currentTarget as HTMLButtonElement).style.transform =
                   "translateY(-1px)";
                 (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                  "0 6px 20px rgba(68,23,230,0.32)";
+                  "0 6px 20px rgba(197,46,62,0.32)";
               }
             }}
             onMouseLeave={(e) => {
               if (isFormValid) {
                 (e.currentTarget as HTMLButtonElement).style.background =
-                  "#4417E6";
+                  theme.primary;
                 (e.currentTarget as HTMLButtonElement).style.transform =
                   "translateY(0)";
                 (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                  "0 4px 16px rgba(68,23,230,0.24)";
+                  "0 4px 16px rgba(197,46,62,0.24)";
               }
             }}
           >

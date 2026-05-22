@@ -22,6 +22,8 @@ import {
   propertiesRoutes,
 } from "./modules/properties/routes/properties.routes";
 
+import { profileRoutes } from "./modules/profiles/routes/profile.routes";
+
 // ========================================================
 // BUILD APP
 // ========================================================
@@ -106,6 +108,13 @@ export async function buildApp() {
     propertiesRoutes,
     {
       prefix: "/properties",
+    }
+  );
+
+  await app.register(
+    profileRoutes,
+    {
+      prefix: "/profile",
     }
   );
 

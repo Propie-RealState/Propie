@@ -3,17 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { CheckCircle2, Sparkles, ArrowRight, Eye } from "lucide-react";
 import { PropertyType } from "../types/property-publish.types";
 import { usePropertyPublish } from "../context/PropertyPublishContext";
-
-const propertyConfig: Record<
-  PropertyType,
-  { label: string; emoji: string; color: string }
-> = {
-  HOUSE:      { label: "Casa",            emoji: "🏡", color: "#4417E6" },
-  APARTMENT:  { label: "Departamento",    emoji: "🏢", color: "#4417E6" },
-  LAND:       { label: "Terreno",         emoji: "🌿", color: "#197A52" },
-  COMMERCIAL: { label: "Local comercial", emoji: "🏬", color: "#C52E3E" },
-  OFFICE:     { label: "Oficina",         emoji: "🏛️", color: "#4417E6" },
-};
+import { useAppTheme } from "../../../../theme/useAppTheme";
 
 interface PublishSuccessModalProps {
   isOpen: boolean;
@@ -25,8 +15,20 @@ export default function PublishSuccessModal({
   onClose,
 }: PublishSuccessModalProps) {
   const navigate = useNavigate();
+  const theme = useAppTheme();
   const { data, reset } = usePropertyPublish();
   const [visible, setVisible] = useState(false);
+
+  const propertyConfig: Record<
+    PropertyType,
+    { label: string; emoji: string; color: string }
+  > = {
+    HOUSE: { label: "Casa", emoji: "🏡", color: theme.primary },
+    APARTMENT: { label: "Departamento", emoji: "🏢", color: theme.primary },
+    LAND: { label: "Terreno", emoji: "🌿", color: "#197A52" },
+    COMMERCIAL: { label: "Local comercial", emoji: "🏬", color: "#C52E3E" },
+    OFFICE: { label: "Oficina", emoji: "🏛️", color: theme.primary },
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -51,7 +53,7 @@ export default function PublishSuccessModal({
 
   const handleViewPublication = () => {
     onClose();
-    navigate(`/propiedades/${data.propertyId}`);
+    navigate(`/propiedad/${data.propertyId}`);
   };
 
   return (
@@ -117,7 +119,7 @@ export default function PublishSuccessModal({
           <div
             style={{
               background:
-                "linear-gradient(160deg, #5A32F0 0%, #4417E6 55%, #3510B8 100%)",
+                theme.heroGradient,
               padding: "40px 28px 32px",
               display: "flex",
               flexDirection: "column",
@@ -261,7 +263,7 @@ export default function PublishSuccessModal({
             {/* Info bullets */}
             <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 11 }}>
-                <Sparkles size={15} color="#4417E6" style={{ flexShrink: 0, marginTop: 2 }} />
+                <Sparkles size={15} color={theme.primary} style={{ flexShrink: 0, marginTop: 2 }} />
                 <p style={{ margin: 0, fontSize: 13, color: "#3a3a3a", lineHeight: 1.55 }}>
                   Tu publicación ya puede aparecer en búsquedas y mapas.
                 </p>
@@ -281,7 +283,7 @@ export default function PublishSuccessModal({
                 onClick={handleExplore}
                 style={{
                   width: "100%",
-                  background: "#4417E6",
+                  background: theme.primary,
                   border: "none",
                   borderRadius: 16,
                   padding: "16px 18px",
@@ -293,20 +295,20 @@ export default function PublishSuccessModal({
                   alignItems: "center",
                   justifyContent: "center",
                   gap: 8,
-                  boxShadow: "0 4px 16px rgba(68,23,230,0.28)",
+                  boxShadow: "0 4px 16px rgba(197,46,62,0.28)",
                   transition: "all 0.15s ease",
                 }}
                 onMouseEnter={(e) => {
                   const b = e.currentTarget as HTMLButtonElement;
-                  b.style.background = "#3510B8";
+                  b.style.background = theme.primaryDark;
                   b.style.transform = "translateY(-1px)";
-                  b.style.boxShadow = "0 6px 20px rgba(68,23,230,0.36)";
+                  b.style.boxShadow = "0 6px 20px rgba(197,46,62,0.36)";
                 }}
                 onMouseLeave={(e) => {
                   const b = e.currentTarget as HTMLButtonElement;
-                  b.style.background = "#4417E6";
+                  b.style.background = theme.primary;
                   b.style.transform = "translateY(0)";
-                  b.style.boxShadow = "0 4px 16px rgba(68,23,230,0.28)";
+                  b.style.boxShadow = "0 4px 16px rgba(197,46,62,0.28)";
                 }}
               >
                 Explorar propiedades
@@ -325,7 +327,7 @@ export default function PublishSuccessModal({
                   cursor: "pointer",
                   fontSize: 15,
                   fontWeight: 600,
-                  color: "#4417E6",
+                  color: theme.primary,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -335,7 +337,7 @@ export default function PublishSuccessModal({
                 onMouseEnter={(e) => {
                   const b = e.currentTarget as HTMLButtonElement;
                   b.style.background = "#f0eeff";
-                  b.style.borderColor = "#4417E6";
+                  b.style.borderColor = theme.primary;
                 }}
                 onMouseLeave={(e) => {
                   const b = e.currentTarget as HTMLButtonElement;

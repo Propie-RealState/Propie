@@ -4,6 +4,7 @@ import { formatPrice } from "../utils/formatPrice";
 
 import React from "react";
 import { Heart, MapPin, Bed, Bath, Maximize2 } from "lucide-react";
+import { useAppTheme } from "../../../../theme/useAppTheme";
 
 interface PropertyCardProps {
   property: Property;
@@ -14,9 +15,10 @@ interface PropertyCardProps {
 export default function PropertyCard({
   property,
   isFav,
-  onToggleFav,
+  onToggleFav
 }: PropertyCardProps) {
   const navigate = useNavigate();
+  const theme = useAppTheme();
 
   return (
     <div
@@ -55,7 +57,7 @@ export default function PropertyCard({
             top: 18,
             left: 18,
             background:
-              property.operationType === "SALE" ? "#4f46e5" : "#10b981",
+              property.operationType === "SALE" ? theme.saleBadge : "#10b981",
             color: "#fff",
             padding: "8px 14px",
             borderRadius: 999,
@@ -203,7 +205,7 @@ export default function PropertyCard({
             border: "none",
             borderRadius: 18,
             padding: "16px 20px",
-            background: "#4f46e5",
+            background: theme.primary,
             color: "#fff",
             fontWeight: 700,
             cursor: "pointer",

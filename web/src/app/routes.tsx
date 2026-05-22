@@ -27,10 +27,9 @@ import PropertyDetails from "./modules/explore/pages/PropertyDetails";
 import EditProperty from "./modules/explore/pages/EditProperty";
 
 import Share from "./pages/Share";
-import Profile from "./pages/Profile";
+import Profile from "./modules/profile/pages/Profile.tsx";
 import { PropertyPublishProvider } from "./modules/publish/context/PropertyPublishContext";
 import MyProperties from "./modules/my-properties/pages/MyProperties";
-
 export const router =
   createBrowserRouter([
     {

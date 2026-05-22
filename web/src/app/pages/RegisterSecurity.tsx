@@ -4,24 +4,13 @@ import { PropieLogo } from "../components/PropieLogo";
 import { ArrowLeft, Check, Shield, Fingerprint, Lock, Mail, Smartphone } from "lucide-react";
 import React from "react";
 import { useRegister } from "../../context/RegisterContext";
+import { getAppTheme } from "../../theme/app-theme";
 
 export default function RegisterSecurity() {
   const { data, updateData } = useRegister();
   const navigate = useNavigate();
 
-  const userType = sessionStorage.getItem("userType");
-  const isAgent = userType === "agente";
-
-  const colors = {
-    gradient: isAgent
-      ? "linear-gradient(160deg, #FF8C5B 0%, #C52E3E 55%, #A82534 100%)"
-      : "linear-gradient(160deg, #5A32F0 0%, #4417E6 55%, #3510B8 100%)",
-    primary: isAgent ? "#C52E3E" : "#4417E6",
-    primaryDark: isAgent ? "#A82534" : "#3510B8",
-    focusShadow: isAgent ? "0 0 0 3px rgba(197,46,62,0.08)" : "0 0 0 3px rgba(68,23,230,0.08)",
-    buttonShadow: isAgent ? "0 4px 16px rgba(197,46,62,0.24)" : "0 4px 16px rgba(68,23,230,0.24)",
-    buttonHoverShadow: isAgent ? "0 6px 20px rgba(197,46,62,0.32)" : "0 6px 20px rgba(68,23,230,0.32)",
-  };
+  const theme = getAppTheme(data.role === "AGENT");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +54,7 @@ export default function RegisterSecurity() {
       <div
         style={{
           position: "relative",
-          background: colors.gradient,
+          background: theme.heroGradient,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -173,7 +162,7 @@ export default function RegisterSecurity() {
                       flexShrink: 0,
                     }}
                   >
-                    <Shield size={20} color={colors.primary} strokeWidth={2} />
+                    <Shield size={20} color={theme.primary} strokeWidth={2} />
                   </div>
                   <div style={{ flex: 1 }}>
                     <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>
@@ -198,7 +187,7 @@ export default function RegisterSecurity() {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        background: data.twoFactorEnabled ? colors.primary : "#e5e5ea",
+                        background: data.twoFactorEnabled ? theme.primary : "#e5e5ea",
                         transition: "0.3s",
                         borderRadius: 28,
                       }}
@@ -246,7 +235,7 @@ export default function RegisterSecurity() {
                       flexShrink: 0,
                     }}
                   >
-                    <Fingerprint size={20} color={colors.primary} strokeWidth={2} />
+                    <Fingerprint size={20} color={theme.primary} strokeWidth={2} />
                   </div>
                   <div style={{ flex: 1 }}>
                     <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>
@@ -271,7 +260,7 @@ export default function RegisterSecurity() {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        background: data.biometricEnabled ? colors.primary : "#e5e5ea",
+                        background: data.biometricEnabled ? theme.primary : "#e5e5ea",
                         transition: "0.3s",
                         borderRadius: 28,
                       }}
@@ -318,7 +307,7 @@ export default function RegisterSecurity() {
                       flexShrink: 0,
                     }}
                   >
-                    <Lock size={20} color={colors.primary} strokeWidth={2} />
+                    <Lock size={20} color={theme.primary} strokeWidth={2} />
                   </div>
                   <div style={{ flex: 1 }}>
                     <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>
@@ -343,7 +332,7 @@ export default function RegisterSecurity() {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        background: data.pinEnabled ? colors.primary : "#e5e5ea",
+                        background: data.pinEnabled ? theme.primary : "#e5e5ea",
                         transition: "0.3s",
                         borderRadius: 28,
                       }}
@@ -391,8 +380,8 @@ export default function RegisterSecurity() {
                         }}
                         onFocus={(e) => {
                           if (!isPinValid) {
-                            (e.target as HTMLInputElement).style.borderColor = colors.primary;
-                            (e.target as HTMLInputElement).style.boxShadow = colors.focusShadow;
+                            (e.target as HTMLInputElement).style.borderColor = theme.primary;
+                            (e.target as HTMLInputElement).style.boxShadow = theme.focusShadow;
                           }
                         }}
                         onBlur={(e) => {
@@ -591,7 +580,7 @@ export default function RegisterSecurity() {
               disabled={!isFormValid}
               style={{
                 width: "100%",
-                background: isFormValid ? colors.primary : "#e5e5ea",
+                background: isFormValid ? theme.primary : "#e5e5ea",
                 border: "none",
                 borderRadius: 16,
                 padding: "16px 18px",
@@ -601,20 +590,20 @@ export default function RegisterSecurity() {
                 color: isFormValid ? "white" : "#9a9aa0",
                 transition: "all 0.18s ease",
                 marginTop: 16,
-                boxShadow: isFormValid ? colors.buttonShadow : "none",
+                boxShadow: isFormValid ? theme.buttonShadow : "none",
               }}
               onMouseEnter={(e) => {
                 if (isFormValid) {
-                  (e.currentTarget as HTMLButtonElement).style.background = colors.primaryDark;
+                  (e.currentTarget as HTMLButtonElement).style.background = theme.primaryDark;
                   (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
-                  (e.currentTarget as HTMLButtonElement).style.boxShadow = colors.buttonHoverShadow;
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow = theme.buttonHoverShadow;
                 }
               }}
               onMouseLeave={(e) => {
                 if (isFormValid) {
-                  (e.currentTarget as HTMLButtonElement).style.background = colors.primary;
+                  (e.currentTarget as HTMLButtonElement).style.background = theme.primary;
                   (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-                  (e.currentTarget as HTMLButtonElement).style.boxShadow = colors.buttonShadow;
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow = theme.buttonShadow;
                 }
               }}
             >

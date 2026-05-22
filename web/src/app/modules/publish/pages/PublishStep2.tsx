@@ -36,6 +36,7 @@ import {
 } from "@dnd-kit/sortable";
 
 import { CSS } from "@dnd-kit/utilities";
+import { useAppTheme } from "../../../../theme/useAppTheme";
 
 interface MediaItem {
   id?: string;
@@ -99,10 +100,12 @@ function mapPropertyMediaToItems(
 
 function SortableMediaCard({
   item,
+  primaryColor,
   onRemove,
   onSetCover,
 }: {
   item: MediaItem;
+  primaryColor: string;
   onRemove: (id: string) => void;
   onSetCover: (id: string) => void;
 }) {
@@ -121,7 +124,7 @@ function SortableMediaCard({
     borderRadius: 14,
     overflow: "hidden",
     background: "#e5e5ea",
-    border: item.isCover ? "2px solid #4417E6" : "2px solid transparent",
+    border: item.isCover ? `2px solid ${primaryColor}` : "2px solid transparent",
     boxShadow: isDragging
       ? "0 8px 24px rgba(0,0,0,0.2)"
       : "0 2px 8px rgba(0,0,0,0.06)",
@@ -162,13 +165,13 @@ function SortableMediaCard({
             position: "absolute",
             top: 8,
             left: 8,
-            background: "#4417E6",
+            background: primaryColor,
             borderRadius: 8,
             padding: "4px 10px",
             display: "flex",
             alignItems: "center",
             gap: 4,
-            boxShadow: "0 2px 8px rgba(68,23,230,0.3)",
+            boxShadow: `0 2px 8px ${primaryColor}4D`,
           }}
         >
           <Star size={12} color="white" fill="white" />
@@ -287,6 +290,7 @@ function SortableMediaCard({
 
 
 export default function PublishStep2() {
+  const theme = useAppTheme();
   const { data } = usePropertyPublish();
 
   const navigate = useNavigate();
@@ -523,7 +527,7 @@ export default function PublishStep2() {
         style={{
           position: "relative",
           background:
-            "linear-gradient(160deg, #5A32F0 0%, #4417E6 55%, #3510B8 100%)",
+            theme.heroGradient,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -705,9 +709,9 @@ export default function PublishStep2() {
               }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.borderColor =
-                  "#4417E6";
+                  theme.primary;
                 (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                  "0 4px 12px rgba(68,23,230,0.1)";
+                  "0 4px 12px rgba(197,46,62,0.1)";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.borderColor =
@@ -716,7 +720,7 @@ export default function PublishStep2() {
                   "0 1px 4px rgba(0,0,0,0.04)";
               }}
             >
-              <Camera size={24} color="#4417E6" />
+              <Camera size={24} color={theme.primary} />
               <span style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>
                 Cámara
               </span>
@@ -749,9 +753,9 @@ export default function PublishStep2() {
               }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.borderColor =
-                  "#4417E6";
+                  theme.primary;
                 (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                  "0 4px 12px rgba(68,23,230,0.1)";
+                  "0 4px 12px rgba(197,46,62,0.1)";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.borderColor =
@@ -760,7 +764,7 @@ export default function PublishStep2() {
                   "0 1px 4px rgba(0,0,0,0.04)";
               }}
             >
-              <Image size={24} color="#4417E6" />
+              <Image size={24} color={theme.primary} />
               <span style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>
                 Galería
               </span>
@@ -793,9 +797,9 @@ export default function PublishStep2() {
               }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.borderColor =
-                  "#4417E6";
+                  theme.primary;
                 (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                  "0 4px 12px rgba(68,23,230,0.1)";
+                  "0 4px 12px rgba(197,46,62,0.1)";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.borderColor =
@@ -804,7 +808,7 @@ export default function PublishStep2() {
                   "0 1px 4px rgba(0,0,0,0.04)";
               }}
             >
-              <Video size={24} color="#4417E6" />
+              <Video size={24} color={theme.primary} />
               <span style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>
                 Videos
               </span>
@@ -845,6 +849,7 @@ export default function PublishStep2() {
                       <SortableMediaCard
                         key={item.id}
                         item={item}
+                        primaryColor={theme.primary}
                         onRemove={handleRemove}
                         onSetCover={handleSetCover}
                       />
@@ -897,7 +902,7 @@ export default function PublishStep2() {
                 style={{
                   margin: 0,
                   fontSize: 12,
-                  color: "#4417E6",
+                  color: theme.primary,
                   lineHeight: 1.6,
                   fontWeight: 500,
                 }}
@@ -913,7 +918,7 @@ export default function PublishStep2() {
             disabled={!isFormValid}
             style={{
               width: "100%",
-              background: isFormValid ? "#4417E6" : "#e5e5ea",
+              background: isFormValid ? theme.primary : "#e5e5ea",
               border: "none",
               borderRadius: 16,
               padding: "16px 18px",
@@ -924,27 +929,27 @@ export default function PublishStep2() {
               transition: "all 0.18s ease",
               marginTop: 8,
               boxShadow: isFormValid
-                ? "0 4px 16px rgba(68,23,230,0.24)"
+                ? "0 4px 16px rgba(197,46,62,0.24)"
                 : "none",
             }}
             onMouseEnter={(e) => {
               if (isFormValid) {
                 (e.currentTarget as HTMLButtonElement).style.background =
-                  "#3510B8";
+                  theme.primaryDark;
                 (e.currentTarget as HTMLButtonElement).style.transform =
                   "translateY(-1px)";
                 (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                  "0 6px 20px rgba(68,23,230,0.32)";
+                  "0 6px 20px rgba(197,46,62,0.32)";
               }
             }}
             onMouseLeave={(e) => {
               if (isFormValid) {
                 (e.currentTarget as HTMLButtonElement).style.background =
-                  "#4417E6";
+                  theme.primary;
                 (e.currentTarget as HTMLButtonElement).style.transform =
                   "translateY(0)";
                 (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                  "0 4px 16px rgba(68,23,230,0.24)";
+                  "0 4px 16px rgba(197,46,62,0.24)";
               }
             }}
           >
