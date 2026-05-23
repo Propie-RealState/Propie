@@ -10,6 +10,8 @@ import { updatePropertyBasicController } from "../controllers/update-property-ba
 
 import { updatePropertyLocationController } from "../controllers/update-property-location.controller";
 
+import { UpdatePropertyLocationSchema } from "../schemas/update-property-location.schema";
+
 import { updatePropertyDetailsController } from "../controllers/update-property-details.controller";
 
 import { UpdatePropertyDetailsSchema } from "../schemas/update-property-details.schema";
@@ -42,6 +44,10 @@ import { updatePropertyMediaOrderController } from "../controllers/update-proper
 
 import { deletePropertyVideoController } from "../controllers/delete-property-video.controller";
 
+import { getMapPropertiesController } from "../controllers/get-map-properties.controller";
+
+import { getNearbyPropertiesController } from "../controllers/get-nearby-properties.controller";
+
 export async function propertiesRoutes(app: FastifyInstance) {
   app.post(
     "/",
@@ -57,6 +63,18 @@ export async function propertiesRoutes(app: FastifyInstance) {
     "/",
 
     getPropertiesController as RouteHandlerMethod,
+  );
+
+  app.get(
+    "/map",
+
+    getMapPropertiesController as RouteHandlerMethod,
+  );
+
+  app.get(
+    "/nearby",
+
+    getNearbyPropertiesController as RouteHandlerMethod,
   );
   
   app.get(
@@ -90,7 +108,23 @@ export async function propertiesRoutes(app: FastifyInstance) {
       preHandler: authMiddleware,
     },
 
-    updatePropertyLocationController as RouteHandlerMethod,
+    async (request, reply) => {
+      const body = UpdatePropertyLocationSchema.parse(request.body);
+
+      return updatePropertyLocationController(
+        {
+          ...request,
+
+          params: {
+            id: (request.params as { id: string }).id,
+          },
+
+          body,
+        },
+
+        reply,
+      );
+    },
   );
 
   app.patch(

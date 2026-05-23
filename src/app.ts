@@ -24,6 +24,10 @@ import {
 
 import { profileRoutes } from "./modules/profiles/routes/profile.routes";
 
+import { agentApplicationsRoutes } from "./modules/agent-applications/routes/agent-applications.routes";
+
+import { geocodingRoutes } from "./modules/geocoding/routes/geocoding.routes";
+
 // ========================================================
 // BUILD APP
 // ========================================================
@@ -115,6 +119,20 @@ export async function buildApp() {
     profileRoutes,
     {
       prefix: "/profile",
+    }
+  );
+
+  await app.register(
+    agentApplicationsRoutes,
+    {
+      prefix: "/agent-applications",
+    }
+  );
+
+  await app.register(
+    geocodingRoutes,
+    {
+      prefix: "/geocoding",
     }
   );
 

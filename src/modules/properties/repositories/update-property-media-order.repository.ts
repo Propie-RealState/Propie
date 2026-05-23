@@ -8,30 +8,14 @@ interface MediaOrderItem {
 interface UpdatePropertyMediaOrderRepositoryRequest {
   propertyId: string;
   media: MediaOrderItem[];
-  userId: string;
 }
 
 export async function updatePropertyMediaOrderRepository({
   propertyId,
   media,
-  userId,
 }: UpdatePropertyMediaOrderRepositoryRequest) {
   if (media.length === 0) {
     throw new Error("EMPTY_MEDIA");
-  }
-
-  const ownerCheck = await db.query(
-    `
-      SELECT id
-      FROM properties
-      WHERE id = $1
-        AND owner_id = $2
-    `,
-    [propertyId, userId],
-  );
-
-  if (ownerCheck.rows.length === 0) {
-    throw new Error("FORBIDDEN");
   }
 
   const countResult = await db.query(

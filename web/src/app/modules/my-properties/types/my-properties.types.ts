@@ -13,6 +13,7 @@ export interface OwnedProperty {
   bathrooms: number;
   area_m2: string;
   status: PropertyStatus;
+  access_type?: "OWNER" | "ASSIGNED_AGENT";
   city: string | null;
   cover_image: string | null;
 }

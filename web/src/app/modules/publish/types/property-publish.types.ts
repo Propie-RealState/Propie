@@ -10,7 +10,11 @@ export type ListingType =
   | "RENT"
   | "TEMPORARY";
 
+export type PublishMode = "create" | "edit";
+
 export interface PropertyPublishData {
+  publishMode: PublishMode | null;
+
   propertyId: string | null;
 
   propertyType: PropertyType | null;
@@ -24,6 +28,8 @@ export interface PropertyPublishData {
   city: string;
   neighborhood: string;
   address: string;
+  lat: number | null;
+  lng: number | null;
 
   bedrooms: number | null;
   bathrooms: number | null;

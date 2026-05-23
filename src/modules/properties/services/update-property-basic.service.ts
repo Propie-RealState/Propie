@@ -9,6 +9,8 @@ import {
   import {
     UpdatePropertyBasicInput,
   } from "../schemas/update-property-basic.schema";
+
+  import { assertCanManageProperty } from "../utils/assert-can-manage-property";
   
   export async function updatePropertyBasicService(
     input: UpdatePropertyBasicInput & {
@@ -27,14 +29,10 @@ import {
       );
     }
   
-    if (
-      property.owner_id !==
-      input.ownerId
-    ) {
-      throw new Error(
-        "FORBIDDEN"
-      );
-    }
+    await assertCanManageProperty(
+      input.ownerId,
+      input.propertyId,
+    );
   
     return updatePropertyBasicRepository({
       propertyId:

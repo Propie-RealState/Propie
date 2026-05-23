@@ -5,6 +5,8 @@ import {
   import {
     savePropertyAmenitiesRepository,
   } from "../repositories/save-property-amenities.repository";
+
+  import { assertCanManageProperty } from "../utils/assert-can-manage-property";
   
   interface Input {
     propertyId: string;
@@ -35,17 +37,10 @@ import {
       );
     }
   
-    // ============================================
-    // OWNER VALIDATION
-    // ============================================
-  
-    if (
-      property.owner_id !== ownerId
-    ) {
-      throw new Error(
-        "Forbidden"
-      );
-    }
+    await assertCanManageProperty(
+      ownerId,
+      propertyId,
+    );
   
     // ============================================
     // SAVE

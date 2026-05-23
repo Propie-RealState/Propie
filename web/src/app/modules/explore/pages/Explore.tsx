@@ -6,6 +6,7 @@ import {
   Search,
   SlidersHorizontal,
   MapPin,
+  Map,
   ChevronDown,
   Home,
   User,
@@ -21,6 +22,9 @@ import { useAuth } from "../../../../context/AuthContext";
 import type { Property } from "../types/property.types";
 import { getPublishedProperties } from "../services/explore.service";
 import { useAppTheme } from "../../../../theme/useAppTheme";
+import { usePropertyPublish } from "../../publish/context/PropertyPublishContext";
+import { useOwnerApplicationCount } from "../../agent-applications/hooks/useOwnerApplicationCount";
+import { useMapStore } from "../../map/stores/useMapStore";
 
 // ─── Footer Nav ───────────────────────────────────────────────────
 function FooterNav({
@@ -31,19 +35,25 @@ function FooterNav({
   theme: ReturnType<typeof useAppTheme>;
 }) {
   const navigate = useNavigate();
+  const { startCreatePublish } = usePropertyPublish();
+  const { count: pendingApplicationCount } = useOwnerApplicationCount();
   const currentPath = window.location.pathname;
 
   const navBtn = (
     Icon: React.ComponentType<{ size: number; color: string; strokeWidth: number }>,
     label: string,
     path: string,
+    onNavigate?: () => void,
   ) => {
     const isActive = currentPath === path || currentPath.startsWith(path + "/");
     const color = isActive ? theme.primary : "#6e6e73";
     return (
       <button
         key={path}
-        onClick={() => navigate(path)}
+        onClick={() => {
+          onNavigate?.();
+          navigate(path);
+        }}
         style={{
           display: "flex",
           flexDirection: "column",
@@ -57,7 +67,32 @@ function FooterNav({
           flex: 1,
         }}
       >
-        <Icon size={22} color={color} strokeWidth={1.8} />
+        <span style={{ position: "relative", display: "flex" }}>
+          <Icon size={22} color={color} strokeWidth={1.8} />
+          {path === "/mensajes" && pendingApplicationCount > 0 && (
+            <span
+              style={{
+                position: "absolute",
+                top: -8,
+                right: -10,
+                minWidth: 17,
+                height: 17,
+                borderRadius: 999,
+                background: "#ef4444",
+                color: "white",
+                fontSize: 10,
+                fontWeight: 800,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "0 5px",
+                boxShadow: "0 2px 6px rgba(239,68,68,0.35)",
+              }}
+            >
+              {pendingApplicationCount}
+            </span>
+          )}
+        </span>
         <span
           style={{
             fontSize: 10,
@@ -85,7 +120,7 @@ function FooterNav({
       <div className="flex items-center px-3 py-2">
         {isLoggedIn ? (
           <>
-            {navBtn(Plus, "Publicar", "/publicar")}
+            {navBtn(Plus, "Publicar", "/publicar", startCreatePublish)}
             {navBtn(Building2, "Mis Props.", "/mis-propiedades")}
             {navBtn(MessageCircle, "Mensajes", "/mensajes")}
             {navBtn(User, "Perfil", "/perfil")}
@@ -181,9 +216,24 @@ export default function Explore() {
 
   const isLoggedIn = !!user;
   const [query, setQuery] = useState("");
-  const [activeType, setActiveType] = useState<"todos" | "venta" | "alquiler">(
-    "todos",
-  );
+  const operationType = useMapStore((state) => state.filters.operationType);
+  const setMapFilters = useMapStore((state) => state.setFilters);
+  const activeType: "todos" | "venta" | "alquiler" =
+    operationType === "SALE"
+      ? "venta"
+      : operationType === "RENT"
+        ? "alquiler"
+        : "todos";
+  const setActiveType = (type: "todos" | "venta" | "alquiler") => {
+    setMapFilters({
+      operationType:
+        type === "venta"
+          ? "SALE"
+          : type === "alquiler"
+            ? "RENT"
+            : undefined,
+    });
+  };
   const [favorites, setFavorites] = useState<string[]>([]);
 
   const toggleFav = (id: string) =>
@@ -258,6 +308,7 @@ export default function Explore() {
             display: "flex",
             flexDirection: "column",
             gap: 8,
+            position: "relative",
           }}
         >
           {/* Search bar */}
@@ -319,7 +370,7 @@ export default function Explore() {
               cursor: "pointer",
               borderRadius: 16,
               height: 44,
-              width: "100%",
+              width: "calc(100% - 96px)",
             }}
           >
             <MapPin size={14} color={theme.primary} />
@@ -327,6 +378,32 @@ export default function Explore() {
               Ubicación
             </span>
             <ChevronDown size={14} color={theme.primary} />
+          </button>
+
+          <button
+            onClick={() => navigate("/mapa")}
+            style={{
+              position: "absolute",
+              right: 16,
+              top: 70,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 7,
+              background: "#141414",
+              border: "none",
+              cursor: "pointer",
+              borderRadius: 16,
+              height: 44,
+              padding: "0 15px",
+              color: "white",
+              fontSize: 14,
+              fontWeight: 700,
+              boxShadow: "0 8px 22px rgba(0,0,0,0.16)",
+            }}
+          >
+            <Map size={15} color="white" />
+            Mapa
           </button>
 
           {/* Row 2 — Todos · Alquiler · Venta · Más filtros (same horizontal margin) */}

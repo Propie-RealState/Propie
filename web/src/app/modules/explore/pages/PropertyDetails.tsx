@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import React from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../../../context/AuthContext";
 import { mapPropertyDetails } from "../mappers/property-details.mapper";
 import { getPropertyById } from "../services/property-details.service";
@@ -35,6 +35,11 @@ import { findPropertyById } from "../../publish/services/find-property-by-id";
 import { mapPropertyToPublishData } from "../mappers/map-property-to-publish-data";
 
 import { usePropertyPublish } from "../../publish/context/PropertyPublishContext";
+import {
+  getMyAgentApplicationByProperty,
+  sendAgentApplication,
+  type AgentApplicationStatus,
+} from "../../agent-applications/services/agent-applications.service";
 type UserType = "guest" | "propie" | "agente" | null;
 
 type MappedProperty = ReturnType<typeof mapPropertyDetails>;
@@ -53,8 +58,15 @@ function formatPrice(price: number) {
   }).format(price);
 }
 
+type PropertyDetailsLocationState = {
+  backTo?: string;
+};
+
 export default function PropertyDetails() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const backTo = (location.state as PropertyDetailsLocationState | null)
+    ?.backTo;
   const {
     updateData,
     reset,
@@ -79,6 +91,9 @@ export default function PropertyDetails() {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
+  const [isSendingRequest, setIsSendingRequest] = useState(false);
+  const [agentApplicationStatus, setAgentApplicationStatus] =
+    useState<AgentApplicationStatus | null>(null);
   const [approvedRequests, setApprovedRequests] = useState<string[]>([]);
   const [rejectedRequests, setRejectedRequests] = useState<string[]>([]);
   const [showChat, setShowChat] = useState(false);
@@ -94,8 +109,15 @@ export default function PropertyDetails() {
   };
 
   const userType = getUserType();
-  const isOwner = userType === "propie";
+  const isOwner =
+    userType === "propie" &&
+    (!property || property.ownerId === user?.id);
   const isAgent = userType === "agente";
+  const canManageProperty =
+    isOwner || agentApplicationStatus === "ACCEPTED";
+  const requestSent =
+    agentApplicationStatus === "PENDING" ||
+    agentApplicationStatus === "REJECTED";
 
   const colors = {
     primary: isAgent ? "#C52E3E" : "#4417E6",
@@ -111,6 +133,25 @@ export default function PropertyDetails() {
   };
 
   const totalPhotos = property?.images?.length || 0;
+
+  useEffect(() => {
+    async function loadAgentApplicationStatus() {
+      if (!id || !user || user.role !== "AGENT") {
+        setAgentApplicationStatus(null);
+        return;
+      }
+
+      try {
+        const application = await getMyAgentApplicationByProperty(id);
+        setAgentApplicationStatus(application?.status ?? null);
+      } catch (error) {
+        console.error("Error loading agent application status:", error);
+        setAgentApplicationStatus(null);
+      }
+    }
+
+    loadAgentApplicationStatus();
+  }, [id, user?.id, user?.role]);
 
   const nextPhoto = () => {
     if (!totalPhotos) return;
@@ -130,10 +171,27 @@ export default function PropertyDetails() {
     setShowRequestModal(true);
   };
 
-  const handleSendRequest = () => {
-    console.log("Enviando solicitud:", requestMessage);
-    setShowRequestModal(false);
-    setRequestMessage("");
+  const handleSendRequest = async () => {
+    if (!property?.id || !requestMessage.trim()) return;
+
+    try {
+      setIsSendingRequest(true);
+
+      await sendAgentApplication({
+        propertyId: property.id,
+        message: requestMessage,
+      });
+
+      setAgentApplicationStatus("PENDING");
+      setShowRequestModal(false);
+      setRequestMessage("");
+      window.dispatchEvent(new Event("agent-applications:changed"));
+    } catch (error) {
+      console.error("Error enviando solicitud:", error);
+      alert("No pudimos enviar la solicitud. Intentá nuevamente.");
+    } finally {
+      setIsSendingRequest(false);
+    }
   };
 
   const handleApproveRequest = (requestId: string, agentName: string) => {
@@ -186,7 +244,10 @@ export default function PropertyDetails() {
           propertyData
         );
   
-      updateData(mappedProperty);
+      updateData({
+        ...mappedProperty,
+        publishMode: "edit",
+      });
   
       navigate("/publicar");
     } catch (error) {
@@ -237,7 +298,14 @@ export default function PropertyDetails() {
         }}
       >
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => {
+            if (backTo) {
+              navigate(backTo);
+              return;
+            }
+
+            navigate(-1);
+          }}
           style={{
             background: "none",
             border: "none",
@@ -287,7 +355,7 @@ export default function PropertyDetails() {
           >
             <Share2 size={18} color="#1a1a1a" />
           </button>
-          {isOwner && (
+          {canManageProperty && (
             <>
               <button
                 style={{
@@ -602,7 +670,7 @@ export default function PropertyDetails() {
           )}
 
           {/* CASO 2: Propie - Estado y gestión */}
-          {isOwner && (
+          {canManageProperty && (
             <>
               {/* Estado */}
               <div
@@ -1219,17 +1287,26 @@ export default function PropertyDetails() {
               </button>
               <button
                 onClick={handleSendRequest}
-                disabled={!requestMessage}
+                disabled={!requestMessage.trim() || isSendingRequest}
                 style={{
                   flex: 1,
-                  background: requestMessage ? colors.primary : "#e5e5ea",
+                  background:
+                    requestMessage.trim() && !isSendingRequest
+                      ? colors.primary
+                      : "#e5e5ea",
                   border: "none",
                   borderRadius: 14,
                   padding: "14px",
-                  color: requestMessage ? "white" : "#9a9aa0",
+                  color:
+                    requestMessage.trim() && !isSendingRequest
+                      ? "white"
+                      : "#9a9aa0",
                   fontSize: 15,
                   fontWeight: 600,
-                  cursor: requestMessage ? "pointer" : "not-allowed",
+                  cursor:
+                    requestMessage.trim() && !isSendingRequest
+                      ? "pointer"
+                      : "not-allowed",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -1237,7 +1314,7 @@ export default function PropertyDetails() {
                 }}
               >
                 <Send size={16} />
-                Enviar solicitud
+                {isSendingRequest ? "Enviando..." : "Enviar solicitud"}
               </button>
             </div>
           </div>
@@ -1299,7 +1376,7 @@ export default function PropertyDetails() {
       )}
 
       {/* CTA sticky - Agent */}
-      {isAgent && (
+      {isAgent && !canManageProperty && (
         <div
           style={{
             position: "fixed",
@@ -1316,25 +1393,26 @@ export default function PropertyDetails() {
         >
           <button
             onClick={handleApplyAgent}
+            disabled={requestSent}
             style={{
               flex: 1,
-              background: colors.gradient,
+              background: requestSent ? "#dcfce7" : colors.gradient,
               border: "none",
               borderRadius: 14,
               padding: "16px",
-              color: "white",
+              color: requestSent ? "#166534" : "white",
               fontSize: 16,
               fontWeight: 700,
-              cursor: "pointer",
-              boxShadow: colors.shadow,
+              cursor: requestSent ? "default" : "pointer",
+              boxShadow: requestSent ? "none" : colors.shadow,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               gap: 8,
             }}
           >
-            <Briefcase size={20} />
-            Enviar solicitud
+            {requestSent ? <CheckCircle size={20} /> : <Briefcase size={20} />}
+            {requestSent ? "Solicitud enviada" : "Enviar solicitud"}
           </button>
         </div>
       )}

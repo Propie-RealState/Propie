@@ -24,6 +24,16 @@ export function mapPropertyToPublishData(
     city: property.city || "",
     neighborhood: property.neighborhood || "",
     address: property.address || "",
+    lat:
+      property.latitude !== undefined &&
+      property.latitude !== null
+        ? Number(property.latitude)
+        : null,
+    lng:
+      property.longitude !== undefined &&
+      property.longitude !== null
+        ? Number(property.longitude)
+        : null,
 
     amenities: property.amenities || [],
 

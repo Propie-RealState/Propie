@@ -12,7 +12,7 @@ export default function EditProperty() {
 
   const navigate = useNavigate();
 
-  const { updateData } =
+  const { reset, updateData } =
     usePropertyPublish();
 
   useEffect(() => {
@@ -23,7 +23,10 @@ export default function EditProperty() {
         const property =
           await getPropertyById (id);
 
+        reset();
+
         updateData({
+          publishMode: "edit",
           propertyId: property.id,
 
           propertyType: property.propertyType as PropertyType,

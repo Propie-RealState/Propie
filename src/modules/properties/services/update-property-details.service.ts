@@ -5,6 +5,8 @@ import {
   import {
     updatePropertyDetailsRepository,
   } from "../repositories/update-property-details.repository";
+
+  import { assertCanManageProperty } from "../utils/assert-can-manage-property";
   
   export async function updatePropertyDetailsService(
     input: {
@@ -37,14 +39,10 @@ import {
       );
     }
   
-    if (
-      property.owner_id !==
-      input.ownerId
-    ) {
-      throw new Error(
-        "Forbidden"
-      );
-    }
+    await assertCanManageProperty(
+      input.ownerId,
+      input.propertyId,
+    );
   
     return updatePropertyDetailsRepository({
       propertyId:

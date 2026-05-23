@@ -1,5 +1,5 @@
 import { createBrowserRouter, Outlet } from "react-router-dom";
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { Root } from "./Root";
 import { RegisterProvider } from "../context/RegisterContext";
 
@@ -30,6 +30,43 @@ import Share from "./pages/Share";
 import Profile from "./modules/profile/pages/Profile.tsx";
 import { PropertyPublishProvider } from "./modules/publish/context/PropertyPublishContext";
 import MyProperties from "./modules/my-properties/pages/MyProperties";
+import Messages from "./modules/agent-applications/pages/Messages";
+import Notifications from "./modules/agent-applications/pages/Notifications";
+
+const PropertyMap = lazy(
+  () => import("./modules/map/pages/PropertyMap")
+);
+
+function MapRoute() {
+  return (
+    <Suspense
+      fallback={
+        <div
+          style={{
+            height:
+              "100dvh",
+            display:
+              "grid",
+            placeItems:
+              "center",
+            background:
+              "#f5f5f7",
+            color:
+              "#141414",
+            fontFamily:
+              "'Inter', sans-serif",
+            fontWeight:
+              800,
+          }}
+        >
+          Cargando mapa...
+        </div>
+      }
+    >
+      <PropertyMap />
+    </Suspense>
+  );
+}
 export const router =
   createBrowserRouter([
     {
@@ -55,6 +92,11 @@ export const router =
         {
           path: "explorar",
           Component: Explore,
+        },
+
+        {
+          path: "mapa",
+          Component: MapRoute,
         },
 
         {
@@ -139,6 +181,16 @@ export const router =
         },
 
         {
+          path: "mensajes",
+          Component: Messages,
+        },
+
+        {
+          path: "notificaciones",
+          Component: Notifications,
+        },
+
+        {
           path: "mis-propiedades",
           Component: MyProperties,
         },
@@ -178,4 +230,3 @@ export const router =
       ],
     },
   ]);
-

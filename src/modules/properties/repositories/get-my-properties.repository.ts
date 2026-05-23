@@ -13,6 +13,10 @@ export async function getMyPropertiesRepository(userId: string) {
       p.bathrooms,
       p.area_m2,
       p.status,
+      CASE
+        WHEN p.owner_id = $1 THEN 'OWNER'
+        ELSE 'ASSIGNED_AGENT'
+      END AS access_type,
   
       l.city,
       l.province,
@@ -27,8 +31,14 @@ export async function getMyPropertiesRepository(userId: string) {
     LEFT JOIN property_images pi
       ON pi.property_id = p.id
       AND pi.is_cover = true
+
+    LEFT JOIN property_assignments pa
+      ON pa.property_id = p.id
+      AND pa.agent_id = $1
+      AND pa.is_active = true
   
     WHERE p.owner_id = $1
+      OR pa.agent_id = $1
   
     ORDER BY p.id, p.created_at DESC
   `,

@@ -52,8 +52,11 @@ export default function PublishSuccessModal({
   };
 
   const handleViewPublication = () => {
+    reset();
     onClose();
-    navigate(`/propiedad/${data.propertyId}`);
+    navigate(`/propiedad/${data.propertyId}`, {
+      state: { backTo: "/explorar" },
+    });
   };
 
   return (

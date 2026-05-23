@@ -2,10 +2,15 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Building2, Plus } from "lucide-react";
 import { useMyProperties } from "../hooks/useMyProperties";
+import { usePropertyPublish } from "../../publish/context/PropertyPublishContext";
+import { useAppTheme, useIsAgent } from "../../../../theme/useAppTheme";
 
 export default function MyProperties() {
   const navigate = useNavigate();
+  const { startCreatePublish } = usePropertyPublish();
   const { properties, loading, error } = useMyProperties();
+  const colors = useAppTheme();
+  const isAgent = useIsAgent();
 
   if (loading) {
     return <div>Cargando...</div>;
@@ -100,13 +105,13 @@ export default function MyProperties() {
                 width: 88,
                 height: 88,
                 borderRadius: 24,
-                background: "linear-gradient(135deg, #f0eeff 0%, #e4deff 100%)",
+                background: colors.lightBg,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Building2 size={40} color="#4417E6" strokeWidth={1.5} />
+              <Building2 size={40} color={colors.primary} strokeWidth={1.5} />
             </div>
 
             <div
@@ -123,7 +128,9 @@ export default function MyProperties() {
                   color: "#1a1a1a",
                 }}
               >
-                Todavía no publicaste nada
+                {isAgent
+                  ? "Todavia no tenes propiedades asignadas"
+                  : "Todavia no publicaste nada"}
               </h2>
 
               <p
@@ -134,29 +141,37 @@ export default function MyProperties() {
                   lineHeight: 1.6,
                 }}
               >
-                Acá vas a poder ver y gestionar todas tus propiedades.
+                {isAgent
+                  ? "Cuando un owner apruebe tu solicitud, la propiedad va a aparecer aca."
+                  : "Aca vas a poder ver y gestionar todas tus propiedades."}
               </p>
             </div>
 
-            <button
-              onClick={() => navigate("/publicar")}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                background: "#4417E6",
-                border: "none",
-                borderRadius: 16,
-                padding: "14px 28px",
-                color: "white",
-                fontSize: 15,
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
-            >
-              <Plus size={20} color="white" />
-              Publicar propiedad
-            </button>
+            {!isAgent && (
+              <button
+                onClick={() => {
+                  startCreatePublish();
+                  navigate("/publicar");
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  background: colors.primary,
+                  border: "none",
+                  borderRadius: 16,
+                  padding: "14px 28px",
+                  color: "white",
+                  fontSize: 15,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  boxShadow: colors.buttonShadow,
+                }}
+              >
+                <Plus size={20} color="white" />
+                Publicar propiedad
+              </button>
+            )}
           </div>
         ) : (
           properties.map((property) => (
@@ -221,6 +236,23 @@ export default function MyProperties() {
                   </div>
                 </div>
 
+                {property.access_type === "ASSIGNED_AGENT" && (
+                  <div
+                    style={{
+                      display: "inline-flex",
+                      alignSelf: "flex-start",
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      background: colors.lightBg,
+                      color: colors.primary,
+                      fontSize: 12,
+                      fontWeight: 800,
+                    }}
+                  >
+                    Asignada a vos
+                  </div>
+                )}
+
                 <div
                   style={{
                     color: "#6e6e73",
@@ -244,13 +276,14 @@ export default function MyProperties() {
                   onClick={() => navigate(`/propiedad/${property.id}`)}
                   style={{
                     marginTop: 8,
-                    background: "#4417E6",
+                    background: colors.primary,
                     color: "white",
                     border: "none",
                     borderRadius: 14,
                     padding: "14px",
                     fontWeight: 700,
                     cursor: "pointer",
+                    boxShadow: colors.buttonShadow,
                   }}
                 >
                   Ver propiedad

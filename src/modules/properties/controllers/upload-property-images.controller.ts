@@ -8,6 +8,7 @@ import { pipeline } from "node:stream/promises";
 
 import { v4 as uuid } from "uuid";
 
+import { assertCanManageProperty } from "../utils/assert-can-manage-property";
 import { createPropertyImageRepository } from "../repositories/create-property-image.repository";
 
 import { countPropertyImagesRepository } from "../repositories/count-property-images.repository";
@@ -21,6 +22,11 @@ export async function uploadPropertyImagesController(
 
   reply: FastifyReply,
 ) {
+  await assertCanManageProperty(
+    request.user.id,
+    request.params.id,
+  );
+
   const parts = await request.files();
   const existingImagesCount =
   await countPropertyImagesRepository(

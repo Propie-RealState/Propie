@@ -1,5 +1,6 @@
 import { updatePropertyImageCoverRepository }
   from "../repositories/update-property-image-cover.repository";
+import { assertCanManageProperty } from "../utils/assert-can-manage-property";
 
 interface UpdatePropertyImageCoverServiceRequest {
   propertyId: string;
@@ -14,9 +15,10 @@ export async function updatePropertyImageCoverService({
   imageId,
   userId,
 }: UpdatePropertyImageCoverServiceRequest) {
+  await assertCanManageProperty(userId, propertyId);
+
   await updatePropertyImageCoverRepository({
     propertyId,
     imageId,
-    userId,
   });
 }

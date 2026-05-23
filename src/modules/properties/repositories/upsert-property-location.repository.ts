@@ -19,7 +19,10 @@ export async function upsertPropertyLocationRepository(
         province,
         city,
         neighborhood,
-        address
+        address,
+        latitude,
+        longitude,
+        coordinates
       )
       VALUES (
         $1,
@@ -27,7 +30,21 @@ export async function upsertPropertyLocationRepository(
         $3,
         $4,
         $5,
-        $6
+        $6,
+        $7,
+        $8,
+        CASE
+          WHEN $7::numeric IS NOT NULL
+            AND $8::numeric IS NOT NULL
+          THEN ST_SetSRID(
+            ST_MakePoint(
+              $8::double precision,
+              $7::double precision
+            ),
+            4326
+          )::geography
+          ELSE NULL
+        END
       )
 
       ON CONFLICT (property_id)
@@ -38,6 +55,18 @@ export async function upsertPropertyLocationRepository(
         city = EXCLUDED.city,
         neighborhood = EXCLUDED.neighborhood,
         address = EXCLUDED.address,
+        latitude = COALESCE(
+          EXCLUDED.latitude,
+          property_locations.latitude
+        ),
+        longitude = COALESCE(
+          EXCLUDED.longitude,
+          property_locations.longitude
+        ),
+        coordinates = COALESCE(
+          EXCLUDED.coordinates,
+          property_locations.coordinates
+        ),
         updated_at = now()
 
       RETURNING *
@@ -49,6 +78,8 @@ export async function upsertPropertyLocationRepository(
       input.city,
       input.neighborhood,
       input.address,
+      input.lat ?? null,
+      input.lng ?? null,
     ]
   );
 

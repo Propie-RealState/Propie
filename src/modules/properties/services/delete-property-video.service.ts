@@ -1,4 +1,5 @@
 import { deletePropertyVideoRepository } from "../repositories/delete-property-video.repository";
+import { assertCanManageProperty } from "../utils/assert-can-manage-property";
 
 interface DeletePropertyVideoServiceRequest {
   videoId: string;
@@ -11,9 +12,10 @@ export async function deletePropertyVideoService({
   propertyId,
   userId,
 }: DeletePropertyVideoServiceRequest) {
+  await assertCanManageProperty(userId, propertyId);
+
   await deletePropertyVideoRepository({
     videoId,
     propertyId,
-    userId,
   });
 }

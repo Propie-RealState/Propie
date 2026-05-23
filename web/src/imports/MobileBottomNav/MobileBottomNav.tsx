@@ -1,5 +1,7 @@
 import svgPaths from "./svg-gr22zfitmm";
 import React from "react";
+import { useNavigate } from "react-router-dom";
+import { useOwnerApplicationCount } from "../../app/modules/agent-applications/hooks/useOwnerApplicationCount";
 
 function Icon() {
   return (
@@ -163,14 +165,33 @@ function Text3() {
   );
 }
 
-function Button3() {
+function Button3({
+  notificationCount,
+  onClick,
+}: {
+  notificationCount: number;
+  onClick: () => void;
+}) {
   return (
-    <div className="h-[60px] relative rounded-[16px] shrink-0 w-[79.031px]" data-name="Button">
+    <button
+      className="bg-transparent border-0 cursor-pointer h-[60px] p-0 relative rounded-[16px] shrink-0 w-[79.031px]"
+      data-name="Button"
+      onClick={onClick}
+      type="button"
+    >
       <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col gap-[4px] items-center px-[12px] py-[8px] relative size-full">
         <Container4 />
+        {notificationCount > 0 && (
+          <span
+            className="absolute bg-[#ef4444] flex items-center justify-center min-w-[18px] h-[18px] px-[5px] right-[18px] rounded-full text-white text-[10px] top-[2px] font-bold shadow-[0_2px_6px_rgba(239,68,68,0.35)]"
+            aria-label={`${notificationCount} notificaciones`}
+          >
+            {notificationCount}
+          </span>
+        )}
         <Text3 />
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -218,13 +239,19 @@ function Button4() {
   );
 }
 
-function Container() {
+function Container({
+  notificationCount,
+  onMessagesClick,
+}: {
+  notificationCount: number;
+  onMessagesClick: () => void;
+}) {
   return (
     <div className="absolute content-stretch flex h-[76px] items-center justify-between left-[601.33px] px-[18.323px] py-[8px] top-0 w-[448px]" data-name="Container">
       <Button />
       <Button1 />
       <Button2 />
-      <Button3 />
+      <Button3 notificationCount={notificationCount} onClick={onMessagesClick} />
       <Button4 />
     </div>
   );
@@ -235,9 +262,15 @@ function Text5() {
 }
 
 export default function MobileBottomNav() {
+  const navigate = useNavigate();
+  const { count } = useOwnerApplicationCount();
+
   return (
     <div className="bg-[rgba(255,255,255,0.95)] border-[#ececec] border-solid border-t-[0.667px] relative size-full" data-name="MobileBottomNav">
-      <Container />
+      <Container
+        notificationCount={count}
+        onMessagesClick={() => navigate("/mensajes")}
+      />
       <Text5 />
     </div>
   );

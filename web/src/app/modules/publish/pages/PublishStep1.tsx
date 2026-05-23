@@ -9,17 +9,24 @@ import { PropertyType } from "../types/property-publish.types";
 import { createProperty } from "../services/create-property";
 import type { ListingType } from "../types/property-publish.types";
 import { useAppTheme } from "../../../../theme/useAppTheme";
+import { PublishLocationPicker } from "../components/PublishLocationPicker";
+import { updatePropertyLocation } from "../services/update-property-location";
 type OperationType = "venta" | "alquiler" | "temporario" | null;
 
 export default function PublishStep1() {
   const theme = useAppTheme();
   const navigate = useNavigate();
 
-  const { data, updateData } = usePropertyPublish();
+  const { data, updateData, startCreatePublish } = usePropertyPublish();
+
+  useEffect(() => {
+    if (data.publishMode === null) {
+      startCreatePublish();
+    }
+  }, []);
 
   const [operationType, setOperationType] = useState<OperationType>(null);
-
-  const [address, setAddress] = useState("");
+  const [address, setAddress] = useState(data.address);
 
   useEffect(() => {
     if (data.listingType) {
@@ -37,6 +44,54 @@ export default function PublishStep1() {
     }
   }, []);
 
+  const locationValue = {
+    country:
+      data.country,
+    province:
+      data.province,
+    city:
+      data.city,
+    neighborhood:
+      data.neighborhood,
+    address:
+      data.address,
+    lat:
+      data.lat,
+    lng:
+      data.lng,
+  };
+
+  const persistLocationForProperty =
+    async (propertyId: string) => {
+      if (
+        !data.address ||
+        data.lat === null ||
+        data.lng === null
+      ) {
+        return;
+      }
+
+      await updatePropertyLocation(
+        propertyId,
+        {
+          country:
+            data.country || "Argentina",
+          province:
+            data.province || "Cordoba",
+          city:
+            data.city || "Cordoba",
+          neighborhood:
+            data.neighborhood || "Centro",
+          address:
+            data.address,
+          lat:
+            data.lat,
+          lng:
+            data.lng,
+        }
+      );
+    };
+
   const handleContinue = async () => {
     const listingTypeMap = {
       venta: "SALE",
@@ -51,71 +106,55 @@ export default function PublishStep1() {
     try {
       const mappedListingType = listingTypeMap[operationType];
 
-      // 🔥 EDIT MODE
-      if (data.propertyId) {
+      const basicPayload = {
+        title: data.title ?? "",
+        description: data.description ?? "",
+        price: Number(data.price ?? 0),
+        bedrooms: Number(data.bedrooms ?? 0),
+        bathrooms: Number(data.bathrooms ?? 0),
+        areaM2: Number(data.areaM2 ?? 0),
+        propertyType: data.propertyType,
+        operationType: mappedListingType,
+      };
 
-        await updatePropertyBasic(
-          data.propertyId,
-          {
-            title:
-              data.title ?? "",
-      
-            description:
-              data.description ?? "",
-      
-            price:
-              Number(data.price ?? 0),
-      
-            bedrooms:
-              Number(data.bedrooms ?? 0),
-      
-            bathrooms:
-              Number(data.bathrooms ?? 0),
-      
-            areaM2:
-              Number(data.areaM2 ?? 0),
-      
-            propertyType:
-              data.propertyType,
-      
-            operationType:
-              mappedListingType,
-          }
-        );
-      
-        updateData({
-          propertyType:
-            data.propertyType,
-      
-          listingType:
-            mappedListingType,
-      
-          address,
-        });
-      
-        navigate(
-          "/publicar/fotos-videos"
-        );
-      
+      const contextUpdate = {
+        propertyType: data.propertyType,
+        listingType: mappedListingType,
+      };
+
+      const isEditMode =
+        data.publishMode === "edit" && Boolean(data.propertyId);
+
+      if (isEditMode) {
+        await updatePropertyBasic(data.propertyId!, basicPayload);
+        await persistLocationForProperty(data.propertyId!);
+        updateData(contextUpdate);
+        navigate("/publicar/fotos-videos");
         return;
       }
 
-      // 🔥 CREATE MODE
+      if (data.propertyId) {
+        await updatePropertyBasic(data.propertyId, basicPayload);
+        await persistLocationForProperty(data.propertyId);
+        updateData(contextUpdate);
+        navigate("/publicar/fotos-videos");
+        return;
+      }
+
       const result = await createProperty({
         propertyType: data.propertyType,
-
         listingType: mappedListingType,
       });
 
       updateData({
+        ...contextUpdate,
         propertyId: result.propertyId,
-
-        propertyType: data.propertyType,
-
-        listingType: mappedListingType,
-
-        address,
+        publishMode: "create",
       });
+
+      await persistLocationForProperty(
+        result.propertyId
+      );
 
       navigate("/publicar/fotos-videos");
     } catch (error) {
@@ -123,7 +162,12 @@ export default function PublishStep1() {
     }
   };
 
-  const isFormValid = operationType && data.propertyType && address;
+  const isFormValid =
+    operationType &&
+    data.propertyType &&
+    data.address &&
+    data.lat !== null &&
+    data.lng !== null;
 
   const operationCards = [
     {
@@ -590,7 +634,11 @@ export default function PublishStep1() {
             >
               Dirección
             </h3>
-            <div style={{ position: "relative" }}>
+            <PublishLocationPicker
+              value={locationValue}
+              onChange={(nextLocation) => updateData(nextLocation)}
+            />
+            <div style={{ display: "none" }}>
               <div
                 style={{
                   position: "absolute",
@@ -637,12 +685,12 @@ export default function PublishStep1() {
             {/* Map placeholder */}
             <div
               style={{
+                display: "none",
                 marginTop: 12,
                 width: "100%",
                 height: 200,
                 borderRadius: 14,
                 background: "linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%)",
-                display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 flexDirection: "column",

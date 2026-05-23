@@ -46,6 +46,12 @@ import {
   
           address:
             request.body.address,
+
+          lat:
+            request.body.lat,
+
+          lng:
+            request.body.lng,
         });
   
       return reply.send(location);

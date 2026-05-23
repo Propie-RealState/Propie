@@ -5,6 +5,8 @@ import {
   import {
     savePropertyCommercializationRepository,
   } from "../repositories/save-property-commercialization.repository";
+
+  import { assertCanManageProperty } from "../utils/assert-can-manage-property";
   
   type Input = {
     ownerId: string;
@@ -39,14 +41,10 @@ import {
       );
     }
   
-    if (
-      property.owner_id !==
-      input.ownerId
-    ) {
-      throw new Error(
-        "Unauthorized"
-      );
-    }
+    await assertCanManageProperty(
+      input.ownerId,
+      input.propertyId,
+    );
   
     const commercialization =
       await savePropertyCommercializationRepository(

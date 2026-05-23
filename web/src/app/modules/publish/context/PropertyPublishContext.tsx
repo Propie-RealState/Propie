@@ -1,5 +1,6 @@
 import {
     createContext,
+    useCallback,
     useContext,
     useState,
     ReactNode,
@@ -17,9 +18,12 @@ import {
     ) => void;
   
     reset: () => void;
+
+    startCreatePublish: () => void;
   }
   
   const initialData: PropertyPublishData = {
+    publishMode: null,
     propertyId: null,
     propertyType: null,
     listingType: null,
@@ -32,6 +36,8 @@ import {
     city: "",
     neighborhood: "",
     address: "",
+    lat: null,
+    lng: null,
   
     bedrooms: null,
     bathrooms: null,
@@ -64,7 +70,12 @@ import {
             );
     
           if (stored) {
-            return JSON.parse(stored);
+            const parsed = JSON.parse(stored) as PropertyPublishData;
+            return {
+              ...initialData,
+              ...parsed,
+              publishMode: parsed.publishMode ?? null,
+            };
           }
     
           return initialData;
@@ -98,6 +109,20 @@ import {
     
         setData(initialData);
       }
+
+      const startCreatePublish = useCallback(() => {
+        const fresh: PropertyPublishData = {
+          ...initialData,
+          publishMode: "create",
+        };
+
+        localStorage.setItem(
+          "property-publish",
+          JSON.stringify(fresh),
+        );
+
+        setData(fresh);
+      }, []);
     
       return (
         <PropertyPublishContext.Provider
@@ -105,6 +130,7 @@ import {
             data,
             updateData,
             reset,
+            startCreatePublish,
           }}
         >
           {children}

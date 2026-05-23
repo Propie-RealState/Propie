@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { updateMyProfile } from "../services/profile.service";
 import { useAppTheme, useIsAgent } from "../../../../theme/useAppTheme";
+import { useOwnerApplicationCount } from "../../agent-applications/hooks/useOwnerApplicationCount";
 
 export default function Profile() {
   const [isSaving, setIsSaving] = useState(false);
@@ -128,6 +129,7 @@ export default function Profile() {
 
   const colors = useAppTheme();
   const isAgent = useIsAgent();
+  const { count: pendingApplicationCount } = useOwnerApplicationCount();
 
   const handleLogout = () => {
     sessionStorage.removeItem("userType");
@@ -826,6 +828,25 @@ export default function Profile() {
               >
                 Notificaciones
               </span>
+              {pendingApplicationCount > 0 && (
+                <span
+                  style={{
+                    minWidth: 22,
+                    height: 22,
+                    borderRadius: 999,
+                    background: "#ef4444",
+                    color: "white",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 12,
+                    fontWeight: 800,
+                    padding: "0 7px",
+                  }}
+                >
+                  {pendingApplicationCount}
+                </span>
+              )}
               <ChevronRight size={20} color="#9a9aa0" />
             </button>
 

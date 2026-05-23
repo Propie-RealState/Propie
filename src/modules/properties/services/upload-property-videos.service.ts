@@ -5,7 +5,6 @@ import { pipeline } from "node:stream/promises";
 
 import type { MultipartFile } from "@fastify/multipart";
 
-import { db } from "@/database/client";
 import { createPropertyVideoRepository } from "../repositories/create-property-video.repository";
 
 const ALLOWED_VIDEO_EXTENSIONS = new Set([
@@ -14,25 +13,6 @@ const ALLOWED_VIDEO_EXTENSIONS = new Set([
   ".webm",
   ".m4v",
 ]);
-
-export async function assertPropertyOwner(
-  propertyId: string,
-  userId: string,
-) {
-  const ownerCheck = await db.query(
-    `
-      SELECT id
-      FROM properties
-      WHERE id = $1
-        AND owner_id = $2
-    `,
-    [propertyId, userId],
-  );
-
-  if (ownerCheck.rows.length === 0) {
-    throw new Error("FORBIDDEN");
-  }
-}
 
 export async function savePropertyVideoFromMultipart(
   propertyId: string,

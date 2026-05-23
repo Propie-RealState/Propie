@@ -9,6 +9,12 @@ import {
   import {
     publishPropertyRepository,
   } from "../repositories/publish-property.repository";
+
+  import {
+    geocodePropertyLocationService,
+  } from "./geocode-property-location.service";
+
+  import { assertCanManageProperty } from "../utils/assert-can-manage-property";
   
   type Input = {
     ownerId: string;
@@ -31,14 +37,10 @@ import {
       );
     }
   
-    if (
-      property.owner_id !==
-      input.ownerId
-    ) {
-      throw new Error(
-        "Unauthorized"
-      );
-    }
+    await assertCanManageProperty(
+      input.ownerId,
+      input.propertyId,
+    );
   
     // =====================================================
     // VALIDATIONS
@@ -79,6 +81,10 @@ import {
     // =====================================================
     // PUBLISH
     // =====================================================
+
+    await geocodePropertyLocationService(
+      input.propertyId
+    );
   
     const publishedProperty =
       await publishPropertyRepository(

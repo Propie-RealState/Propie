@@ -1,9 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 
-import {
-  assertPropertyOwner,
-  savePropertyVideoFromMultipart,
-} from "../services/upload-property-videos.service";
+import { assertCanManageProperty } from "../utils/assert-can-manage-property";
+import { savePropertyVideoFromMultipart } from "../services/upload-property-videos.service";
 
 export async function uploadPropertyVideosController(
   request: FastifyRequest<{
@@ -17,7 +15,7 @@ export async function uploadPropertyVideosController(
     const { propertyId } = request.params;
     const userId = request.user.id;
 
-    await assertPropertyOwner(propertyId, userId);
+    await assertCanManageProperty(userId, propertyId);
 
     const uploadedVideos = [];
 

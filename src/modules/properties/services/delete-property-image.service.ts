@@ -1,4 +1,5 @@
 import { deletePropertyImageRepository } from "../repositories/delete-property-image.repository";
+import { assertCanManageProperty } from "../utils/assert-can-manage-property";
 
 interface DeletePropertyImageServiceRequest {
   imageId: string;
@@ -11,9 +12,10 @@ export async function deletePropertyImageService({
   propertyId,
   userId,
 }: DeletePropertyImageServiceRequest) {
+  await assertCanManageProperty(userId, propertyId);
+
   await deletePropertyImageRepository({
     imageId,
-    userId, 
     propertyId,
   });
 }

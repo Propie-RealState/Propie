@@ -3,30 +3,14 @@ import { db } from "@/database/client";
 interface UpdatePropertyImagesOrderRepositoryRequest {
   propertyId: string;
   imageIds: string[];
-  userId: string;
 }
 
 export async function updatePropertyImagesOrderRepository({
   propertyId,
   imageIds,
-  userId,
 }: UpdatePropertyImagesOrderRepositoryRequest) {
   if (imageIds.length === 0) {
     return;
-  }
-
-  const ownerCheck = await db.query(
-    `
-      SELECT id
-      FROM properties
-      WHERE id = $1
-        AND owner_id = $2
-    `,
-    [propertyId, userId],
-  );
-
-  if (ownerCheck.rows.length === 0) {
-    throw new Error("FORBIDDEN");
   }
 
   const countResult = await db.query(

@@ -1,4 +1,5 @@
 import { updatePropertyImagesOrderRepository } from "../repositories/update-property-images-order.repository";
+import { assertCanManageProperty } from "../utils/assert-can-manage-property";
 
 interface UpdatePropertyImagesOrderServiceRequest {
   propertyId: string;
@@ -11,9 +12,10 @@ export async function updatePropertyImagesOrderService({
   imageIds,
   userId,
 }: UpdatePropertyImagesOrderServiceRequest) {
+  await assertCanManageProperty(userId, propertyId);
+
   await updatePropertyImagesOrderRepository({
     propertyId,
     imageIds,
-    userId,
   });
 }
