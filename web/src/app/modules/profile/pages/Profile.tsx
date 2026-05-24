@@ -29,6 +29,12 @@ import {
 import { updateMyProfile } from "../services/profile.service";
 import { useAppTheme, useIsAgent } from "../../../../theme/useAppTheme";
 import { useOwnerApplicationCount } from "../../agent-applications/hooks/useOwnerApplicationCount";
+import { AppFooterNav } from "../../../components/navigation/AppFooterNav";
+import { NotificationsBell } from "../../../components/navigation/NotificationsBell";
+import {
+  canPublishProperties,
+  isClientRole,
+} from "../../../../lib/roles";
 
 export default function Profile() {
   const [isSaving, setIsSaving] = useState(false);
@@ -129,7 +135,15 @@ export default function Profile() {
 
   const colors = useAppTheme();
   const isAgent = useIsAgent();
+  const isClient = isClientRole(user?.role);
+  const showPublisherStats = canPublishProperties(user?.role);
   const { count: pendingApplicationCount } = useOwnerApplicationCount();
+
+  const roleLabel = isAgent
+    ? "Agente"
+    : isClient
+      ? "Explorador"
+      : "Propietario";
 
   const handleLogout = () => {
     sessionStorage.removeItem("userType");
@@ -251,17 +265,7 @@ export default function Profile() {
           Perfil
         </h1>
 
-        <button
-          onClick={() => navigate("/configuracion")}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: 4,
-          }}
-        >
-          <Settings size={20} color="#1a1a1a" />
-        </button>
+        <NotificationsBell />
       </div>
 
       {/* Content */}
@@ -381,7 +385,7 @@ export default function Profile() {
                         color: colors.primary,
                       }}
                     >
-                      {isAgent ? "Agente" : "Propie"}
+                      {roleLabel}
                     </span>
                   </div>
                 </div>
@@ -546,7 +550,7 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Stats */}
+          {showPublisherStats && (
           <div
             style={{
               background: "white",
@@ -719,6 +723,7 @@ export default function Profile() {
               </div>
             )}
           </div>
+          )}
 
           {/* Menu Options */}
           <div
@@ -850,6 +855,59 @@ export default function Profile() {
               <ChevronRight size={20} color="#9a9aa0" />
             </button>
 
+            {/* Settings */}
+            <button
+              onClick={() => navigate("/configuracion")}
+              style={{
+                width: "100%",
+                background: "none",
+                border: "none",
+                padding: "16px",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                cursor: "pointer",
+                borderRadius: 12,
+                transition: "background 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "#f5f5f7";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "none";
+              }}
+            >
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 10,
+                  background: colors.lightBg,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Settings size={20} color={colors.primary} />
+              </div>
+              <span
+                style={{
+                  flex: 1,
+                  textAlign: "left",
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: "#1a1a1a",
+                }}
+              >
+                Configuración
+              </span>
+              <ChevronRight size={20} color="#9a9aa0" />
+            </button>
+
+            {!isClient && (
+            <>
             {/* Help */}
             <button
               onClick={() => navigate("/ayuda")}
@@ -951,6 +1009,8 @@ export default function Profile() {
               </span>
               <ChevronRight size={20} color="#9a9aa0" />
             </button>
+            </>
+            )}
           </div>
 
           {/* Logout Button */}
@@ -1000,6 +1060,8 @@ export default function Profile() {
           </p>
         </div>
       </div>
+
+      <AppFooterNav />
 
       {/* Logout Confirmation Modal */}
       {showLogoutModal && (

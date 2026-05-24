@@ -40,7 +40,12 @@ import {
   sendAgentApplication,
   type AgentApplicationStatus,
 } from "../../agent-applications/services/agent-applications.service";
-type UserType = "guest" | "propie" | "agente" | null;
+import { NotificationsBell } from "../../../components/navigation/NotificationsBell";
+import {
+  isFavorite,
+  toggleFavoriteId,
+} from "../../../../lib/favorites-storage";
+type UserType = "guest" | "client" | "owner" | "agente" | null;
 
 type MappedProperty = ReturnType<typeof mapPropertyDetails>;
 
@@ -105,12 +110,15 @@ export default function PropertyDetails() {
 
   const getUserType = (): UserType => {
     if (!isLoggedIn) return "guest";
-    return user?.role === "AGENT" ? "agente" : "propie";
+    if (user?.role === "AGENT") return "agente";
+    if (user?.role === "OWNER") return "owner";
+    if (user?.role === "CLIENT") return "client";
+    return "client";
   };
 
   const userType = getUserType();
   const isOwner =
-    userType === "propie" &&
+    userType === "owner" &&
     (!property || property.ownerId === user?.id);
   const isAgent = userType === "agente";
   const canManageProperty =
@@ -323,6 +331,7 @@ export default function PropertyDetails() {
         </button>
 
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {isLoggedIn && <NotificationsBell />}
           {!isLoggedIn && (
             <button
               onClick={() => navigate("/ingresar")}
@@ -1321,6 +1330,71 @@ export default function PropertyDetails() {
         </div>
       )}
 
+      {/* CTA sticky - Registered client (explore-only account) */}
+      {userType === "client" && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: "white",
+            borderTop: "1px solid #e5e5ea",
+            padding: "16px 20px",
+            display: "flex",
+            gap: 12,
+            zIndex: 10,
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              if (id) {
+                toggleFavoriteId(id);
+              }
+            }}
+            style={{
+              background: "#f0f0f0",
+              border: "none",
+              borderRadius: 12,
+              padding: "14px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Heart
+              size={22}
+              color={id && isFavorite(id) ? colors.primary : "#1a1a1a"}
+              fill={id && isFavorite(id) ? colors.primary : "none"}
+            />
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowChat(true)}
+            style={{
+              flex: 1,
+              background: colors.primary,
+              border: "none",
+              borderRadius: 12,
+              padding: "14px",
+              color: "white",
+              fontSize: 16,
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+            }}
+          >
+            <MessageCircle size={20} />
+            Contactar
+          </button>
+        </div>
+      )}
+
       {/* CTA sticky - Guest */}
       {userType === "guest" && (
         <div
@@ -1338,6 +1412,8 @@ export default function PropertyDetails() {
           }}
         >
           <button
+            type="button"
+            onClick={() => navigate("/ingresar")}
             style={{
               background: "#f0f0f0",
               border: "none",
@@ -1352,7 +1428,8 @@ export default function PropertyDetails() {
             <Heart size={22} color="#1a1a1a" />
           </button>
           <button
-            onClick={() => navigate("/registro")}
+            type="button"
+            onClick={() => navigate("/ingresar")}
             style={{
               flex: 1,
               background: colors.primary,

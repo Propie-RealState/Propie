@@ -4,10 +4,17 @@ import { PropieLogo } from "../components/PropieLogo";
 import { ArrowLeft, Eye, EyeOff, Check } from "lucide-react";
 import React from "react";
 import { useRegister } from "../../context/RegisterContext";
-export default function RegisterPropie() {
+type RegisterPropieProps = {
+  registrationKind?: "owner" | "client";
+};
+
+export default function RegisterPropie({
+  registrationKind = "owner",
+}: RegisterPropieProps = {}) {
   const { data, updateData } = useRegister();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const isClientRegistration = registrationKind === "client";
 
 
   const validateEmail = (email: string) => {
@@ -20,14 +27,26 @@ export default function RegisterPropie() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    sessionStorage.setItem("userType", "propie");
+    if (isClientRegistration) {
+      updateData({ role: "CLIENT", mainGoal: "EXPLORE" });
+      sessionStorage.removeItem("userType");
+    } else {
+      updateData({ role: "OWNER" });
+      sessionStorage.setItem("userType", "propie");
+    }
     console.log("Registro:", data);
     navigate("/registro/verification");
   };
 
   const handleSocialLogin = (provider: string) => {
-    sessionStorage.setItem("userType", "propie");
-    console.log(`Login con ${provider}`);
+    if (isClientRegistration) {
+      updateData({ role: "CLIENT", mainGoal: "EXPLORE" });
+      sessionStorage.removeItem("userType");
+    } else {
+      updateData({ role: "OWNER" });
+      sessionStorage.setItem("userType", "propie");
+    }
+    console.log(`Login con ${provider}`, provider);
     navigate("/registro/verification");
   };
 

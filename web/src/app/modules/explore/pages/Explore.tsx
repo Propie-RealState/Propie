@@ -8,190 +8,21 @@ import {
   MapPin,
   Map,
   ChevronDown,
-  Home,
-  User,
-  LogIn,
-  MessageCircle,
   Bed,
   Bath,
   Maximize2,
-  Plus,
-  Building2,
 } from "lucide-react";
 import { useAuth } from "../../../../context/AuthContext";
 import type { Property } from "../types/property.types";
 import { getPublishedProperties } from "../services/explore.service";
 import { useAppTheme } from "../../../../theme/useAppTheme";
-import { usePropertyPublish } from "../../publish/context/PropertyPublishContext";
-import { useOwnerApplicationCount } from "../../agent-applications/hooks/useOwnerApplicationCount";
 import { useMapStore } from "../../map/stores/useMapStore";
-
-// ─── Footer Nav ───────────────────────────────────────────────────
-function FooterNav({
-  isLoggedIn,
-  theme,
-}: {
-  isLoggedIn: boolean;
-  theme: ReturnType<typeof useAppTheme>;
-}) {
-  const navigate = useNavigate();
-  const { startCreatePublish } = usePropertyPublish();
-  const { count: pendingApplicationCount } = useOwnerApplicationCount();
-  const currentPath = window.location.pathname;
-
-  const navBtn = (
-    Icon: React.ComponentType<{ size: number; color: string; strokeWidth: number }>,
-    label: string,
-    path: string,
-    onNavigate?: () => void,
-  ) => {
-    const isActive = currentPath === path || currentPath.startsWith(path + "/");
-    const color = isActive ? theme.primary : "#6e6e73";
-    return (
-      <button
-        key={path}
-        onClick={() => {
-          onNavigate?.();
-          navigate(path);
-        }}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 3,
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          padding: "6px 10px",
-          borderRadius: 12,
-          flex: 1,
-        }}
-      >
-        <span style={{ position: "relative", display: "flex" }}>
-          <Icon size={22} color={color} strokeWidth={1.8} />
-          {path === "/mensajes" && pendingApplicationCount > 0 && (
-            <span
-              style={{
-                position: "absolute",
-                top: -8,
-                right: -10,
-                minWidth: 17,
-                height: 17,
-                borderRadius: 999,
-                background: "#ef4444",
-                color: "white",
-                fontSize: 10,
-                fontWeight: 800,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "0 5px",
-                boxShadow: "0 2px 6px rgba(239,68,68,0.35)",
-              }}
-            >
-              {pendingApplicationCount}
-            </span>
-          )}
-        </span>
-        <span
-          style={{
-            fontSize: 10,
-            fontWeight: 600,
-            fontFamily: "'Inter', sans-serif",
-            color,
-          }}
-        >
-          {label}
-        </span>
-      </button>
-    );
-  };
-
-  return (
-    <div
-      style={{
-        flexShrink: 0,
-        background: "white",
-        borderTop: "1px solid #efefef",
-        boxShadow: "0 -4px 20px rgba(0,0,0,0.07)",
-        paddingBottom: "max(env(safe-area-inset-bottom), 4px)",
-      }}
-    >
-      <div className="flex items-center px-3 py-2">
-        {isLoggedIn ? (
-          <>
-            {navBtn(Plus, "Publicar", "/publicar", startCreatePublish)}
-            {navBtn(Building2, "Mis Props.", "/mis-propiedades")}
-            {navBtn(MessageCircle, "Mensajes", "/mensajes")}
-            {navBtn(User, "Perfil", "/perfil")}
-          </>
-        ) : (
-          <>
-            {/* Inicio */}
-            <button
-              onClick={() => navigate("/")}
-              style={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 3,
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: "6px 10px",
-                borderRadius: 12,
-              }}
-            >
-              <Home size={22} color="#6e6e73" strokeWidth={1.8} />
-              <span
-                style={{
-                  fontSize: 10,
-                  fontWeight: 600,
-                  fontFamily: "'Inter', sans-serif",
-                  color: "#6e6e73",
-                }}
-              >
-                Inicio
-              </span>
-            </button>
-
-            {/* Ingresar — destacado */}
-            <button
-              onClick={() => navigate("/ingresar")}
-              style={{
-                flex: 2,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                background: "#4417E6",
-                border: "none",
-                cursor: "pointer",
-                borderRadius: 18,
-                padding: "10px 0",
-                margin: "2px 10px",
-                boxShadow: "0 4px 14px rgba(68,23,230,0.30)",
-              }}
-            >
-              <LogIn size={18} color="white" strokeWidth={2} />
-              <span
-                style={{
-                  fontSize: 13,
-                  fontWeight: 700,
-                  fontFamily: "'Sora', sans-serif",
-                  color: "white",
-                }}
-              >
-                Ingresar
-              </span>
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
+import { AppFooterNav } from "../../../components/navigation/AppFooterNav";
+import { NotificationsBell } from "../../../components/navigation/NotificationsBell";
+import {
+  getFavoriteIds,
+  toggleFavoriteId,
+} from "../../../../lib/favorites-storage";
 
 // ─── Main Page ────────────────────────────────────────────────────
 export default function Explore() {
@@ -213,8 +44,6 @@ export default function Explore() {
   }, []);
 
   const { user } = useAuth();
-
-  const isLoggedIn = !!user;
   const [query, setQuery] = useState("");
   const operationType = useMapStore((state) => state.filters.operationType);
   const setMapFilters = useMapStore((state) => state.setFilters);
@@ -234,12 +63,27 @@ export default function Explore() {
             : undefined,
     });
   };
-  const [favorites, setFavorites] = useState<string[]>([]);
+  const [favorites, setFavorites] = useState<string[]>(getFavoriteIds());
 
-  const toggleFav = (id: string) =>
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+  useEffect(() => {
+    function syncFavorites() {
+      setFavorites(getFavoriteIds());
+    }
+
+    window.addEventListener("favorites:changed", syncFavorites);
+    return () => {
+      window.removeEventListener("favorites:changed", syncFavorites);
+    };
+  }, []);
+
+  const toggleFav = (id: string) => {
+    if (!user) {
+      navigate("/ingresar");
+      return;
+    }
+
+    toggleFavoriteId(id);
+  };
 
   const filtered = properties.filter((p) => {
     const matchType =
@@ -311,6 +155,29 @@ export default function Explore() {
             position: "relative",
           }}
         >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 2,
+            }}
+          >
+            <h1
+              style={{
+                margin: 0,
+                fontSize: 22,
+                fontWeight: 800,
+                color: "#1a1a1a",
+                fontFamily: "'Sora', sans-serif",
+                letterSpacing: "-0.5px",
+              }}
+            >
+              Explorar
+            </h1>
+            <NotificationsBell />
+          </div>
+
           {/* Search bar */}
           <div
             style={{
@@ -532,7 +399,7 @@ export default function Explore() {
       </div>
 
       {/* ── FOOTER ── */}
-      <FooterNav isLoggedIn={isLoggedIn} theme={theme} />
+      <AppFooterNav />
     </div>
   );
 }

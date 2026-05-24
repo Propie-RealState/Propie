@@ -11,6 +11,11 @@ import {
 } from "lucide-react";
 
 import { useAppTheme } from "../../../../theme/useAppTheme";
+import { useAuth } from "../../../../context/AuthContext";
+import { isClientRole } from "../../../../lib/roles";
+import { AppFooterNav } from "../../../components/navigation/AppFooterNav";
+import { NotificationsBell } from "../../../components/navigation/NotificationsBell";
+import { apiFetch } from "../../../../lib/api";
 import {
   getOwnerAgentApplications,
   type OwnerAgentApplication,
@@ -27,12 +32,20 @@ function getAgentName(application: OwnerAgentApplication) {
 export default function Notifications() {
   const navigate = useNavigate();
   const colors = useAppTheme();
+  const { user } = useAuth();
+  const isClient = isClientRole(user?.role);
   const [applications, setApplications] = useState<OwnerAgentApplication[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadApplications() {
       try {
+        if (isClient) {
+          await apiFetch("/notifications");
+          setApplications([]);
+          return;
+        }
+
         const data = await getOwnerAgentApplications();
         setApplications(data);
       } catch (error) {
@@ -43,7 +56,7 @@ export default function Notifications() {
     }
 
     loadApplications();
-  }, []);
+  }, [isClient]);
 
   const pendingApplications = useMemo(
     () =>
@@ -104,7 +117,7 @@ export default function Notifications() {
           Notificaciones
         </h1>
 
-        <Bell size={22} color={colors.primary} />
+        <NotificationsBell />
       </div>
 
       <div
@@ -152,7 +165,9 @@ export default function Notifications() {
                 lineHeight: 1.5,
               }}
             >
-              Solicitudes, actividad y avisos importantes de tus propiedades.
+              {isClient
+                ? "Mensajes, bajas de precio y novedades de tus favoritos."
+                : "Solicitudes, actividad y avisos importantes de tus propiedades."}
             </p>
           </div>
 
@@ -328,6 +343,8 @@ export default function Notifications() {
           </section>
         </div>
       </div>
+
+      <AppFooterNav />
     </div>
   );
 }

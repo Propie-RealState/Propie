@@ -16,6 +16,11 @@ import RegisterSecurity from "./pages/RegisterSecurity";
 import RegisterProfilePhoto from "./pages/RegisterProfilePhoto";
 import RegisterOwnerInfo from "./pages/RegisterOwnerInfo";
 import RegisterAgentInfo from "./pages/RegisterAgentInfo";
+import RegisterClient from "./pages/RegisterClient";
+import RegisterClientInfo from "./pages/RegisterClientInfo";
+import { PublisherRoute } from "../components/auth/PublisherRoute";
+import { ProtectedRoute } from "../components/auth/ProtectedRoute";
+import Favorites from "./modules/favorites/pages/Favorites";
 
 import PublishStep1 from "./modules/publish/pages/PublishStep1";
 import PublishStep2 from "./modules/publish/pages/PublishStep2";
@@ -126,6 +131,11 @@ export const router =
               path: "agent",
               Component: RegisterAgente,
             },
+
+            {
+              path: "client",
+              Component: RegisterClient,
+            },
         
             {
               path: "verification",
@@ -156,6 +166,11 @@ export const router =
               path: "agent-info",
               Component: RegisterAgentInfo,
             },
+
+            {
+              path: "client-info",
+              Component: RegisterClientInfo,
+            },
           ],
         },
 
@@ -177,30 +192,63 @@ export const router =
 
         {
           path: "perfil",
-          Component: Profile,
+          element: (
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          ),
+        },
+
+        {
+          path: "favoritos",
+          element: (
+            <ProtectedRoute>
+              <Favorites />
+            </ProtectedRoute>
+          ),
         },
 
         {
           path: "mensajes",
-          Component: Messages,
+          element: (
+            <ProtectedRoute>
+              <Messages />
+            </ProtectedRoute>
+          ),
         },
 
         {
           path: "notificaciones",
-          Component: Notifications,
+          element: (
+            <ProtectedRoute>
+              <Notifications />
+            </ProtectedRoute>
+          ),
         },
 
         {
           path: "mis-propiedades",
-          Component: MyProperties,
+          element: (
+            <PublisherRoute>
+              <MyProperties />
+            </PublisherRoute>
+          ),
         },
         {
           path: "/mis-propiedades/:id/editar",
-          element: <EditProperty />,
+          element: (
+            <PublisherRoute>
+              <EditProperty />
+            </PublisherRoute>
+          ),
         },
         {
           path: "/publicar",
-          element: <Outlet />,
+          element: (
+            <PublisherRoute>
+              <Outlet />
+            </PublisherRoute>
+          ),
         
           children: [
             {

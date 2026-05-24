@@ -14,6 +14,10 @@ import {
 } from "lucide-react";
 
 import { useAppTheme } from "../../../../theme/useAppTheme";
+import { useAuth } from "../../../../context/AuthContext";
+import { isClientRole } from "../../../../lib/roles";
+import { AppFooterNav } from "../../../components/navigation/AppFooterNav";
+import { NotificationsBell } from "../../../components/navigation/NotificationsBell";
 import {
   getOwnerAgentApplications,
   type OwnerAgentApplication,
@@ -41,6 +45,8 @@ function getApplicationLocation(application: OwnerAgentApplication) {
 export default function Messages() {
   const navigate = useNavigate();
   const colors = useAppTheme();
+  const { user } = useAuth();
+  const isClient = isClientRole(user?.role);
   const [applications, setApplications] = useState<OwnerAgentApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -57,8 +63,13 @@ export default function Messages() {
   }
 
   useEffect(() => {
+    if (isClient) {
+      setLoading(false);
+      return;
+    }
+
     loadApplications();
-  }, []);
+  }, [isClient]);
 
   const pendingCount = useMemo(
     () =>
@@ -137,31 +148,7 @@ export default function Messages() {
           Mensajes
         </h1>
 
-        <div style={{ position: "relative" }}>
-          <MessageCircle size={22} color={colors.primary} />
-          {pendingCount > 0 && (
-            <span
-              style={{
-                position: "absolute",
-                top: -8,
-                right: -10,
-                minWidth: 18,
-                height: 18,
-                borderRadius: 999,
-                background: "#ef4444",
-                color: "white",
-                fontSize: 11,
-                fontWeight: 800,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "0 5px",
-              }}
-            >
-              {pendingCount}
-            </span>
-          )}
-        </div>
+        <NotificationsBell />
       </div>
 
       <div
@@ -182,6 +169,29 @@ export default function Messages() {
             gap: 14,
           }}
         >
+          {isClient ? (
+            <div
+              style={{
+                background: "white",
+                borderRadius: 20,
+                border: "1.5px solid #e5e5ea",
+                padding: 28,
+                textAlign: "center",
+                color: "#6e6e73",
+              }}
+            >
+              <MessageCircle
+                size={32}
+                color={colors.primary}
+                style={{ marginBottom: 12 }}
+              />
+              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.55 }}>
+                Tus conversaciones con propietarios y agentes aparecerán acá
+                cuando contactes una propiedad.
+              </p>
+            </div>
+          ) : (
+            <>
           <div
             style={{
               background: "white",
@@ -502,8 +512,12 @@ export default function Messages() {
               );
             })
           )}
+            </>
+          )}
         </div>
       </div>
+
+      <AppFooterNav />
     </div>
   );
 }

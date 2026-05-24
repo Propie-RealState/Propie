@@ -37,6 +37,7 @@ declare module 'fastify' {
 
 // ========================================================
 // AUTH MIDDLEWARE
+// Guest = no Authorization header (no DB role).
 // ========================================================
 
 export async function authMiddleware(

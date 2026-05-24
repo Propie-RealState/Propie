@@ -4,7 +4,11 @@ import { z } from "zod";
 // ENUMS
 // ========================================================
 
-export const RegisterRoleSchema = z.enum(["OWNER", "AGENT"]);
+export const RegisterRoleSchema = z.enum([
+  "OWNER",
+  "AGENT",
+  "CLIENT",
+]);
 
 export const MainGoalSchema = z.enum(["PUBLISH", "EXPLORE"]);
 

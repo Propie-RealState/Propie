@@ -100,7 +100,8 @@ export async function createUser(
 
     role:
     | 'OWNER'
-    | 'AGENT';
+    | 'AGENT'
+    | 'CLIENT';
 
   }
 ): Promise<User> {

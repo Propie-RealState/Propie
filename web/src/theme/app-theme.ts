@@ -54,6 +54,11 @@ export function syncUserTypeFromRole(role: string | undefined | null) {
 
   if (role === "OWNER") {
     sessionStorage.setItem("userType", "propie");
+    return;
+  }
+
+  if (role === "CLIENT") {
+    sessionStorage.removeItem("userType");
   }
 }
 

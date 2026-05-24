@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from "react";
 
-export type RegisterRole = "OWNER" | "AGENT";
+export type RegisterRole = "OWNER" | "AGENT" | "CLIENT";
 
 export type RegisterData = {
   role: RegisterRole | null;

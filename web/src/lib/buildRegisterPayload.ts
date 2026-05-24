@@ -10,7 +10,7 @@ type MainGoal = 'PUBLISH' | 'EXPLORE';
  */
 export function buildRegisterPayload(
   data: RegisterData,
-  role: RegisterRole,
+  role: RegisterRole | 'CLIENT',
   mainGoal: MainGoal = 'EXPLORE'
 ) {
   return {

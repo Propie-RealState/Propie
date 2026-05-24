@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { PropieLogo } from "../components/PropieLogo";
-import { Home, Briefcase, ArrowLeft, ChevronRight } from "lucide-react";
+import { Home, Briefcase, Search, ArrowLeft, ChevronRight } from "lucide-react";
 import React from "react";
 import { useRegister } from "../../context/RegisterContext";
 export default function RegisterChoice() {
@@ -20,6 +20,15 @@ export default function RegisterChoice() {
     });
   
     navigate("/registro/agent");
+  }
+
+  function handleClientSelect() {
+    updateData({
+      role: "CLIENT",
+      mainGoal: "EXPLORE",
+    });
+
+    navigate("/registro/client");
   }
   return (
     <div
@@ -161,6 +170,51 @@ export default function RegisterChoice() {
           {/* Arrow */}
           <div style={{ width: 32, height: 32, borderRadius: 10, background: "#f0eeff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <ChevronRight size={16} color="#4417E6" />
+          </div>
+        </button>
+
+        {/* Explorador (CLIENT) */}
+        <button
+          onClick={handleClientSelect}
+          style={{
+            width: "100%",
+            maxWidth: 420,
+            background: "white",
+            border: "2px solid transparent",
+            borderRadius: 24,
+            padding: "26px 22px",
+            cursor: "pointer",
+            textAlign: "left",
+            boxShadow: "0 2px 16px rgba(0,0,0,0.07)",
+            transition: "all 0.18s ease",
+            display: "flex",
+            alignItems: "center",
+            gap: 18,
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "#C52E3E";
+            (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 28px rgba(197,46,62,0.14)";
+            (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "transparent";
+            (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 2px 16px rgba(0,0,0,0.07)";
+            (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+          }}
+        >
+          <div style={{ width: 60, height: 60, borderRadius: 20, background: "linear-gradient(135deg, #fff6f0 0%, #ffe8d6 100%)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 4px 14px rgba(197,46,62,0.10)" }}>
+            <Search size={26} color="#C52E3E" strokeWidth={1.8} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: "0 0 5px", fontSize: 20, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif", letterSpacing: "-0.5px" }}>
+              Quiero explorar
+            </p>
+            <p style={{ margin: 0, fontSize: 13, color: "#6e6e73", lineHeight: 1.55 }}>
+              Buscá propiedades, guardá favoritos y contactá publicadores.
+            </p>
+          </div>
+          <div style={{ width: 32, height: 32, borderRadius: 10, background: "#fff6f0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <ChevronRight size={16} color="#C52E3E" />
           </div>
         </button>
 

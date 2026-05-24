@@ -35,6 +35,8 @@ export default function RegisterProfilePhoto() {
   const handleContinue = () => {
     if (data.role === "AGENT") {
       navigate("/registro/agent-info");
+    } else if (data.role === "CLIENT") {
+      navigate("/registro/client-info");
     } else {
       navigate("/registro/owner-info");
     }

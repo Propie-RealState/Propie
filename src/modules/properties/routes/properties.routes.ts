@@ -1,6 +1,11 @@
 import { FastifyInstance, FastifyRequest, RouteHandlerMethod } from "fastify";
 
 import { authMiddleware } from "@/middlewares/auth.middleware";
+import { requireRoles } from "@/middlewares/require-roles.middleware";
+import {
+  PROPERTY_MANAGER_ROLES,
+  USER_ROLES,
+} from "@/constants/roles";
 
 import { createPropertyController } from "../controllers/create-property.controller";
 
@@ -53,7 +58,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
     "/",
 
     {
-      preHandler: authMiddleware,
+      preHandler: requireRoles([USER_ROLES.OWNER]),
     },
 
     createPropertyController as RouteHandlerMethod,
@@ -80,7 +85,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
   app.get(
     "/mine",
     {
-      preHandler: authMiddleware,
+      preHandler: requireRoles(PROPERTY_MANAGER_ROLES),
     },
     getMyPropertiesController as RouteHandlerMethod,
   );
