@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Propie Roles Banner</title>
+
+  <!-- FONT -->
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+    }
+
+    body{
+
+      background:#f5f5f7;
+
+      height:100vh;
+
+      display:flex;
+      justify-content:center;
+      align-items:center;
+
+      font-family:'Sora',sans-serif;
+    }
+
+    /*
+      MOBILE CONTAINER
+    */
+
+    .mobile{
+
+      width:390px;
+      height:844px;
+
+      background:white;
+
+      overflow:hidden;
+
+      position:relative;
+
+      display:flex;
+      justify-content:center;
+      align-items:center;
+    }
+
+    /*
+      BANNER
+    */
+
+    .banner{
+
+      width:92%;
+      height:230px;
+
+      background:#4417E6;
+
+      border-radius:38px;
+
+      position:relative;
+
+      overflow:hidden;
+
+      display:flex;
+      justify-content:center;
+      align-items:center;
+
+      box-shadow:
+      0 18px 40px rgba(68,23,230,.18);
+    }
+
+    /*
+      ITEMS
+    */
+
+    .slider{
+
+      width:100%;
+      height:100%;
+
+      position:relative;
+    }
+
+    .slide{
+
+      position:absolute;
+
+      top:50%;
+      left:50%;
+
+      transform:
+      translate(-50%, -50%);
+
+      transition:
+      transform .55s cubic-bezier(.22,1,.36,1),
+      opacity .45s ease;
+
+      text-align:center;
+
+      cursor:pointer;
+    }
+
+    /*
+      CENTRO
+    */
+
+    .active{
+
+      z-index:3;
+
+      opacity:1;
+
+      transform:
+      translate(-50%, -50%)
+      scale(1);
+    }
+
+    .active h1{
+
+      color:white;
+
+      font-size:44px;
+
+      font-weight:800;
+
+      letter-spacing:-2px;
+    }
+
+    .active p{
+
+      margin-top:10px;
+
+      color:rgba(255,255,255,.75);
+
+      font-size:14px;
+
+      width:220px;
+
+      line-height:1.5;
+    }
+
+    /*
+      LADOS
+    */
+
+    .left{
+
+      z-index:1;
+
+      opacity:.35;
+
+      transform:
+      translate(-185%, -50%)
+      scale(.72);
+    }
+
+    .right{
+
+      z-index:1;
+
+      opacity:.35;
+
+      transform:
+      translate(85%, -50%)
+      scale(.72);
+    }
+
+    .left h2,
+    .right h2{
+
+      color:white;
+
+      font-size:30px;
+
+      font-weight:700;
+
+      letter-spacing:-1px;
+    }
+
+    /*
+      DOTS
+    */
+
+    .dots{
+
+      position:absolute;
+
+      bottom:20px;
+
+      left:50%;
+
+      transform:translateX(-50%);
+
+      display:flex;
+
+      gap:10px;
+    }
+
+    .dot{
+
+      width:9px;
+      height:9px;
+
+      border-radius:50%;
+
+      background:rgba(255,255,255,.35);
+
+      transition:.3s;
+    }
+
+    .dot.active-dot{
+
+      width:28px;
+
+      border-radius:20px;
+
+      background:white;
+    }
+
+    /*
+      TOQUE SUAVE
+    */
+
+    .banner::before{
+
+      content:'';
+
+      position:absolute;
+
+      width:240px;
+      height:240px;
+
+      background:
+      radial-gradient(
+        circle,
+        rgba(255,255,255,.12),
+        transparent 70%
+      );
+
+      top:-80px;
+      right:-60px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="mobile">
+
+    <section class="banner">
+
+      <div class="slider">
+
+        <!-- PROPIE -->
+        <div class="slide left" id="slide-left">
+          <h2>Propie</h2>
+        </div>
+
+        <!-- EXPLORE -->
+        <div class="slide active" id="slide-center">
+          <h1>Explorar</h1>
+
+          <p>
+            Encontrá propiedades cerca tuyo
+            de forma rápida y simple
+          </p>
+        </div>
+
+        <!-- AGENTE -->
+        <div class="slide right" id="slide-right">
+          <h2>Agente</h2>
+        </div>
+
+      </div>
+
+      <!-- DOTS -->
+
+      <div class="dots">
+
+        <div class="dot"></div>
+        <div class="dot active-dot"></div>
+        <div class="dot"></div>
+
+      </div>
+
+    </section>
+
+  </div>
+
+  <script>
+
+    const roles = [
+
+      {
+        title:'Propie',
+        desc:'Publicá y administrá tus propiedades fácilmente'
+      },
+
+      {
+        title:'Explorar',
+        desc:'Encontrá propiedades cerca tuyo de forma rápida y simple'
+      },
+
+      {
+        title:'Agente',
+        desc:'Generá ingresos comercializando propiedades'
+      }
+
+    ];
+
+    let current = 1;
+
+    const left = document.getElementById('slide-left');
+    const center = document.getElementById('slide-center');
+    const right = document.getElementById('slide-right');
+
+    const dots = document.querySelectorAll('.dot');
+
+    function updateSlider(){
+
+      const prev =
+      (current - 1 + roles.length) % roles.length;
+
+      const next =
+      (current + 1) % roles.length;
+
+      left.innerHTML =
+      `<h2>${roles[prev].title}</h2>`;
+
+      center.innerHTML =
+      `
+      <h1>${roles[current].title}</h1>
+      <p>${roles[current].desc}</p>
+      `;
+
+      right.innerHTML =
+      `<h2>${roles[next].title}</h2>`;
+
+      dots.forEach(dot =>
+      dot.classList.remove('active-dot'));
+
+      dots[current]
+      .classList.add('active-dot');
+    }
+
+    left.addEventListener('click', () => {
+
+      current =
+      (current - 1 + roles.length) % roles.length;
+
+      updateSlider();
+
+    });
+
+    right.addEventListener('click', () => {
+
+      current =
+      (current + 1) % roles.length;
+
+      updateSlider();
+
+    });
+
+  </script>
+
+</body>
+</html>

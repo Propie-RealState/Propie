@@ -1,0 +1,16 @@
+---
+description: Token optimization
+alwaysApply: true
+---
+
+- Never scan the full repository unless explicitly requested
+- Read only files directly related to the current task
+- Avoid opening dependency files unless necessary
+- Avoid repeated reads of the same files
+- Prefer minimal diffs
+- Prefer editing existing code over rewriting files
+- Keep answers under 150 words unless asked
+- Avoid generating unnecessary explanations
+- Ask before making multi-file refactors
+- Do not inspect tests unless the task involves tests
+- Do not inspect documentation unless requested

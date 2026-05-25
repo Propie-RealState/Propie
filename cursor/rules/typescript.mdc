@@ -1,0 +1,10 @@
+---
+description: TypeScript rules
+globs: *.ts,*.tsx
+---
+
+- Reuse existing types whenever possible
+- Never use any
+- Prefer inferred types when obvious
+- Avoid generating duplicate utilities
+- Follow existing patterns before creating new abstractions

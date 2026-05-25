@@ -1,0 +1,2 @@
+ALTER TABLE property_images
+ADD COLUMN display_order INTEGER NOT NULL DEFAULT 0;
