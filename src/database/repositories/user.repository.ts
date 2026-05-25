@@ -1,8 +1,8 @@
-import { db } from '@/database/client';
+import { db } from '../client';
 
 import type {
   User,
-} from '@/database/types/users';
+} from '../types/users';
 
 
 
@@ -360,4 +360,3 @@ export async function updateUserProfile(
   );
   
 }
-
