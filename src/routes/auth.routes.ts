@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 
-import { LoginSchema } from "@/database/types/auth";
+import { LoginSchema } from "../database/types/auth";
 
 import { login } from "../services/auth/auth.service";
 
