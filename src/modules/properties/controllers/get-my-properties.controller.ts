@@ -3,7 +3,7 @@ import {
     FastifyRequest,
   } from "fastify";
   
-  import { getMyPropertiesService } from "../services/get-my-properties.service.ts";
+  import { getMyPropertiesService } from "../services/get-my-properties.service";
   
   export async function getMyPropertiesController(
     request: FastifyRequest,
