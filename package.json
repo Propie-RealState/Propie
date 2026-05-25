@@ -1,6 +1,7 @@
 {
   "name": "propie",
   "version": "1.0.0",
+  "packageManager": "pnpm@11.1.3",
   "description": "",
   "homepage": "https://github.com/Propie-RealState/Propie#readme",
   "bugs": {
