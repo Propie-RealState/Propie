@@ -5,8 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { pipeline } from "node:stream/promises";
-
-import { v4 as uuid } from "uuid";
+import { randomUUID } from "node:crypto";
 
 import { assertCanManageProperty } from "../utils/assert-can-manage-property";
 import { createPropertyImageRepository } from "../repositories/create-property-image.repository";
@@ -45,7 +44,7 @@ export async function uploadPropertyImagesController(
     // UNIQUE NAME
     // ================================================
 
-    const filename = `${uuid()}${extension}`;
+    const filename = `${randomUUID()}${extension}`;
 
     // ================================================
     // PATH
