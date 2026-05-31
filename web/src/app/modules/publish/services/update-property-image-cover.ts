@@ -1,3 +1,5 @@
+import { API_URL } from "../../../../lib/api-base";
+
 export async function updatePropertyImageCover(
     propertyId: string,
     imageId: string,
@@ -6,7 +8,7 @@ export async function updatePropertyImageCover(
       localStorage.getItem("accessToken");
   
     const response = await fetch(
-      `http://localhost:3000/properties/${propertyId}/images/${imageId}/cover`,
+      `${API_URL}/properties/${propertyId}/images/${imageId}/cover`,
       {
         method: "PATCH",
   

@@ -2,6 +2,7 @@ import type {
     PropertyDetailsDTO,
     PropertyImageDTO,
   } from "../types/property-details.dto";
+import { resolveMediaUrl } from "../../../../lib/api-base";
   
   export function mapPropertyDetails(
     property: PropertyDetailsDTO
@@ -11,7 +12,7 @@ import type {
         (image: PropertyImageDTO) => ({
           id: image.id,
   
-          url: `http://localhost:3000${image.image_url}`,
+          url: resolveMediaUrl(image.image_url) ?? "",
   
           isCover: image.is_cover,
         })

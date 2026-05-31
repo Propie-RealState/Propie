@@ -4,10 +4,7 @@ import type {
   NearbyPropertiesResponse,
   PropertiesMapResponse,
 } from "../types/map.types";
-
-const API_BASE =
-  import.meta.env.VITE_API_URL ??
-  "http://localhost:3000";
+import { API_URL } from "../../../../lib/api-base";
 
 function appendFilters(
   params: URLSearchParams,
@@ -71,7 +68,7 @@ export async function getMapProperties(
 
   const response =
     await fetch(
-      `${API_BASE}/properties/map?${params.toString()}`,
+      `${API_URL}/properties/map?${params.toString()}`,
       {
         signal:
           input.signal,
@@ -113,7 +110,7 @@ export async function getNearbyProperties(
 
   const response =
     await fetch(
-      `${API_BASE}/properties/nearby?${params.toString()}`,
+      `${API_URL}/properties/nearby?${params.toString()}`,
       {
         signal:
           input.signal,

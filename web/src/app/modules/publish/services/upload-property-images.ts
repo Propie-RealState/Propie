@@ -1,5 +1,4 @@
-const API_URL =
-  "http://localhost:3000";
+import { API_URL } from "../../../../lib/api-base";
 
 export async function uploadPropertyImages(
   propertyId: string,

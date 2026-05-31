@@ -4,6 +4,7 @@ import { ArrowLeft, Building2, Plus } from "lucide-react";
 import { useMyProperties } from "../hooks/useMyProperties";
 import { usePropertyPublish } from "../../publish/context/PropertyPublishContext";
 import { useAppTheme, useIsAgent } from "../../../../theme/useAppTheme";
+import { resolveMediaUrl } from "../../../../lib/api-base";
 
 export default function MyProperties() {
   const navigate = useNavigate();
@@ -185,7 +186,7 @@ export default function MyProperties() {
               }}
             >
               <img
-                src={`http://localhost:3000${property.cover_image}`}
+                src={resolveMediaUrl(property.cover_image) ?? ""}
                 alt={property.title}
                 style={{
                   width: "100%",

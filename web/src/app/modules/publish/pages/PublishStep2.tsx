@@ -19,6 +19,7 @@ import { updatePropertyImageCover } from "../services/update-property-image-cove
 import { updatePropertyMediaOrder } from "../services/update-property-media-order";
 import { deletePropertyImage } from "../services/delete-property-image";
 import { deletePropertyVideo } from "../services/delete-property-video";
+import { resolveMediaUrl } from "../../../../lib/api-base";
 import {
   DndContext,
   closestCenter,
@@ -51,9 +52,6 @@ interface MediaItem {
 
   isExisting?: boolean;
 }
-
-const API_BASE =
-   "http://localhost:3000";
 
 type PropertyMediaRow = {
   id: string;
@@ -92,7 +90,9 @@ function mapPropertyMediaToItems(
   return rows.map((row) => ({
     id: row.id,
     type: row.type,
-    url: `${API_BASE}${row.type === "image" ? row.image_url : row.video_url}`,
+    url: resolveMediaUrl(
+      row.type === "image" ? row.image_url : row.video_url,
+    ) ?? "",
     isCover: row.type === "image" ? Boolean(row.is_cover) : false,
     isExisting: true,
   }));
@@ -344,7 +344,7 @@ export default function PublishStep2() {
 
             type: "image",
 
-            url: `${API_BASE}${image.image_url}`,
+            url: resolveMediaUrl(image.image_url) ?? "",
 
             isCover: image.is_cover,
 
@@ -366,7 +366,7 @@ export default function PublishStep2() {
           (video: { id: string; video_url: string }) => ({
             id: video.id,
             type: "video",
-            url: `${API_BASE}${video.video_url}`,
+            url: resolveMediaUrl(video.video_url) ?? "",
             isCover: false,
             isExisting: true,
           }),
