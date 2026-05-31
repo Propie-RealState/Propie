@@ -25,7 +25,7 @@ export function PublisherRoute({
   if (!canPublishProperties(user.role)) {
     return (
       <Navigate
-        to="/explorar"
+        to="/explore"
         replace
       />
     );

@@ -1,9 +1,8 @@
-import { createBrowserRouter, Outlet } from "react-router-dom";
+import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
 import React, { lazy, Suspense } from "react";
 import { Root } from "./Root";
 import { RegisterProvider } from "../context/RegisterContext";
 
-import Home from "./pages/Home";
 import Explore from "./modules/explore/pages/Explore.tsx";
 import Login from "./pages/Login";
 
@@ -91,12 +90,17 @@ export const router =
 
         {
           index: true,
-          Component: Home,
+          element: <Navigate to="/explore" replace />,
+        },
+
+        {
+          path: "explore",
+          Component: Explore,
         },
 
         {
           path: "explorar",
-          Component: Explore,
+          element: <Navigate to="/explore" replace />,
         },
 
         {

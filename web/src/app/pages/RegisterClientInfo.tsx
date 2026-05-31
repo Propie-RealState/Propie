@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check } from 'lucide-react';
 import React from 'react';
-import { PropieLogo } from '../components/PropieLogo';
+import { AuthHeroHeader } from '../components/AuthHeroHeader';
 import { RegisterSuccessOverlay } from '../components/register/RegisterSuccessOverlay';
 import { REGISTER_COMPLETION } from '../components/register/registerCompletionTheme';
 import { useRegister } from '../../context/RegisterContext';
@@ -73,7 +73,7 @@ export default function RegisterClientInfo() {
 
   const handleSuccessFinish = useCallback(() => {
     setShowSuccess(false);
-    navigate('/explorar', { replace: true });
+    navigate('/explore', { replace: true });
   }, [navigate]);
 
   const charCount = data.bio.length;
@@ -99,38 +99,7 @@ export default function RegisterClientInfo() {
           paddingBottom: 0,
         }}
       >
-        <div
-          style={{
-            width: '100%',
-            maxWidth: 420,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '20px 24px 0',
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            style={{
-              background: 'rgba(255,255,255,0.15)',
-              border: '1px solid rgba(255,255,255,0.22)',
-              borderRadius: 12,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 5,
-              color: 'white',
-              padding: '8px 14px',
-            }}
-          >
-            <ArrowLeft size={15} color="white" />
-            <span style={{ fontSize: 13, fontWeight: 600 }}>Volver</span>
-          </button>
-
-          <PropieLogo size={38} />
-          <div style={{ width: 80 }} />
-        </div>
+        <AuthHeroHeader />
 
         <div
           style={{

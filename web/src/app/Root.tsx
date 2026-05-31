@@ -1,7 +1,12 @@
 import React from "react";
-import { Outlet } from "react-router-dom";
+
+import { PageTransition } from "./components/PageTransition";
+import AppStartup from "./pages/SplashScreen";
 
 export function Root() {
-  return <Outlet />;
+  return (
+    <AppStartup>
+      <PageTransition />
+    </AppStartup>
+  );
 }
-
