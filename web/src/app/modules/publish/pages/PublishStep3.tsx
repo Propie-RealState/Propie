@@ -5,7 +5,7 @@ import { ArrowLeft, Check } from "lucide-react";
 import React from "react";
 import { updatePropertyAmenities } from "../services/update-property-amenities.ts";
 import { usePropertyPublish } from "../context/PropertyPublishContext";
-import { updatePropertyDetails } from "../services/update-property-details";
+import { updatePropertyBasic } from "../services/updatePropertyBasic";
 import { useAppTheme } from "../../../../theme/useAppTheme";
 import { amenitiesMap } from "../mappers/map-amenities-to-api";
   
@@ -95,18 +95,15 @@ export default function PublishStep3() {
     }
 
     try {
-      await updatePropertyDetails(data.propertyId, {
+      await updatePropertyBasic(data.propertyId, {
         title: formData.title,
-
         description: formData.description,
-
         price: Number(formData.price),
-
         bedrooms: Number(formData.rooms),
-
         bathrooms: Number(formData.bathrooms),
-
         areaM2: Number(formData.sqm),
+        propertyType: data.propertyType ?? "HOUSE",
+        operationType: data.listingType ?? "SALE",
       });
 
       await updatePropertyAmenities(

@@ -17,10 +17,6 @@ import { updatePropertyLocationController } from "../controllers/update-property
 
 import { UpdatePropertyLocationSchema } from "../schemas/update-property-location.schema";
 
-import { updatePropertyDetailsController } from "../controllers/update-property-details.controller";
-
-import { UpdatePropertyDetailsSchema } from "../schemas/update-property-details.schema";
-
 import { uploadPropertyImagesController } from "../controllers/upload-property-images.controller";
 
 import { savePropertyAmenitiesController } from "../controllers/save-property-amenities.controller";
@@ -117,32 +113,6 @@ export async function propertiesRoutes(app: FastifyInstance) {
       const body = UpdatePropertyLocationSchema.parse(request.body);
 
       return updatePropertyLocationController(
-        {
-          ...request,
-
-          params: {
-            id: (request.params as { id: string }).id,
-          },
-
-          body,
-        },
-
-        reply,
-      );
-    },
-  );
-
-  app.patch(
-    "/:id/details",
-
-    {
-      preHandler: authMiddleware,
-    },
-
-    async (request, reply) => {
-      const body = UpdatePropertyDetailsSchema.parse(request.body);
-
-      return updatePropertyDetailsController(
         {
           ...request,
 
