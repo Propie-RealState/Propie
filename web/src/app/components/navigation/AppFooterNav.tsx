@@ -3,12 +3,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Building2,
   Heart,
-  Home,
   LogIn,
   MessageCircle,
   Plus,
   Search,
   User,
+  UserPlus,
 } from 'lucide-react';
 
 import { useAuth } from '../../../context/AuthContext';
@@ -23,9 +23,6 @@ export function AppFooterNav() {
   const { user } = useAuth();
   const { startCreatePublish } = usePropertyPublish();
   const audience = getNavAudience(user);
-  const isOnExplore =
-    location.pathname === '/explorar' ||
-    location.pathname.startsWith('/explorar/');
 
   const navBtn = (
     Icon: React.ComponentType<{
@@ -78,6 +75,54 @@ export function AppFooterNav() {
     );
   };
 
+  const authBtn = (
+    label: string,
+    path: string,
+    Icon: React.ComponentType<{
+      size: number;
+      color: string;
+      strokeWidth: number;
+    }>,
+    filled?: boolean,
+  ) => (
+    <button
+      type="button"
+      onClick={() => navigate(path)}
+      style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        background: filled ? theme.primary : 'white',
+        border: filled ? 'none' : `1.5px solid ${theme.primary}`,
+        cursor: 'pointer',
+        borderRadius: 18,
+        padding: '10px 0',
+        margin: '2px 6px',
+        boxShadow: filled
+          ? `0 4px 14px rgba(${theme.rgb}, 0.30)`
+          : 'none',
+      }}
+    >
+      <Icon
+        size={18}
+        color={filled ? 'white' : theme.primary}
+        strokeWidth={2}
+      />
+      <span
+        style={{
+          fontSize: 13,
+          fontWeight: 700,
+          fontFamily: "'Sora', sans-serif",
+          color: filled ? 'white' : theme.primary,
+        }}
+      >
+        {label}
+      </span>
+    </button>
+  );
+
   return (
     <div
       style={{
@@ -91,44 +136,14 @@ export function AppFooterNav() {
       <div className="flex items-center px-3 py-2">
         {audience === 'guest' && (
           <>
-            {navBtn(Home, 'Inicio', '/')}
-            {!isOnExplore && navBtn(Search, 'Explorar', '/explorar')}
-            <button
-              type="button"
-              onClick={() => navigate('/ingresar')}
-              style={{
-                flex: 2,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                background: theme.primary,
-                border: 'none',
-                cursor: 'pointer',
-                borderRadius: 18,
-                padding: '10px 0',
-                margin: '2px 10px',
-                boxShadow: `0 4px 14px rgba(${theme.rgb}, 0.30)`,
-              }}
-            >
-              <LogIn size={18} color="white" strokeWidth={2} />
-              <span
-                style={{
-                  fontSize: 13,
-                  fontWeight: 700,
-                  fontFamily: "'Sora', sans-serif",
-                  color: 'white',
-                }}
-              >
-                Ingresar
-              </span>
-            </button>
+            {authBtn('Ingresar', '/ingresar', LogIn, true)}
+            {authBtn('Registrate', '/registro', UserPlus)}
           </>
         )}
 
         {audience === 'client' && (
           <>
-            {navBtn(Search, 'Explorar', '/explorar')}
+            {navBtn(Search, 'Explorar', '/explore')}
             {navBtn(Heart, 'Favoritos', '/favoritos')}
             {navBtn(MessageCircle, 'Mensajes', '/mensajes')}
             {navBtn(User, 'Perfil', '/perfil')}

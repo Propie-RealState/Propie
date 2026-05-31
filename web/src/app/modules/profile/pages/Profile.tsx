@@ -149,7 +149,7 @@ export default function Profile() {
     sessionStorage.removeItem("userType");
     logout();
     setShowLogoutModal(false);
-    navigate("/");
+    navigate("/explore");
   };
 
   function resetFormFromUser() {

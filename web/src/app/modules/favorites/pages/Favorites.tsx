@@ -123,7 +123,7 @@ export default function Favorites() {
             </p>
             <button
               type="button"
-              onClick={() => navigate('/explorar')}
+              onClick={() => navigate('/explore')}
               style={{
                 marginTop: 8,
                 background: theme.primary,

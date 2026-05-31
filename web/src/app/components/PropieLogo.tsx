@@ -1,11 +1,11 @@
-/** Raster export from brand PDF (`public/brand/logo-full-color.png`). */
-const LOGO_SRC = "/brand/logo-full-color.png";
+/** App-wide logo (`web/public/logo.png`) — same asset as SplashScreen */
+export const PROPIE_LOGO_SRC = "/logo.png";
 
 export type PropieLogoProps = {
   size?: number;
   /**
-   * `onHero`: light pill behind full-color mark (headers con gradiente).
-   * `inline`: solo la imagen, para fondos claros.
+   * `onHero`: light pill behind mark (headers on gradient/dark backgrounds).
+   * `inline`: logo only, for light backgrounds.
    */
   variant?: "onHero" | "inline";
 };
@@ -13,18 +13,18 @@ export type PropieLogoProps = {
 export function PropieLogo({ size = 46, variant = "onHero" }: PropieLogoProps) {
   const img = (
     <img
-      src={LOGO_SRC}
-      alt="propie"
-      width={undefined}
-      height={undefined}
+      src={PROPIE_LOGO_SRC}
+      alt="Propie"
+      width={200}
+      height={72}
       decoding="async"
       style={{
-        height: Math.max(22, size * 0.52),
+        height: Math.max(24, size * 0.62),
         width: "auto",
-        maxWidth: Math.min(200, size * 4),
+        maxWidth: Math.min(220, size * 3.5),
         display: "block",
         objectFit: "contain",
-        objectPosition: "left center",
+        objectPosition: "center",
       }}
     />
   );
@@ -39,8 +39,8 @@ export function PropieLogo({ size = 46, variant = "onHero" }: PropieLogoProps) {
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "6px 12px",
-        borderRadius: 14,
+        padding: size >= 52 ? "8px 18px" : "6px 12px",
+        borderRadius: 16,
         background: "rgba(255,255,255,0.96)",
         boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
       }}
@@ -50,7 +50,7 @@ export function PropieLogo({ size = 46, variant = "onHero" }: PropieLogoProps) {
   );
 }
 
-/** Misma marca en fondo claro (sin pastilla). */
+/** Same mark on light backgrounds (no pill). */
 export function PropieLogoDark({ size = 46 }: { size?: number }) {
   return <PropieLogo size={size} variant="inline" />;
 }

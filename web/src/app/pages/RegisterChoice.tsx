@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { PropieLogo } from "../components/PropieLogo";
-import { Home, Briefcase, Search, ArrowLeft, ChevronRight } from "lucide-react";
+import { AuthHeroHeader } from "../components/AuthHeroHeader";
+import { Home, Briefcase, Search, ChevronRight } from "lucide-react";
 import React from "react";
 import { useRegister } from "../../context/RegisterContext";
 export default function RegisterChoice() {
@@ -56,32 +56,7 @@ export default function RegisterChoice() {
         <div style={{ position: "absolute", width: 300, height: 300, background: "radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%)", top: -80, right: -60, pointerEvents: "none" }} />
         <div style={{ position: "absolute", width: 180, height: 180, background: "radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)", bottom: 40, left: -40, pointerEvents: "none" }} />
 
-        {/* Nav row */}
-        <div style={{ width: "100%", maxWidth: 420, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 24px 0" }}>
-          <button
-            onClick={() => navigate(-1)}
-            style={{
-              background: "rgba(255,255,255,0.15)",
-              border: "1px solid rgba(255,255,255,0.22)",
-              borderRadius: 12,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 5,
-              color: "white",
-              padding: "8px 14px",
-              backdropFilter: "blur(8px)",
-            }}
-          >
-            <ArrowLeft size={15} color="white" />
-            <span style={{ fontSize: 13, fontWeight: 600 }}>Volver</span>
-          </button>
-
-          <PropieLogo size={38} />
-
-          {/* spacer */}
-          <div style={{ width: 80 }} />
-        </div>
+        <AuthHeroHeader />
 
         {/* Heading */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "32px 28px 12px" }}>

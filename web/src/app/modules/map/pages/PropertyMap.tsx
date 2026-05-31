@@ -402,7 +402,7 @@ export default function PropertyMap() {
         <button
           aria-label="Volver a explorar"
           className="propie-map-icon-button"
-          onClick={() => navigate("/explorar")}
+          onClick={() => navigate("/explore")}
           type="button"
         >
           <ArrowLeft size={20} />

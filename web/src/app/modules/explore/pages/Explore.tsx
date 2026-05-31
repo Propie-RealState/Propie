@@ -29,6 +29,7 @@ export default function Explore() {
   const navigate = useNavigate();
   const theme = useAppTheme();
 
+
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
