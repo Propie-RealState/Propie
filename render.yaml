@@ -3,7 +3,7 @@ services:
     name: propie-api
     runtime: node
     plan: free
-    buildCommand: npx --yes pnpm@11.1.3 install --frozen-lockfile && npx --yes pnpm@11.1.3 build
+    buildCommand: npx --yes pnpm@11.1.3 install --no-frozen-lockfile && npx --yes pnpm@11.1.3 build
     startCommand: npx --yes pnpm@11.1.3 exec tsx src/server.ts
     healthCheckPath: /properties
     envVars:
