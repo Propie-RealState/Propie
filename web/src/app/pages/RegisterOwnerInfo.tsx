@@ -13,7 +13,7 @@ import { useAuth } from "../../context/AuthContext";
 export default function RegisterOwnerInfo() {
   const navigate = useNavigate();
   const auth = useAuth();
-  const { data, updateData } = useRegister();
+  const { data, updateData, reset } = useRegister();
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -62,6 +62,8 @@ export default function RegisterOwnerInfo() {
       );
 
       sessionStorage.setItem("userType", "propie");
+
+      reset();
 
       setShowSuccess(true);
     } catch (error) {

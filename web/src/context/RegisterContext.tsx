@@ -2,6 +2,7 @@ import React from "react";
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -93,6 +94,44 @@ const initialData: RegisterData = {
   mainGoal: null,
 };
 
+const REGISTER_STORAGE_KEY =
+  "propie.registerDraft";
+
+function readStoredRegisterData() {
+  if (typeof window === "undefined") {
+    return initialData;
+  }
+
+  try {
+    const stored =
+      window.sessionStorage.getItem(
+        REGISTER_STORAGE_KEY
+      );
+
+    if (!stored) {
+      return initialData;
+    }
+
+    return {
+      ...initialData,
+      ...JSON.parse(stored),
+    } as RegisterData;
+  } catch {
+    return initialData;
+  }
+}
+
+function persistRegisterData(data: RegisterData) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.sessionStorage.setItem(
+    REGISTER_STORAGE_KEY,
+    JSON.stringify(data)
+  );
+}
+
 const RegisterContext = createContext<
   RegisterContextType | undefined
 >(undefined);
@@ -102,18 +141,37 @@ type Props = {
 };
 
 export function RegisterProvider({ children }: Props) {
-  const [data, setData] = useState<RegisterData>(initialData);
+  const [data, setData] =
+    useState<RegisterData>(
+      readStoredRegisterData
+    );
 
   function updateData(values: Partial<RegisterData>) {
-    setData((prev) => ({
-      ...prev,
-      ...values,
-    }));
+    setData((prev) => {
+      const next = {
+        ...prev,
+        ...values,
+      };
+
+      persistRegisterData(next);
+
+      return next;
+    });
   }
 
   function reset() {
     setData(initialData);
+
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem(
+        REGISTER_STORAGE_KEY
+      );
+    }
   }
+
+  useEffect(() => {
+    persistRegisterData(data);
+  }, [data]);
 
   const value = useMemo(
     () => ({

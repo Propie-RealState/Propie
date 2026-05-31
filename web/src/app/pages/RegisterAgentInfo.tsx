@@ -34,7 +34,7 @@ type ExperienceEntry = {
 export default function RegisterAgentInfo() {
   const navigate = useNavigate();
   const auth = useAuth();
-  const { data, updateData } = useRegister();
+  const { data, updateData, reset } = useRegister();
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -95,6 +95,8 @@ export default function RegisterAgentInfo() {
       );
 
       sessionStorage.setItem("userType", "agente");
+
+      reset();
 
       setShowSuccess(true);
     } catch (error) {
