@@ -16,6 +16,15 @@ DB_NAME=propie_db
 POSTGRES_CONTAINER=propie-postgres
 
 # =========================================
+# SUPABASE DEV FALLBACK
+# =========================================
+
+SUPABASE_URL=https://cqbjsrwizzibmqeelfny.supabase.co
+SUPABASE_STORAGE_BUCKET=property-images
+# SUPABASE_SERVICE_ROLE_KEY  →  definir en .env (nunca commitear)
+# DATABASE_URL               →  definir en .env (connection string de Supabase)
+
+# =========================================
 # UI
 # =========================================
 

@@ -17,6 +17,7 @@
   "main": "index.js",
   "scripts": {
     "db:setup": "bash scripts/setup-db.sh",
+    "db:setup:supabase": "node scripts/setup-supabase-db.js",
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node -r tsconfig-paths/register dist/server.js",

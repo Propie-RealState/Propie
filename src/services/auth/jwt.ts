@@ -4,6 +4,11 @@ import type {
   JwtPayload,
 } from '@/database/types/auth';
 
+import {
+  getAccessTokenSecret,
+  getRefreshTokenSecret,
+} from '@/config/secrets';
+
 
 
 // ========================================================
@@ -48,7 +53,7 @@ export function generateAccessToken(
       role: input.role,
     },
 
-    process.env.JWT_SECRET!,
+    getAccessTokenSecret()!,
 
     {
       expiresIn:
@@ -75,7 +80,7 @@ export function generateRefreshToken(
       role: input.role,
     },
 
-    process.env.JWT_REFRESH_SECRET!,
+    getRefreshTokenSecret()!,
 
     {
       expiresIn:
@@ -96,7 +101,7 @@ export function verifyAccessToken(
   return jwt.verify(
     token,
 
-    process.env.JWT_SECRET!
+    getAccessTokenSecret()!
   ) as JwtPayload;
 }
 
@@ -112,6 +117,6 @@ export function verifyRefreshToken(
   return jwt.verify(
     token,
 
-    process.env.JWT_REFRESH_SECRET!
+    getRefreshTokenSecret()!
   ) as JwtPayload;
 }

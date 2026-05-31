@@ -2,14 +2,11 @@ import type { PropertyDTO } from "../types/property.dto";
 import type { Property } from "../types/property.types";
 
 import { mapPropertyDtoToProperty } from "../mappers/property.mapper";
-
-const API_BASE =
-  import.meta.env.VITE_API_URL ??
-  "http://localhost:3000";
+import { API_URL } from "../../../../lib/api-base";
 
 export async function getPublishedProperties(): Promise<Property[]> {
   const response = await fetch(
-    `${API_BASE}/properties`
+    `${API_URL}/properties`
   );
 
   if (!response.ok) {

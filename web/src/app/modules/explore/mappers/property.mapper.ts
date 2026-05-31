@@ -1,5 +1,6 @@
 import type { PropertyDTO } from "../types/property.dto";
 import type { Property } from "../types/property.types";
+import { resolveMediaUrl } from "../../../../lib/api-base";
 
 export function mapPropertyDtoToProperty(
   property: PropertyDTO
@@ -23,7 +24,7 @@ export function mapPropertyDtoToProperty(
     operationType: property.operation_type,
 
     coverImage: property.cover_image
-      ? `http://localhost:3000${property.cover_image}`
+      ? resolveMediaUrl(property.cover_image)
       : null,
 
     rooms: property.bedrooms || 0,

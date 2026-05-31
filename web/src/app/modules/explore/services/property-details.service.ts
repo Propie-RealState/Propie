@@ -5,16 +5,13 @@ import type {
 import {
   mapPropertyDetails,
 } from "../mappers/property-details.mapper";
-
-const API_BASE =
-  import.meta.env.VITE_API_URL ??
-  "http://localhost:3000";
+import { API_URL } from "../../../../lib/api-base";
 
 export async function getPropertyById(
   id: string
 ) {
   const response = await fetch(
-    `${API_BASE}/properties/${id}`
+    `${API_URL}/properties/${id}`
   );
 
   if (!response.ok) {
