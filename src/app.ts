@@ -51,10 +51,19 @@ export async function buildApp() {
   // CORS
   // ======================================================
 
+  const allowedOrigins =
+    (process.env.DEPLOY_FRONTEND_ORIGIN || process.env.FRONTEND_ORIGIN)
+      ?.split(",")
+      .map((origin) => origin.trim())
+      .filter(Boolean);
+
   await app.register(
     cors,
     {
-      origin: true,
+      origin:
+        allowedOrigins?.length
+          ? allowedOrigins
+          : true,
 
       credentials: true,
       methods: [

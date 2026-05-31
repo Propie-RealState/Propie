@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: propie-api
+    runtime: node
+    plan: free
+    buildCommand: npx --yes pnpm@11.1.3 install --frozen-lockfile && npx --yes pnpm@11.1.3 build
+    startCommand: npx --yes pnpm@11.1.3 exec tsx src/server.ts
+    healthCheckPath: /properties
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22.13.1"
+      - key: DEPLOY_DATABASE_URL
+        sync: false
+      - key: DEPLOY_DB_SSL
+        value: "true"
+      - key: DEPLOY_FRONTEND_ORIGIN
+        value: https://propie-weld.vercel.app
+      - key: DEPLOY_JWT_SECRET
+        generateValue: true
+      - key: DEPLOY_JWT_REFRESH_SECRET
+        generateValue: true
+      - key: SUPABASE_URL
+        value: https://cqbjsrwizzibmqeelfny.supabase.co
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_STORAGE_BUCKET
+        value: property-images
