@@ -43,7 +43,66 @@ export async function findPropertyByIdRepository(propertyId: string) {
             WHERE pv.id IS NOT NULL
           ),
           '[]'
-        ) AS videos
+        ) AS videos,
+
+        (
+          SELECT row_to_json(t) FROM (
+            SELECT
+              ou.id AS owner_id,
+              opr.first_name AS owner_first_name,
+              opr.last_name AS owner_last_name,
+              opr.avatar_url AS owner_avatar_url,
+              opr.bio AS owner_bio,
+              opr.created_at AS owner_member_since,
+              COALESCE(ors.total_reviews, 0)::int AS owner_total_reviews,
+              COALESCE(ors.average_rating, 0)::float AS owner_average_rating,
+              COALESCE(opc.active_count, 0)::int AS owner_active_properties
+            FROM users ou
+            LEFT JOIN profiles opr ON opr.user_id = ou.id
+            LEFT JOIN (
+              SELECT
+                target_user_id,
+                COUNT(*)::int AS total_reviews,
+                ROUND(AVG(rating)::numeric, 1)::float AS average_rating
+              FROM user_reviews
+              GROUP BY target_user_id
+            ) ors ON ors.target_user_id = ou.id
+            LEFT JOIN (
+              SELECT owner_id, COUNT(*) FILTER (WHERE status = 'PUBLISHED')::int AS active_count
+              FROM properties
+              GROUP BY owner_id
+            ) opc ON opc.owner_id = ou.id
+            WHERE ou.id = p.owner_id
+          ) t
+        ) AS owner_info,
+
+        (
+          SELECT COALESCE(
+            json_agg(
+              jsonb_build_object(
+                'id', au.id,
+                'name', TRIM(CONCAT(apr.first_name, ' ', COALESCE(apr.last_name, ''))),
+                'photo', apr.avatar_url,
+                'average_rating', COALESCE(ars.average_rating, 0),
+                'total_reviews', COALESCE(ars.total_reviews, 0)
+              )
+            ),
+            '[]'
+          )
+          FROM property_assignments pa2
+          INNER JOIN users au ON au.id = pa2.agent_id
+          LEFT JOIN profiles apr ON apr.user_id = au.id
+          LEFT JOIN (
+            SELECT
+              target_user_id,
+              ROUND(AVG(rating)::numeric, 1)::float AS average_rating,
+              COUNT(*)::int AS total_reviews
+            FROM user_reviews
+            GROUP BY target_user_id
+          ) ars ON ars.target_user_id = au.id
+          WHERE pa2.property_id = p.id
+            AND pa2.is_active = true
+        ) AS agents
 
       FROM properties p
 

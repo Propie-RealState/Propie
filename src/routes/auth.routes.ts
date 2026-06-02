@@ -18,6 +18,8 @@ import { getMyProfile } from "../modules/profiles/services/profile.service";
 
 import { buildAuthUserPayload } from "../modules/profiles/utils/map-profile";
 
+import { findAgentStatsRepository } from "../modules/profiles/repositories/profiles.repository";
+
 // ========================================================
 // AUTH ROUTES
 // ========================================================
@@ -118,10 +120,16 @@ export async function authRoutes(app: FastifyInstance) {
     async (request, reply) => {
       const profile = await getMyProfile(request.user.id);
 
+      let stats = null;
+
+      if (request.user.role === "AGENT") {
+        stats = await findAgentStatsRepository(request.user.id);
+      }
+
       return reply.send({
         success: true,
 
-        data: buildAuthUserPayload(request.user, profile),
+        data: buildAuthUserPayload(request.user, profile, stats),
       });
     },
   );

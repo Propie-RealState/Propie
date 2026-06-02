@@ -52,4 +52,28 @@ export interface PropertyImageDTO {
     longitude?: number | null;
   
     images: PropertyImageDTO[];
+
+    agents?: PropertyAgentDTO[] | null;
+
+    owner_info?: PropertyOwnerInfoDTO | null;
+  }
+
+  export interface PropertyAgentDTO {
+    id: string;
+    name: string | null;
+    photo: string | null;
+    average_rating: number;
+    total_reviews: number;
+  }
+
+  export interface PropertyOwnerInfoDTO {
+    owner_id: string;
+    owner_first_name: string | null;
+    owner_last_name: string | null;
+    owner_avatar_url: string | null;
+    owner_bio: string | null;
+    owner_member_since: string | null;
+    owner_total_reviews: number;
+    owner_average_rating: number;
+    owner_active_properties: number;
   }

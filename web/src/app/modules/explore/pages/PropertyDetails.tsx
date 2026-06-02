@@ -47,6 +47,207 @@ import {
 } from "../../../../lib/favorites-storage";
 type UserType = "guest" | "client" | "owner" | "agente" | null;
 
+// ─── Publicado por card ────────────────────────────────────────────────────────
+
+type OwnerInfoForCard = {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  avatarUrl: string | null | undefined;
+  bio: string | null;
+  memberSince: string | null;
+  totalReviews: number;
+  averageRating: number;
+  activeProperties: number;
+};
+
+function PublicadoPorCard({
+  ownerInfo,
+  primaryColor,
+  onViewProfile,
+}: {
+  ownerInfo: OwnerInfoForCard;
+  primaryColor: string;
+  onViewProfile: () => void;
+}) {
+  const fullName =
+    [ownerInfo.firstName, ownerInfo.lastName].filter(Boolean).join(" ") ||
+    "Propietario";
+
+  const initial = fullName.charAt(0).toUpperCase();
+
+  const hasReviews = ownerInfo.totalReviews > 0;
+
+  return (
+    <div
+      style={{
+        background: "white",
+        borderRadius: 16,
+        padding: "20px",
+        border: "1.5px solid #e5e5ea",
+      }}
+    >
+      <h3
+        style={{
+          margin: "0 0 14px",
+          fontSize: 15,
+          fontWeight: 700,
+          color: "#1a1a1a",
+          fontFamily: "'Sora', sans-serif",
+        }}
+      >
+        Publicado por
+      </h3>
+
+      {/* Avatar + Name + Role */}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 14 }}>
+        <div
+          style={{
+            width: 52,
+            height: 52,
+            borderRadius: "50%",
+            background: "#f0eeff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "hidden",
+            flexShrink: 0,
+          }}
+        >
+          {ownerInfo.avatarUrl ? (
+            <img
+              src={ownerInfo.avatarUrl}
+              alt={fullName}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          ) : (
+            <span style={{ fontSize: 22, fontWeight: 700, color: primaryColor }}>
+              {initial}
+            </span>
+          )}
+        </div>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "#1a1a1a", marginBottom: 4 }}>
+            {fullName}
+          </div>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5,
+              background: "#f5f5f7",
+              padding: "3px 8px",
+              borderRadius: 6,
+              fontSize: 11,
+              color: "#6e6e73",
+              fontWeight: 600,
+            }}
+          >
+            <Briefcase size={10} color={primaryColor} />
+            Propietario
+          </div>
+        </div>
+      </div>
+
+      {/* Reputation row */}
+      <div style={{ marginBottom: 12 }}>
+        {hasReviews ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            {/* Stars */}
+            <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+              {[1, 2, 3, 4, 5].map((s) => (
+                <Star
+                  key={s}
+                  size={13}
+                  color="#f59e0b"
+                  fill={s <= Math.round(ownerInfo.averageRating) ? "#f59e0b" : "none"}
+                />
+              ))}
+            </div>
+            <span style={{ fontSize: 14, fontWeight: 700, color: "#1a1a1a" }}>
+              {ownerInfo.averageRating.toFixed(1)}
+            </span>
+            <span style={{ fontSize: 12, color: "#6e6e73" }}>
+              ({ownerInfo.totalReviews} {ownerInfo.totalReviews === 1 ? "reseña" : "reseñas"})
+            </span>
+          </div>
+        ) : (
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5,
+              background: "#f0f0f5",
+              padding: "4px 10px",
+              borderRadius: 8,
+              fontSize: 12,
+              color: "#6e6e73",
+              fontWeight: 500,
+            }}
+          >
+            ✨ Nuevo en Propie
+          </div>
+        )}
+      </div>
+
+      {/* Properties count */}
+      {ownerInfo.activeProperties > 0 && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 5,
+            fontSize: 12,
+            color: "#3a3a3c",
+            marginBottom: 10,
+          }}
+        >
+          <Briefcase size={12} color="#9a9aa0" />
+          <span>
+            {ownerInfo.activeProperties}{" "}
+            {ownerInfo.activeProperties === 1 ? "propiedad publicada" : "propiedades publicadas"}
+          </span>
+        </div>
+      )}
+
+      {/* Member since */}
+      {ownerInfo.memberSince && (
+        <p style={{ margin: "0 0 14px", fontSize: 12, color: "#9a9aa0" }}>
+          Miembro desde{" "}
+          {new Date(ownerInfo.memberSince).toLocaleDateString("es-AR", {
+            month: "long",
+            year: "numeric",
+          })}
+        </p>
+      )}
+
+      {/* CTA */}
+      <button
+        type="button"
+        onClick={onViewProfile}
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 6,
+          fontSize: 13,
+          fontWeight: 600,
+          color: primaryColor,
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          padding: 0,
+          fontFamily: "'Inter', sans-serif",
+        }}
+      >
+        Ver perfil completo →
+      </button>
+    </div>
+  );
+}
+
 type MappedProperty = ReturnType<typeof mapPropertyDetails>;
 
 function formatOperationType(type: string) {
@@ -219,6 +420,19 @@ export default function PropertyDetails() {
   const handleOpenChat = (agentName: string) => {
     setSelectedAgent(agentName);
     setShowChat(true);
+  };
+
+  const handleOpenOwnerProfile = () => {
+    if (!property?.ownerId || !property?.id) {
+      return;
+    }
+
+    navigate(`/perfil/${property.ownerId}`, {
+      state: {
+        reviewPropertyId: property.id,
+        reviewPropertyTitle: property.title,
+      },
+    });
   };
 
   const handleSendMessage = () => {
@@ -597,85 +811,23 @@ export default function PropertyDetails() {
             </div>
           </div>
 
-          {/* CASO 1: Guest - Publicado por */}
-          {userType === "guest" && (
-            <div
-              style={{
-                background: "white",
-                borderRadius: 16,
-                padding: "20px",
-                border: "1.5px solid #e5e5ea",
+          {/* Publicado por — visible to everyone except the property owner */}
+          {property.ownerInfo && !isOwner && (
+            <PublicadoPorCard
+              ownerInfo={property.ownerInfo as {
+                id: string;
+                firstName: string | null;
+                lastName: string | null;
+                avatarUrl: string | null | undefined;
+                bio: string | null;
+                memberSince: string | null;
+                totalReviews: number;
+                averageRating: number;
+                activeProperties: number;
               }}
-            >
-              <h3
-                style={{
-                  margin: "0 0 16px",
-                  fontSize: 16,
-                  fontWeight: 700,
-                  color: "#1a1a1a",
-                  fontFamily: "'Sora', sans-serif",
-                }}
-              >
-                Publicado por
-              </h3>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  marginBottom: 16,
-                }}
-              >
-                <div
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: "50%",
-                    background: colors.lightBg,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <UserCheck size={24} color={colors.primary} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>
-                    Propie verificado
-                  </div>
-                  <div style={{ fontSize: 13, color: "#6e6e73", marginTop: 2 }}>
-                    {property.agents.length} agente
-                    {property.agents.length !== 1 ? "s" : ""} trabajando
-                  </div>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 4,
-                    background: "#fff7ed",
-                    padding: "6px 10px",
-                    borderRadius: 8,
-                  }}
-                >
-                  <Star size={14} color="#f59e0b" fill="#f59e0b" />
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "#f59e0b" }}>
-                    5.0
-                  </span>
-                </div>
-              </div>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 13,
-                  color: "#6e6e73",
-                  lineHeight: 1.6,
-                }}
-              >
-                Esta propiedad es verificada por Propie. Registrate para contactar al
-                propietario o agentes.
-              </p>
-            </div>
+              primaryColor={colors.primary}
+              onViewProfile={handleOpenOwnerProfile}
+            />
           )}
 
           {/* CASO 2: Propie - Estado y gestión */}
@@ -800,6 +952,7 @@ export default function PropertyDetails() {
                       name?: string;
                       photo?: string;
                       rating?: number;
+                      totalReviews?: number;
                       activeListings?: number;
                     };
                     const listingCount = a.activeListings ?? 0;
@@ -844,17 +997,18 @@ export default function PropertyDetails() {
                             >
                               {a.name ?? ""}
                             </div>
-                            <div style={{ fontSize: 12, color: "#6e6e73" }}>
+                            <div style={{ fontSize: 12, color: "#6e6e73", display: "flex", alignItems: "center", gap: 4 }}>
                               <Star
                                 size={12}
                                 color="#f59e0b"
-                                fill="#f59e0b"
-                                style={{ display: "inline", marginRight: 4 }}
+                                fill={a.rating ? "#f59e0b" : "none"}
                               />
-                              {a.rating ?? 0} •{" "}
-                              {listingCount > 1
-                                ? `${listingCount} publicaciones activas`
-                                : "1 publicación activa"}
+                              <span style={{ fontWeight: 600, color: "#1a1a1a" }}>
+                                {a.rating ? a.rating.toFixed(1) : "—"}
+                              </span>
+                              {a.totalReviews !== undefined && a.totalReviews > 0 && (
+                                <span>({a.totalReviews})</span>
+                              )}
                             </div>
                           </div>
                           <div
@@ -892,23 +1046,42 @@ export default function PropertyDetails() {
                             <MessageCircle size={16} />
                             Abrir chat
                           </button>
-                          <button
-                            style={{
-                              background: "white",
-                              border: "1.5px solid #e5e5ea",
-                              borderRadius: 10,
-                              padding: "10px 14px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            <MoreVertical size={16} color="#1a1a1a" />
-                          </button>
+                          {a.id && (
+                            <button
+                              onClick={() =>
+                                navigate(`/agentes/${a.id}`, {
+                                  state: {
+                                    reviewPropertyId: property.id,
+                                    reviewPropertyTitle: property.title,
+                                  },
+                                })
+                              }
+                              style={{
+                                background: "white",
+                                border: "1.5px solid #e5e5ea",
+                                borderRadius: 10,
+                                padding: "10px 14px",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 5,
+                                fontSize: 12,
+                                fontWeight: 600,
+                                color: "#1a1a1a",
+                              }}
+                            >
+                              <UserCheck size={15} color={colors.primary} />
+                              Perfil
+                            </button>
+                          )}
                         </div>
                       </div>
                     );
                   })}
                 </div>
               )}
+
             </>
           )}
         </div>

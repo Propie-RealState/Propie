@@ -261,84 +261,146 @@ export default function Notifications() {
                 No hay solicitudes pendientes por ahora.
               </div>
             ) : (
-              pendingApplications.map((application) => (
-                <button
-                  key={application.id}
-                  onClick={() => navigate("/mensajes")}
-                  style={{
-                    width: "100%",
-                    border: "none",
-                    borderTop: "1px solid #f0f0f0",
-                    background: "white",
-                    padding: 18,
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    textAlign: "left",
-                  }}
-                >
+              pendingApplications.map((application) => {
+                const agentName = getAgentName(application);
+                return (
                   <div
+                    key={application.id}
                     style={{
-                      width: 42,
-                      height: 42,
-                      borderRadius: "50%",
-                      background: colors.lightBg,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
+                      borderTop: "1px solid #f0f0f0",
                     }}
                   >
-                    <UserCheck size={21} color={colors.primary} />
-                  </div>
-
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
+                    {/* Main row: navigate to messages */}
+                    <button
+                      onClick={() => navigate("/mensajes")}
                       style={{
-                        fontSize: 14,
-                        fontWeight: 800,
-                        color: "#1a1a1a",
-                        marginBottom: 4,
-                      }}
-                    >
-                      {getAgentName(application)} envio una solicitud
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        color: "#6e6e73",
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      {application.property_title || "Propiedad sin titulo"}
-                    </div>
-                    <div
-                      style={{
+                        width: "100%",
+                        border: "none",
+                        background: "white",
+                        padding: "16px 18px",
+                        cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
-                        gap: 5,
-                        color: "#9a9aa0",
-                        fontSize: 12,
-                        marginTop: 8,
+                        gap: 12,
+                        textAlign: "left",
                       }}
                     >
-                      <Clock size={13} />
-                      {new Date(application.created_at).toLocaleString(
-                        "es-AR",
-                        {
-                          day: "2-digit",
-                          month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        },
-                      )}
-                    </div>
-                  </div>
+                      <div
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: "50%",
+                          background: colors.lightBg,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          overflow: "hidden",
+                        }}
+                      >
+                        {application.agent_avatar_url ? (
+                          <img
+                            src={application.agent_avatar_url}
+                            alt={agentName}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          <span
+                            style={{
+                              fontSize: 18,
+                              fontWeight: 700,
+                              color: colors.primary,
+                            }}
+                          >
+                            {agentName.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
 
-                  <ChevronRight size={20} color="#9a9aa0" />
-                </button>
-              ))
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div
+                          style={{
+                            fontSize: 14,
+                            fontWeight: 800,
+                            color: "#1a1a1a",
+                            marginBottom: 3,
+                          }}
+                        >
+                          {agentName} envió una solicitud
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 13,
+                            color: "#6e6e73",
+                            lineHeight: 1.4,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {application.property_title || "Propiedad sin título"}
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 5,
+                            color: "#9a9aa0",
+                            fontSize: 12,
+                            marginTop: 6,
+                          }}
+                        >
+                          <Clock size={13} />
+                          {new Date(application.created_at).toLocaleString(
+                            "es-AR",
+                            {
+                              day: "2-digit",
+                              month: "short",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            },
+                          )}
+                        </div>
+                      </div>
+
+                      <ChevronRight size={20} color="#9a9aa0" />
+                    </button>
+
+                    {/* Ver perfil link */}
+                    <button
+                      onClick={() =>
+                        navigate(`/agentes/${application.agent_id}`, {
+                          state: {
+                            reviewPropertyId: application.property_id,
+                            reviewPropertyTitle: application.property_title,
+                            canCreateReview: application.status === "ACCEPTED",
+                          },
+                        })
+                      }
+                      style={{
+                        width: "100%",
+                        border: "none",
+                        background: "none",
+                        padding: "8px 18px 14px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        color: colors.primary,
+                        fontSize: 12,
+                        fontWeight: 700,
+                      }}
+                    >
+                      <UserCheck size={13} />
+                      Ver perfil de {agentName}
+                    </button>
+                  </div>
+                );
+              })
             )}
           </section>
         </div>

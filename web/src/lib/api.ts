@@ -5,6 +5,11 @@ export async function apiFetch(
   options?: RequestInit,
   _retry = false,
 ) {
+  const shouldRefreshSession =
+    !path.startsWith("/auth/login") &&
+    !path.startsWith("/auth/register") &&
+    !path.startsWith("/auth/refresh");
+
   // ====================================================
   // ACCESS TOKEN
   // ====================================================
@@ -40,7 +45,11 @@ export async function apiFetch(
   // GLOBAL 401 DETECTION
   // ====================================================
 
-  if (response.status === 401 && !_retry) {
+  if (
+    response.status === 401 &&
+    shouldRefreshSession &&
+    !_retry
+  ) {
     console.warn("Access token expired. Refreshing session...");
 
     try {

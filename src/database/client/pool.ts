@@ -1,13 +1,26 @@
 import '../../config/env';
 import { Pool, type PoolConfig } from 'pg';
 
-const deployDatabaseUrl =
-  process.env.DEPLOY_DATABASE_URL ||
-  process.env.DATABASE_URL;
+const isProduction =
+  process.env.NODE_ENV === 'production';
 
-const databaseConfig: PoolConfig = deployDatabaseUrl
+const hasLocalDatabaseConfig =
+  Boolean(
+    process.env.LOCAL_DB_HOST ||
+      process.env.DB_HOST
+  );
+
+const databaseUrl =
+  isProduction
+    ? process.env.DEPLOY_DATABASE_URL ||
+      process.env.DATABASE_URL
+    : hasLocalDatabaseConfig
+      ? undefined
+      : process.env.DATABASE_URL;
+
+const databaseConfig: PoolConfig = databaseUrl
   ? {
-      connectionString: deployDatabaseUrl,
+      connectionString: databaseUrl,
       ssl:
         (process.env.DEPLOY_DB_SSL || process.env.DB_SSL) === 'false'
           ? false

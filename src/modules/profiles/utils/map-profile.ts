@@ -1,3 +1,11 @@
+export type AgentStats = {
+  average_rating: number;
+  total_reviews: number;
+  total_worked_properties: number;
+  active_properties: number;
+  completed_properties: number;
+};
+
 export type ClientProfile = {
   id: string;
   first_name: string | null;
@@ -12,6 +20,12 @@ export type ClientProfile = {
   bio: string | null;
   avatar_url: string | null;
   created_at: string | null;
+  // Agent reputation stats (only present for AGENT role)
+  average_rating?: number;
+  total_reviews?: number;
+  total_worked_properties?: number;
+  active_properties?: number;
+  completed_properties?: number;
 };
 
 export function mapProfileRow(
@@ -43,11 +57,30 @@ export function mapProfileRow(
 export function buildAuthUserPayload(
   user: { id: string; email: string; role: string },
   profileRow: Record<string, unknown> | null | undefined,
+  statsRow?: Record<string, unknown> | null,
 ) {
+  const profile = mapProfileRow(profileRow);
+
+  if (profile && statsRow) {
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      profile: {
+        ...profile,
+        average_rating: (statsRow.average_rating as number) ?? 0,
+        total_reviews: (statsRow.total_reviews as number) ?? 0,
+        total_worked_properties: (statsRow.total_worked_properties as number) ?? 0,
+        active_properties: (statsRow.active_properties as number) ?? 0,
+        completed_properties: (statsRow.completed_properties as number) ?? 0,
+      },
+    };
+  }
+
   return {
     id: user.id,
     email: user.email,
     role: user.role,
-    profile: mapProfileRow(profileRow),
+    profile,
   };
 }
