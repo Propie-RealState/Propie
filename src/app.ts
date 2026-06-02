@@ -34,6 +34,8 @@ import { notificationsRoutes } from "./modules/notifications/routes/notification
 
 import { contactsRoutes } from "./modules/contacts/routes/contacts.routes";
 
+import { agentsRoutes } from "./modules/agents/routes/agents.routes";
+
 // ========================================================
 // BUILD APP
 // ========================================================
@@ -51,11 +53,28 @@ export async function buildApp() {
   // CORS
   // ======================================================
 
-  const allowedOrigins =
-    (process.env.DEPLOY_FRONTEND_ORIGIN || process.env.FRONTEND_ORIGIN)
-      ?.split(",")
-      .map((origin) => origin.trim())
-      .filter(Boolean);
+  const configuredOrigins = [
+    process.env.FRONTEND_ORIGIN,
+    process.env.DEPLOY_FRONTEND_ORIGIN,
+  ]
+    .flatMap((origins) => origins?.split(",") ?? [])
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  const localOrigins =
+    process.env.NODE_ENV === "production"
+      ? []
+      : [
+          "http://localhost:5173",
+          "http://127.0.0.1:5173",
+        ];
+
+  const allowedOrigins = [
+    ...new Set([
+      ...configuredOrigins,
+      ...localOrigins,
+    ]),
+  ];
 
   await app.register(
     cors,
@@ -176,6 +195,13 @@ export async function buildApp() {
     contactsRoutes,
     {
       prefix: "/contacts",
+    }
+  );
+
+  await app.register(
+    agentsRoutes,
+    {
+      prefix: "/agents",
     }
   );
 

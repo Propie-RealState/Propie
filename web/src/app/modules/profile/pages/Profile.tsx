@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../../context/AuthContext";
 import {
   ArrowLeft,
-  User,
   Mail,
   Phone,
   MapPin,
@@ -20,11 +19,12 @@ import {
   Shield,
   Star,
   Home,
-  Briefcase,
   Eye,
+  Briefcase,
   MessageCircle,
   ChevronRight,
   Heart,
+  TrendingUp,
 } from "lucide-react";
 import { updateMyProfile } from "../services/profile.service";
 import { useAppTheme, useIsAgent } from "../../../../theme/useAppTheme";
@@ -35,6 +35,9 @@ import {
   canPublishProperties,
   isClientRole,
 } from "../../../../lib/roles";
+import { StarRating } from "../../../components/StarRating";
+import { useAgentReviews } from "../../agents/hooks/useAgentReviews";
+import { resolveMediaUrl } from "../../../../lib/api-base";
 
 export default function Profile() {
   const [isSaving, setIsSaving] = useState(false);
@@ -138,6 +141,14 @@ export default function Profile() {
   const isClient = isClientRole(user?.role);
   const showPublisherStats = canPublishProperties(user?.role);
   const { count: pendingApplicationCount } = useOwnerApplicationCount();
+  const { reviews, loading: reviewsLoading, hasMore, loadMore } = useAgentReviews(
+    isAgent ? user?.id : undefined,
+  );
+
+  const averageRating = user?.profile?.average_rating ?? 0;
+  const totalReviews = user?.profile?.total_reviews ?? 0;
+  const totalWorkedProperties = user?.profile?.total_worked_properties ?? 0;
+  const completedProperties = user?.profile?.completed_properties ?? 0;
 
   const roleLabel = isAgent
     ? "Agente"
@@ -388,6 +399,18 @@ export default function Profile() {
                       {roleLabel}
                     </span>
                   </div>
+
+                  {isAgent && (
+                    <div style={{ marginTop: 6 }}>
+                      <StarRating
+                        rating={averageRating}
+                        totalReviews={totalReviews}
+                        size={13}
+                        compact={false}
+                        showCount={true}
+                      />
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
                   {isEditing ? (
@@ -587,7 +610,7 @@ export default function Profile() {
                     borderRadius: 14,
                   }}
                 >
-                  <Briefcase
+                  <Home
                     size={22}
                     color={colors.primary}
                     style={{ margin: "0 auto 8px" }}
@@ -595,10 +618,10 @@ export default function Profile() {
                   <div
                     style={{ fontSize: 20, fontWeight: 700, color: "#1a1a1a" }}
                   >
-                    {realUser.stats.agente.activeListings}
+                    {totalWorkedProperties}
                   </div>
                   <div style={{ fontSize: 11, color: "#6e6e73", marginTop: 4 }}>
-                    Publicaciones
+                    Trabajadas
                   </div>
                 </div>
                 <div
@@ -609,7 +632,7 @@ export default function Profile() {
                     borderRadius: 14,
                   }}
                 >
-                  <Home
+                  <Briefcase
                     size={22}
                     color={colors.primary}
                     style={{ margin: "0 auto 8px" }}
@@ -617,10 +640,10 @@ export default function Profile() {
                   <div
                     style={{ fontSize: 20, fontWeight: 700, color: "#1a1a1a" }}
                   >
-                    {realUser.stats.agente.totalViews}
+                    {completedProperties}
                   </div>
                   <div style={{ fontSize: 11, color: "#6e6e73", marginTop: 4 }}>
-                    Operaciones
+                    Cerradas
                   </div>
                 </div>
                 <div
@@ -633,16 +656,17 @@ export default function Profile() {
                 >
                   <Star
                     size={22}
-                    color={colors.primary}
+                    color="#f59e0b"
+                    fill={averageRating > 0 ? "#f59e0b" : "none"}
                     style={{ margin: "0 auto 8px" }}
                   />
                   <div
                     style={{ fontSize: 20, fontWeight: 700, color: "#1a1a1a" }}
                   >
-                    {realUser.stats.agente.totalChats}
+                    {averageRating > 0 ? averageRating.toFixed(1) : "—"}
                   </div>
                   <div style={{ fontSize: 11, color: "#6e6e73", marginTop: 4 }}>
-                    Chats
+                    Reputación
                   </div>
                 </div>
               </div>
@@ -723,6 +747,297 @@ export default function Profile() {
               </div>
             )}
           </div>
+          )}
+
+          {/* Agent Reviews Section */}
+          {isAgent && (
+            <div
+              style={{
+                background: "white",
+                borderRadius: 20,
+                padding: "24px",
+                border: "1.5px solid #e5e5ea",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 16,
+                }}
+              >
+                <h3
+                  style={{
+                    margin: 0,
+                    fontSize: 16,
+                    fontWeight: 700,
+                    color: "#1a1a1a",
+                    fontFamily: "'Sora', sans-serif",
+                  }}
+                >
+                  Reseñas
+                </h3>
+                {totalReviews > 0 && (
+                  <StarRating
+                    rating={averageRating}
+                    totalReviews={totalReviews}
+                    size={13}
+                    compact={true}
+                  />
+                )}
+              </div>
+
+              {reviewsLoading && reviews.length === 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      style={{
+                        background: "#f5f5f7",
+                        borderRadius: 14,
+                        padding: "16px",
+                        animation: "pulse 1.5s ease-in-out infinite",
+                      }}
+                    >
+                      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 8 }}>
+                        <div
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: "50%",
+                            background: "#e5e5ea",
+                          }}
+                        />
+                        <div style={{ flex: 1 }}>
+                          <div
+                            style={{
+                              height: 12,
+                              background: "#e5e5ea",
+                              borderRadius: 6,
+                              width: "60%",
+                              marginBottom: 6,
+                            }}
+                          />
+                          <div
+                            style={{
+                              height: 10,
+                              background: "#e5e5ea",
+                              borderRadius: 6,
+                              width: "40%",
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          height: 10,
+                          background: "#e5e5ea",
+                          borderRadius: 6,
+                          width: "80%",
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : reviews.length === 0 ? (
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: "32px 16px",
+                  }}
+                >
+                  <TrendingUp size={40} color="#d1d1d6" style={{ margin: "0 auto 12px" }} />
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: 14,
+                      color: "#9a9aa0",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    Todavía no tenés reseñas.
+                    <br />
+                    ¡Trabajá con propietarios para empezar a construir tu reputación!
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {reviews.map((review) => {
+                    const reviewerName =
+                      [review.reviewer_first_name, review.reviewer_last_name]
+                        .filter(Boolean)
+                        .join(" ") || "Usuario";
+                    const avatarUrl = review.reviewer_avatar_url
+                      ? resolveMediaUrl(review.reviewer_avatar_url)
+                      : null;
+                    const dateLabel = new Date(review.created_at).toLocaleDateString(
+                      "es-AR",
+                      { day: "numeric", month: "short", year: "numeric" },
+                    );
+
+                    return (
+                      <div
+                        key={review.id}
+                        style={{
+                          background: "#f5f5f7",
+                          borderRadius: 14,
+                          padding: "16px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "flex-start",
+                            gap: 12,
+                            marginBottom: review.comment ? 10 : 0,
+                          }}
+                        >
+                          {avatarUrl ? (
+                            <img
+                              src={avatarUrl}
+                              alt={reviewerName}
+                              style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: "50%",
+                                objectFit: "cover",
+                                flexShrink: 0,
+                              }}
+                            />
+                          ) : (
+                            <div
+                              style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: "50%",
+                                background: colors.lightBg,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                flexShrink: 0,
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: 16,
+                                  fontWeight: 700,
+                                  color: colors.primary,
+                                }}
+                              >
+                                {reviewerName.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                gap: 8,
+                                marginBottom: 4,
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: 14,
+                                  fontWeight: 600,
+                                  color: "#1a1a1a",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {reviewerName}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  color: "#9a9aa0",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {dateLabel}
+                              </span>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                              {[1, 2, 3, 4, 5].map((n) => (
+                                <Star
+                                  key={n}
+                                  size={12}
+                                  color="#f59e0b"
+                                  fill={n <= review.rating ? "#f59e0b" : "none"}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {review.comment && (
+                          <p
+                            style={{
+                              margin: 0,
+                              fontSize: 13,
+                              color: "#3a3a3c",
+                              lineHeight: 1.55,
+                            }}
+                          >
+                            {review.comment}
+                          </p>
+                        )}
+
+                        {review.property_title && (
+                          <div
+                            style={{
+                              marginTop: 8,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 4,
+                              background: colors.lightBg,
+                              padding: "3px 8px",
+                              borderRadius: 6,
+                            }}
+                          >
+                            <Home size={11} color={colors.primary} />
+                            <span
+                              style={{
+                                fontSize: 11,
+                                color: colors.primary,
+                                fontWeight: 500,
+                              }}
+                            >
+                              {review.property_title}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  {hasMore && (
+                    <button
+                      onClick={loadMore}
+                      disabled={reviewsLoading}
+                      style={{
+                        width: "100%",
+                        background: "none",
+                        border: `1.5px solid ${colors.primary}30`,
+                        borderRadius: 12,
+                        padding: "12px",
+                        color: colors.primary,
+                        fontSize: 14,
+                        fontWeight: 600,
+                        cursor: reviewsLoading ? "not-allowed" : "pointer",
+                        opacity: reviewsLoading ? 0.6 : 1,
+                      }}
+                    >
+                      {reviewsLoading ? "Cargando..." : "Ver más reseñas"}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           )}
 
           {/* Menu Options */}

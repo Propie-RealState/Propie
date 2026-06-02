@@ -32,6 +32,8 @@ import EditProperty from "./modules/explore/pages/EditProperty";
 
 import Share from "./pages/Share";
 import Profile from "./modules/profile/pages/Profile.tsx";
+import AgentPublicProfile from "./modules/agents/pages/AgentPublicProfile.tsx";
+import UserPublicProfile from "./modules/agents/pages/UserPublicProfile.tsx";
 import { PropertyPublishProvider } from "./modules/publish/context/PropertyPublishContext";
 import MyProperties from "./modules/my-properties/pages/MyProperties";
 import Messages from "./modules/agent-applications/pages/Messages";
@@ -186,6 +188,16 @@ export const router =
         {
           path: "compartir/:id",
           Component: Share,
+        },
+
+        {
+          path: "agentes/:agentId",
+          Component: AgentPublicProfile,
+        },
+
+        {
+          path: "perfil/:userId",
+          Component: UserPublicProfile,
         },
 
 

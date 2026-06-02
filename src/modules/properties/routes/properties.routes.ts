@@ -4,7 +4,7 @@ import { authMiddleware } from "@/middlewares/auth.middleware";
 import { requireRoles } from "@/middlewares/require-roles.middleware";
 import {
   PROPERTY_MANAGER_ROLES,
-  USER_ROLES,
+  PUBLISHER_ROLES,
 } from "@/constants/roles";
 
 import { createPropertyController } from "../controllers/create-property.controller";
@@ -54,7 +54,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
     "/",
 
     {
-      preHandler: requireRoles([USER_ROLES.OWNER]),
+      preHandler: requireRoles(PUBLISHER_ROLES),
     },
 
     createPropertyController as RouteHandlerMethod,

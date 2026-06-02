@@ -1,6 +1,8 @@
 import type {
+    PropertyAgentDTO,
     PropertyDetailsDTO,
     PropertyImageDTO,
+    PropertyOwnerInfoDTO,
   } from "../types/property-details.dto";
 import { resolveMediaUrl } from "../../../../lib/api-base";
   
@@ -81,6 +83,29 @@ import { resolveMediaUrl } from "../../../../lib/api-base";
   
       favorites: 0,
   
-      agents: [],
+      agents: (property.agents ?? []).map((a: PropertyAgentDTO) => ({
+        id: a.id,
+        name: a.name ?? "",
+        photo: resolveMediaUrl(a.photo) ?? undefined,
+        rating: a.average_rating ?? 0,
+        totalReviews: a.total_reviews ?? 0,
+        activeListings: 1,
+      })),
+
+      ownerInfo: property.owner_info
+        ? {
+            id: (property.owner_info as PropertyOwnerInfoDTO).owner_id,
+            firstName: (property.owner_info as PropertyOwnerInfoDTO).owner_first_name,
+            lastName: (property.owner_info as PropertyOwnerInfoDTO).owner_last_name,
+            avatarUrl: resolveMediaUrl(
+              (property.owner_info as PropertyOwnerInfoDTO).owner_avatar_url,
+            ),
+            bio: (property.owner_info as PropertyOwnerInfoDTO).owner_bio,
+            memberSince: (property.owner_info as PropertyOwnerInfoDTO).owner_member_since,
+            totalReviews: (property.owner_info as PropertyOwnerInfoDTO).owner_total_reviews ?? 0,
+            averageRating: (property.owner_info as PropertyOwnerInfoDTO).owner_average_rating ?? 0,
+            activeProperties: (property.owner_info as PropertyOwnerInfoDTO).owner_active_properties ?? 0,
+          }
+        : null,
     };
   }

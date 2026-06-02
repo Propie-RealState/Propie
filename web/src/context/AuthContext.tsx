@@ -71,6 +71,13 @@ type User = {
 
     created_at?: string | null;
 
+    // Agent reputation stats (only present for AGENT role)
+    average_rating?: number | null;
+    total_reviews?: number | null;
+    total_worked_properties?: number | null;
+    active_properties?: number | null;
+    completed_properties?: number | null;
+
   };
 
 };

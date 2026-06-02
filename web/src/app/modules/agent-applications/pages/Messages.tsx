@@ -6,6 +6,8 @@ import {
   Bell,
   Check,
   Clock,
+  ExternalLink,
+  Home,
   Mail,
   MapPin,
   MessageCircle,
@@ -447,12 +449,73 @@ export default function Messages() {
                     </span>
                   </div>
 
+                  {/* Ver perfil del agente */}
+                  <button
+                    onClick={() =>
+                      navigate(`/agentes/${application.agent_id}`, {
+                        state: {
+                          reviewPropertyId: application.property_id,
+                          reviewPropertyTitle: application.property_title,
+                          canCreateReview: application.status === "ACCEPTED",
+                        },
+                      })
+                    }
+                    style={{
+                      width: "100%",
+                      marginTop: 14,
+                      background: "#f5f5f7",
+                      border: "none",
+                      borderRadius: 12,
+                      padding: "11px 14px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                      cursor: "pointer",
+                      color: colors.primary,
+                      fontSize: 13,
+                      fontWeight: 700,
+                    }}
+                  >
+                    <UserCheck size={15} />
+                    Ver perfil del agente
+                    <ExternalLink size={13} />
+                  </button>
+
+                  {/* Accepted: link to the property */}
+                  {application.status === "ACCEPTED" && application.property_id && (
+                    <button
+                      onClick={() =>
+                        navigate(`/propiedad/${application.property_id}`)
+                      }
+                      style={{
+                        width: "100%",
+                        marginTop: 8,
+                        background: colors.lightBg,
+                        border: "none",
+                        borderRadius: 12,
+                        padding: "11px 14px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 8,
+                        cursor: "pointer",
+                        color: colors.primary,
+                        fontSize: 13,
+                        fontWeight: 700,
+                      }}
+                    >
+                      <Home size={15} />
+                      Ver propiedad
+                    </button>
+                  )}
+
                   {isPending && (
                     <div
                       style={{
                         display: "flex",
                         gap: 10,
-                        marginTop: 18,
+                        marginTop: 12,
                       }}
                     >
                       <button
