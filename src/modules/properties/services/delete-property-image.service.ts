@@ -20,5 +20,8 @@ export async function deletePropertyImageService({
     propertyId,
   });
 
-  await deleteFromStorage(deleted.image_url);
+  await Promise.all([
+    deleteFromStorage(deleted.image_url),
+    deleted.thumb_url ? deleteFromStorage(deleted.thumb_url) : Promise.resolve(),
+  ]);
 }

@@ -6,12 +6,15 @@ interface Input {
 
   imageUrl: string;
 
+  thumbUrl?: string | null;
+
   isCover?: boolean;
 }
 
 export async function createPropertyImageRepository({
   propertyId,
   imageUrl,
+  thumbUrl = null,
   isCover = false,
 }: Input) {
 
@@ -57,6 +60,7 @@ export async function createPropertyImageRepository({
         INSERT INTO property_images (
           property_id,
           image_url,
+          thumb_url,
           is_cover,
           display_order
         )
@@ -65,7 +69,8 @@ export async function createPropertyImageRepository({
           $1,
           $2,
           $3,
-          $4
+          $4,
+          $5
         )
 
         RETURNING *
@@ -73,6 +78,7 @@ export async function createPropertyImageRepository({
       [
         propertyId,
         imageUrl,
+        thumbUrl,
         isCover,
         nextOrder,
       ]
