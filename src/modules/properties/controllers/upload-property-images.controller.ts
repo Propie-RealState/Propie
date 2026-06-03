@@ -1,16 +1,11 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-
-import fs from "node:fs";
-
-import path from "node:path";
-
-import { pipeline } from "node:stream/promises";
 import { randomUUID } from "node:crypto";
+import path from "node:path";
 
 import { assertCanManageProperty } from "../utils/assert-can-manage-property";
 import { createPropertyImageRepository } from "../repositories/create-property-image.repository";
-
 import { countPropertyImagesRepository } from "../repositories/count-property-images.repository";
+import { uploadToStorage } from "@/lib/supabase";
 
 export async function uploadPropertyImagesController(
   request: FastifyRequest<{
@@ -26,56 +21,33 @@ export async function uploadPropertyImagesController(
     request.params.id,
   );
 
-  const parts = await request.files();
+  const propertyId = request.params.id;
+  const parts = request.files();
+
   const existingImagesCount =
-  await countPropertyImagesRepository(
-    request.params.id,
-  );  
+    await countPropertyImagesRepository(propertyId);
+
   const uploadedImages = [];
 
   for await (const file of parts) {
-    // ================================================
-    // EXTENSION
-    // ================================================
+    const extension = path.extname(file.filename).toLowerCase() || ".jpg";
+    const uuid = randomUUID();
+    const storagePath = `images/${propertyId}/${uuid}${extension}`;
 
-    const extension = path.extname(file.filename);
+    const buffer = await file.toBuffer();
 
-    // ================================================
-    // UNIQUE NAME
-    // ================================================
-
-    const filename = `${randomUUID()}${extension}`;
-
-    // ================================================
-    // PATH
-    // ================================================
-
-    const filepath = path.join(process.cwd(), "uploads", filename);
-
-    // ================================================
-    // SAVE FILE
-    // ================================================
-
-    await pipeline(file.file, fs.createWriteStream(filepath));
-
-    // ================================================
-    // URL
-    // ================================================
-
-    const imageUrl = `/uploads/${filename}`;
-
-    // ================================================
-    // SAVE DB
-    // ================================================
+    const imageUrl = await uploadToStorage(
+      storagePath,
+      buffer,
+      file.mimetype,
+    );
 
     const image = await createPropertyImageRepository({
-      propertyId: request.params.id,
-
+      propertyId,
       imageUrl,
-
       isCover:
-      existingImagesCount === 0 &&
-      uploadedImages.length === 0
+        existingImagesCount === 0 &&
+        uploadedImages.length === 0,
     });
 
     uploadedImages.push(image);
@@ -83,7 +55,6 @@ export async function uploadPropertyImagesController(
 
   return reply.send({
     success: true,
-
     images: uploadedImages,
   });
 }

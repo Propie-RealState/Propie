@@ -14,6 +14,7 @@ export async function deletePropertyVideoRepository({
       DELETE FROM property_videos
       WHERE id = $1
         AND property_id = $2
+      RETURNING video_url
     `,
     [videoId, propertyId],
   );
@@ -21,4 +22,6 @@ export async function deletePropertyVideoRepository({
   if (result.rowCount === 0) {
     throw new Error("VIDEO_NOT_FOUND");
   }
+
+  return result.rows[0] as { video_url: string };
 }
