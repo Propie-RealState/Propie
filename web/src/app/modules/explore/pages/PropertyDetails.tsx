@@ -118,6 +118,8 @@ function PublicadoPorCard({
             <img
               src={ownerInfo.avatarUrl}
               alt={fullName}
+              loading="lazy"
+              decoding="async"
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
           ) : (
@@ -978,6 +980,8 @@ export default function PropertyDetails() {
                             <img
                               src={a.photo}
                               alt={a.name}
+                              loading="lazy"
+                              decoding="async"
                               style={{
                                 width: 48,
                                 height: 48,

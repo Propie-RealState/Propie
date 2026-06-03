@@ -110,6 +110,20 @@ export async function findProfileByUserId(userId: string) {
   return result.rows[0];
 }
 
+export async function updateAvatarUrl(userId: string, avatarUrl: string) {
+  const result = await db.query(
+    `
+      UPDATE profiles
+      SET avatar_url = $1,
+          updated_at = now()
+      WHERE user_id = $2
+      RETURNING *
+    `,
+    [avatarUrl, userId],
+  );
+  return result.rows[0];
+}
+
 export async function updateProfile(
   userId: string,
   data: {

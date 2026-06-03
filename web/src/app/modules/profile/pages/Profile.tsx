@@ -897,6 +897,8 @@ export default function Profile() {
                             <img
                               src={avatarUrl}
                               alt={reviewerName}
+                              loading="lazy"
+                              decoding="async"
                               style={{
                                 width: 40,
                                 height: 40,

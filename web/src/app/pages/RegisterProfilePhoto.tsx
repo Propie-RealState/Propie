@@ -4,6 +4,7 @@ import { AuthHeroHeader } from "../components/AuthHeroHeader";
 import { ArrowLeft, Upload, Camera, User } from "lucide-react";
 import React from "react";
 import { useRegister } from "../../context/RegisterContext";
+import { setPendingAvatarFile } from "../../lib/pending-avatar";
 
 export default function RegisterProfilePhoto() {
   const { data, updateData } = useRegister();
@@ -24,12 +25,9 @@ export default function RegisterProfilePhoto() {
   };
 
   const handleFileSelect = (file: File) => {
+    // Keep the File for post-registration upload; use a blob URL for preview only.
+    setPendingAvatarFile(file);
     updateData({ ...data, profilePhoto: URL.createObjectURL(file) });
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      updateData({ ...data, profilePhoto: reader.result as string });
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleContinue = () => {

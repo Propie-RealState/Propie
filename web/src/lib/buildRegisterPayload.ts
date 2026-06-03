@@ -41,7 +41,5 @@ export function buildRegisterPayload(
     bio: data.bio || undefined,
 
     mainGoal,
-
-    profilePhoto: data.profilePhoto ?? null,
   };
 }

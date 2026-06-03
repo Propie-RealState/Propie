@@ -10,7 +10,12 @@ export function resolveMediaUrl(url?: string | null) {
     return null;
   }
 
-  if (url.startsWith("http://") || url.startsWith("https://")) {
+  // Absolute URLs (Supabase, external CDN) and data URIs pass through as-is.
+  if (
+    url.startsWith("http://") ||
+    url.startsWith("https://") ||
+    url.startsWith("data:")
+  ) {
     return url;
   }
 

@@ -92,7 +92,7 @@ export async function registerRoute(app: FastifyInstance) {
 
         bio: data.bio,
 
-        avatarUrl: data.profilePhoto ?? undefined,
+        // Avatar is uploaded separately via POST /profile/me/avatar after registration.
       });
 
       // =====================================
