@@ -6,9 +6,18 @@ from "../../../middlewares/auth.middleware";
 import { updateProfile }
 from "../repositories/profiles.repository";
 
+import { uploadAvatarController }
+from "../controllers/upload-avatar.controller";
+
 export async function profileRoutes(
   app: FastifyInstance
 ) {
+
+  app.post(
+    "/me/avatar",
+    { preHandler: authMiddleware },
+    uploadAvatarController,
+  );
 
   app.put(
     "/me",

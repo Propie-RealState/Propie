@@ -188,6 +188,8 @@ export default function MyProperties() {
               <img
                 src={resolveMediaUrl(property.cover_image) ?? ""}
                 alt={property.title}
+                loading="lazy"
+                decoding="async"
                 style={{
                   width: "100%",
                   height: 220,

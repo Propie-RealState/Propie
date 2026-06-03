@@ -9,6 +9,8 @@ import { useRegister } from '../../context/RegisterContext';
 import { apiFetch } from '../../lib/api';
 import { buildRegisterPayload } from '../../lib/buildRegisterPayload';
 import { useAuth } from '../../context/AuthContext';
+import { getPendingAvatarFile, clearPendingAvatarFile } from '../../lib/pending-avatar';
+import { uploadAvatar } from '../modules/profile/services/upload-avatar.service';
 
 export default function RegisterClientInfo() {
   const navigate = useNavigate();
@@ -62,6 +64,17 @@ export default function RegisterClientInfo() {
       );
 
       sessionStorage.removeItem('userType');
+
+      const pendingAvatar = getPendingAvatarFile();
+      if (pendingAvatar) {
+        try {
+          await uploadAvatar(pendingAvatar);
+        } catch {
+          // Non-fatal: avatar upload failure should not block registration completion.
+        } finally {
+          clearPendingAvatarFile();
+        }
+      }
 
       reset();
 

@@ -678,6 +678,8 @@ export default function AgentPublicProfile() {
                           <img
                             src={avatar}
                             alt={name}
+                            loading="lazy"
+                            decoding="async"
                             style={{
                               width: 38,
                               height: 38,

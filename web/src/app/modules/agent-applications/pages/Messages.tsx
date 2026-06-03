@@ -314,6 +314,8 @@ export default function Messages() {
                         <img
                           src={application.agent_avatar_url}
                           alt={agentName}
+                          loading="lazy"
+                          decoding="async"
                           style={{
                             width: "100%",
                             height: "100%",

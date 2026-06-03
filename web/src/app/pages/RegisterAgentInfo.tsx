@@ -9,6 +9,8 @@ import { apiFetch } from "../../lib/api";
 import { buildRegisterPayload } from "../../lib/buildRegisterPayload";
 import { RegisterSuccessOverlay } from "../components/register/RegisterSuccessOverlay";
 import { REGISTER_COMPLETION } from "../components/register/registerCompletionTheme";
+import { getPendingAvatarFile, clearPendingAvatarFile } from "../../lib/pending-avatar";
+import { uploadAvatar } from "../modules/profile/services/upload-avatar.service";
 
 type EducationEntry = {
   id: string;
@@ -95,6 +97,18 @@ export default function RegisterAgentInfo() {
       );
 
       sessionStorage.setItem("userType", "agente");
+
+      // Upload avatar if the user selected one during registration.
+      const pendingAvatar = getPendingAvatarFile();
+      if (pendingAvatar) {
+        try {
+          await uploadAvatar(pendingAvatar);
+        } catch {
+          // Non-fatal: avatar upload failure should not block registration completion.
+        } finally {
+          clearPendingAvatarFile();
+        }
+      }
 
       reset();
 

@@ -27,17 +27,25 @@ export const storageBucket = SUPABASE_STORAGE_BUCKET;
 
 /**
  * Upload a buffer to Supabase Storage and return the public URL.
- * storagePath example: "images/prop-uuid/file-uuid.jpg"
+ *
+ * @param storagePath  e.g. "images/{propertyId}/{uuid}.webp"
+ * @param buffer       File content
+ * @param contentType  MIME type
+ * @param cacheControl Cache-Control max-age in seconds (default 31536000 = 1 year).
+ *                     Safe for UUID-named files (content never changes at a given URL).
+ *                     Use a shorter value (e.g. '3600') for paths that may be overwritten.
  */
 export async function uploadToStorage(
   storagePath: string,
   buffer: Buffer,
   contentType: string,
+  cacheControl = "31536000",
 ): Promise<string> {
   const { error } = await supabase.storage
     .from(storageBucket)
     .upload(storagePath, buffer, {
       contentType,
+      cacheControl,
       upsert: false,
     });
 
