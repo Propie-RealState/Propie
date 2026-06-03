@@ -1,11 +1,10 @@
-import path from "node:path";
-import fs from "node:fs";
 import { randomUUID } from "node:crypto";
-import { pipeline } from "node:stream/promises";
+import path from "node:path";
 
 import type { MultipartFile } from "@fastify/multipart";
 
 import { createPropertyVideoRepository } from "../repositories/create-property-video.repository";
+import { uploadToStorage } from "@/lib/supabase";
 
 const ALLOWED_VIDEO_EXTENSIONS = new Set([
   ".mp4",
@@ -24,13 +23,18 @@ export async function savePropertyVideoFromMultipart(
     throw new Error("INVALID_VIDEO_FORMAT");
   }
 
-  const fileName = `${randomUUID()}${extension}`;
-  const uploadPath = path.resolve("uploads", fileName);
+  const storagePath = `videos/${propertyId}/${randomUUID()}${extension}`;
 
-  await pipeline(file.file, fs.createWriteStream(uploadPath));
+  const buffer = await file.toBuffer();
+
+  const videoUrl = await uploadToStorage(
+    storagePath,
+    buffer,
+    file.mimetype,
+  );
 
   return createPropertyVideoRepository({
     propertyId,
-    videoUrl: `/uploads/${fileName}`,
+    videoUrl,
   });
 }

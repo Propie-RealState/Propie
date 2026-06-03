@@ -8,6 +8,8 @@ import fastifyStatic from "@fastify/static";
 
 import path from "node:path";
 
+import fs from "node:fs";
+
 import {
   authRoutes,
 } from "./routes/auth.routes";
@@ -114,16 +116,14 @@ export async function buildApp() {
   // STATIC FILES
   // ======================================================
 
+  const uploadsDir = path.join(process.cwd(), "uploads");
+  fs.mkdirSync(uploadsDir, { recursive: true });
+
   await app.register(
     fastifyStatic,
     {
-      root: path.join(
-        process.cwd(),
-        "uploads"
-      ),
-
-      prefix:
-        "/uploads/",
+      root: uploadsDir,
+      prefix: "/uploads/",
     }
   );
 

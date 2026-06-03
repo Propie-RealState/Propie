@@ -1,5 +1,6 @@
 import { deletePropertyVideoRepository } from "../repositories/delete-property-video.repository";
 import { assertCanManageProperty } from "../utils/assert-can-manage-property";
+import { deleteFromStorage } from "@/lib/supabase";
 
 interface DeletePropertyVideoServiceRequest {
   videoId: string;
@@ -14,8 +15,10 @@ export async function deletePropertyVideoService({
 }: DeletePropertyVideoServiceRequest) {
   await assertCanManageProperty(userId, propertyId);
 
-  await deletePropertyVideoRepository({
+  const deleted = await deletePropertyVideoRepository({
     videoId,
     propertyId,
   });
+
+  await deleteFromStorage(deleted.video_url);
 }

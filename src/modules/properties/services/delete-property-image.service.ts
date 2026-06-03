@@ -1,5 +1,6 @@
 import { deletePropertyImageRepository } from "../repositories/delete-property-image.repository";
 import { assertCanManageProperty } from "../utils/assert-can-manage-property";
+import { deleteFromStorage } from "@/lib/supabase";
 
 interface DeletePropertyImageServiceRequest {
   imageId: string;
@@ -14,8 +15,10 @@ export async function deletePropertyImageService({
 }: DeletePropertyImageServiceRequest) {
   await assertCanManageProperty(userId, propertyId);
 
-  await deletePropertyImageRepository({
+  const deleted = await deletePropertyImageRepository({
     imageId,
     propertyId,
   });
+
+  await deleteFromStorage(deleted.image_url);
 }
