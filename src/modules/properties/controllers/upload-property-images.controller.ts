@@ -1,11 +1,11 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { randomUUID } from "node:crypto";
-import path from "node:path";
 
 import { assertCanManageProperty } from "../utils/assert-can-manage-property";
 import { createPropertyImageRepository } from "../repositories/create-property-image.repository";
 import { countPropertyImagesRepository } from "../repositories/count-property-images.repository";
 import { uploadToStorage } from "@/lib/supabase";
+import { processPropertyImage } from "../services/process-property-image.service";
 
 export async function uploadPropertyImagesController(
   request: FastifyRequest<{
@@ -30,21 +30,22 @@ export async function uploadPropertyImagesController(
   const uploadedImages = [];
 
   for await (const file of parts) {
-    const extension = path.extname(file.filename).toLowerCase() || ".jpg";
     const uuid = randomUUID();
-    const storagePath = `images/${propertyId}/${uuid}${extension}`;
+    const fullPath = `images/${propertyId}/${uuid}.webp`;
+    const thumbPath = `images/${propertyId}/${uuid}_thumb.webp`;
 
-    const buffer = await file.toBuffer();
+    const rawBuffer = await file.toBuffer();
+    const { fullBuffer, thumbBuffer } = await processPropertyImage(rawBuffer);
 
-    const imageUrl = await uploadToStorage(
-      storagePath,
-      buffer,
-      file.mimetype,
-    );
+    const [imageUrl, thumbUrl] = await Promise.all([
+      uploadToStorage(fullPath, fullBuffer, "image/webp"),
+      uploadToStorage(thumbPath, thumbBuffer, "image/webp"),
+    ]);
 
     const image = await createPropertyImageRepository({
       propertyId,
       imageUrl,
+      thumbUrl,
       isCover:
         existingImagesCount === 0 &&
         uploadedImages.length === 0,

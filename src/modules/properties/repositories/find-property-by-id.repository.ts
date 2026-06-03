@@ -20,6 +20,7 @@ export async function findPropertyByIdRepository(propertyId: string) {
               'id', pi.id,
               'type', 'image',
               'image_url', pi.image_url,
+              'thumb_url', pi.thumb_url,
               'is_cover', pi.is_cover,
               'display_order', pi.display_order,
               'created_at', pi.created_at

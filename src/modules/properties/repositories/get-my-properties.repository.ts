@@ -21,7 +21,7 @@ export async function getMyPropertiesRepository(userId: string) {
       l.city,
       l.province,
   
-      pi.image_url AS cover_image
+      COALESCE(pi.thumb_url, pi.image_url) AS cover_image
   
     FROM properties p
   

@@ -14,7 +14,7 @@ export async function deletePropertyImageRepository({
       DELETE FROM property_images
       WHERE id = $1
         AND property_id = $2
-      RETURNING image_url
+      RETURNING image_url, thumb_url
     `,
     [imageId, propertyId],
   );
@@ -23,5 +23,5 @@ export async function deletePropertyImageRepository({
     throw new Error("IMAGE_NOT_FOUND");
   }
 
-  return result.rows[0] as { image_url: string };
+  return result.rows[0] as { image_url: string; thumb_url: string | null };
 }
