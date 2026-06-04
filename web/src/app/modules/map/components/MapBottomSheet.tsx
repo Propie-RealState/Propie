@@ -1,5 +1,6 @@
 import React, { memo, useMemo, useState } from "react";
 
+import { MapPropertyCardMedia } from "./MapPropertyCardMedia";
 import type { PropertyPin } from "../types/map.types";
 import {
   formatMapPrice,
@@ -119,35 +120,57 @@ export const MapBottomSheet = memo(
             ))}
 
           {!loading &&
-            properties.map((property) => (
-              <article
-                className={`propie-map-sheet-card${
-                  selectedPropertyId === property.id
-                    ? " is-selected"
-                    : ""
-                }`}
-                key={property.id}
-                onClick={() => onSelectProperty(property)}
-              >
-                <div>
-                  <strong>{formatMapPrice(property.price)}</strong>
-                  <span>
-                    {formatOperationType(property.operationType)} ·{" "}
-                    {formatPropertyType(property.propertyType)}
-                  </span>
-                </div>
+            properties.map((property) => {
+              const locationLabel =
+                property.location?.trim() ||
+                "Ubicación no especificada";
+              const bedroomsLabel =
+                property.bedrooms &&
+                property.bedrooms > 0
+                  ? `${property.bedrooms} dorm.`
+                  : null;
 
-                <button
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onOpenProperty(property);
-                  }}
-                  type="button"
+              return (
+                <article
+                  className={`propie-map-sheet-card${
+                    selectedPropertyId === property.id
+                      ? " is-selected"
+                      : ""
+                  }`}
+                  key={property.id}
+                  onClick={() => onSelectProperty(property)}
                 >
-                  Ver
-                </button>
-              </article>
-            ))}
+                  <MapPropertyCardMedia
+                    alt={`Portada de ${formatPropertyType(property.propertyType)} en ${locationLabel}`}
+                    coverImage={property.coverImage}
+                  />
+
+                  <div className="propie-map-sheet-card-body">
+                    <div className="propie-map-sheet-card-copy">
+                      <strong>{formatMapPrice(property.price)}</strong>
+                      <span>
+                        {formatOperationType(property.operationType)} ·{" "}
+                        {formatPropertyType(property.propertyType)}
+                        {bedroomsLabel ? ` · ${bedroomsLabel}` : ""}
+                      </span>
+                      <p className="propie-map-sheet-card-location">
+                        {locationLabel}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onOpenProperty(property);
+                      }}
+                      type="button"
+                    >
+                      Ver
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
         </div>
       </section>
     );

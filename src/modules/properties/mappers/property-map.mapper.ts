@@ -15,6 +15,9 @@ type MapRow = {
   operation_type?: string;
   property_type?: string;
   count?: string | number;
+  cover_image?: string | null;
+  bedrooms?: string | number | null;
+  location_label?: string | null;
 };
 
 type NearbyRow = {
@@ -25,24 +28,19 @@ type NearbyRow = {
   operation_type: string;
   property_type: string;
   distance_meters: string | number;
+  cover_image?: string | null;
+  bedrooms?: string | number | null;
+  location_label?: string | null;
 };
 
 export function mapPropertyPinRow(
-  row: NearbyRow
-): NearbyPropertyResult;
-
-export function mapPropertyPinRow(
-  row: MapRow
-): PropertyPin;
-
-export function mapPropertyPinRow(
   row: MapRow | NearbyRow
-) {
+): PropertyPin | NearbyPropertyResult {
   const pin = {
     type:
       "property" as const,
     id:
-      row.id,
+      String(row.id),
     lat:
       Number(row.lat),
     lng:
@@ -50,9 +48,18 @@ export function mapPropertyPinRow(
     price:
       Number(row.price),
     operationType:
-      row.operation_type,
+      row.operation_type ?? "",
     propertyType:
-      row.property_type,
+      row.property_type ?? "",
+    coverImage:
+      row.cover_image ?? null,
+    bedrooms:
+      row.bedrooms === undefined ||
+      row.bedrooms === null
+        ? undefined
+        : Number(row.bedrooms),
+    location:
+      row.location_label ?? null,
   };
 
   if ("distance_meters" in row) {
