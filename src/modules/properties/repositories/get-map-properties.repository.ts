@@ -112,10 +112,20 @@ export async function getMapPropertiesRepository(
             ST_X(pl.coordinates::geometry) AS lng,
             p.price,
             p.operation_type,
-            p.property_type
+            p.property_type,
+            p.bedrooms,
+            COALESCE(pl.neighborhood, pl.city) AS location_label,
+            cover.cover_image
           FROM properties p
           INNER JOIN property_locations pl
             ON pl.property_id = p.id
+          LEFT JOIN LATERAL (
+            SELECT COALESCE(pi.thumb_url, pi.image_url) AS cover_image
+            FROM property_images pi
+            WHERE pi.property_id = p.id
+            ORDER BY pi.is_cover DESC, pi.display_order ASC, pi.created_at ASC
+            LIMIT 1
+          ) cover ON true
           CROSS JOIN bounds b
           WHERE ${filters}
             AND pl.coordinates::geometry && b.geom
@@ -213,6 +223,32 @@ export async function getMapPropertiesRepository(
             WHEN count = 1 THEN sample_property_type
             ELSE NULL
           END AS property_type,
+          CASE
+            WHEN count = 1 THEN (
+              SELECT p.bedrooms
+              FROM properties p
+              WHERE p.id::text = sample_id
+            )
+            ELSE NULL
+          END AS bedrooms,
+          CASE
+            WHEN count = 1 THEN (
+              SELECT COALESCE(pl.neighborhood, pl.city)
+              FROM property_locations pl
+              WHERE pl.property_id::text = sample_id
+            )
+            ELSE NULL
+          END AS location_label,
+          CASE
+            WHEN count = 1 THEN (
+              SELECT COALESCE(pi.thumb_url, pi.image_url)
+              FROM property_images pi
+              WHERE pi.property_id::text = sample_id
+              ORDER BY pi.is_cover DESC, pi.display_order ASC, pi.created_at ASC
+              LIMIT 1
+            )
+            ELSE NULL
+          END AS cover_image,
           CASE
             WHEN count = 1 THEN NULL
             ELSE count

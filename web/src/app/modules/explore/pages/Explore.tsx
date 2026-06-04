@@ -1,17 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PropertyCard from "../components/PropertyCard";
+import GlobalSearchBar from "../components/GlobalSearchBar";
 import React from "react";
 import {
-  Search,
   SlidersHorizontal,
   MapPin,
-  Map,
   ChevronDown,
-  Bed,
-  Bath,
-  Maximize2,
 } from "lucide-react";
+import { useGlobalSearch } from "../hooks/useGlobalSearch";
+import type { GlobalSearchSelection } from "../types/global-search.types";
 import { useAuth } from "../../../../context/AuthContext";
 import type { Property } from "../types/property.types";
 import { getPublishedProperties } from "../services/explore.service";
@@ -46,6 +44,13 @@ export default function Explore() {
 
   const { user } = useAuth();
   const [query, setQuery] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
+  const {
+    results: searchResults,
+    isActive: isSearchActive,
+    loading: isSearchLoading,
+    error: searchError,
+  } = useGlobalSearch(query, 300);
   const operationType = useMapStore((state) => state.filters.operationType);
   const setMapFilters = useMapStore((state) => state.setFilters);
   const activeType: "todos" | "venta" | "alquiler" =
@@ -86,16 +91,44 @@ export default function Explore() {
     toggleFavoriteId(id);
   };
 
+  const searchPropertyIds = useMemo(
+    () =>
+      new Set(
+        searchResults.properties.map((property) => property.id),
+      ),
+    [searchResults.properties],
+  );
+
+  const handleSearchSelect = (selection: GlobalSearchSelection) => {
+    if (selection.kind === "location") {
+      setLocationFilter(selection.label);
+    } else {
+      setLocationFilter("");
+    }
+  };
+
   const filtered = properties.filter((p) => {
     const matchType =
       activeType === "todos" ||
       (activeType === "venta" && p.operationType === "SALE") ||
       (activeType === "alquiler" && p.operationType === "RENT");
-    const matchQuery =
-      query.trim() === "" ||
-      p.title.toLowerCase().includes(query.toLowerCase()) ||
-      p.location.toLowerCase().includes(query.toLowerCase());
-    return matchType && matchQuery;
+
+    const activeLocation = locationFilter.trim();
+
+    if (activeLocation) {
+      const normalizedLocation = activeLocation.toLowerCase();
+
+      return (
+        matchType &&
+        p.location.toLowerCase().includes(normalizedLocation)
+      );
+    }
+
+    if (isSearchActive) {
+      return matchType && searchPropertyIds.has(p.id);
+    }
+
+    return matchType;
   });
 
   const pillStyle = (active: boolean): React.CSSProperties => ({
@@ -112,6 +145,17 @@ export default function Explore() {
     whiteSpace: "nowrap",
     flexShrink: 0,
   });
+
+  const listContentStyle: React.CSSProperties = {
+    width: "100%",
+    maxWidth: 520,
+    margin: "0 auto",
+  };
+
+  const openMapView = () => {
+    navigate("/mapa");
+  };
+
   if (loading) {
     return (
       <div
@@ -153,7 +197,6 @@ export default function Explore() {
             display: "flex",
             flexDirection: "column",
             gap: 8,
-            position: "relative",
           }}
         >
           <div
@@ -162,6 +205,7 @@ export default function Explore() {
               alignItems: "center",
               justifyContent: "space-between",
               marginBottom: 2,
+              ...listContentStyle,
             }}
           >
             <h1
@@ -179,55 +223,33 @@ export default function Explore() {
             <NotificationsBell />
           </div>
 
-          {/* Search bar */}
           <div
             style={{
+              ...listContentStyle,
               display: "flex",
-              alignItems: "center",
-              gap: 10,
-              background: "#f5f5f7",
-              borderRadius: 16,
-              padding: "0 14px",
-              height: 48,
-              border: "1.5px solid #ececec",
+              flexDirection: "column",
+              gap: 8,
             }}
           >
-            <Search size={18} color="#9a9aa0" strokeWidth={2} />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar propiedades..."
-              style={{
-                flex: 1,
-                background: "none",
-                border: "none",
-                outline: "none",
-                fontSize: 14,
-                color: "#1a1a1a",
-                fontFamily: "'Inter', sans-serif",
-              }}
-            />
-            {query && (
-              <button
-                onClick={() => setQuery("")}
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  color: "#9a9aa0",
-                  fontSize: 20,
-                  lineHeight: 1,
-                  padding: 0,
-                }}
-              >
-                ×
-              </button>
-            )}
-          </div>
+          <GlobalSearchBar
+            value={query}
+            onChange={(nextQuery) => {
+              setQuery(nextQuery);
+              if (!nextQuery.trim()) {
+                setLocationFilter("");
+              }
+            }}
+            onSelect={handleSearchSelect}
+            results={searchResults}
+            loading={isSearchLoading}
+            error={searchError}
+            isActive={isSearchActive}
+          />
 
-          {/* Row 1 — Ubicación (full width, same as search bar) */}
+          {/* Ubicación — abre el mapa con filtros compartidos */}
           <button
+            onClick={openMapView}
+            type="button"
             style={{
               display: "flex",
               alignItems: "center",
@@ -238,7 +260,7 @@ export default function Explore() {
               cursor: "pointer",
               borderRadius: 16,
               height: 44,
-              width: "calc(100% - 96px)",
+              width: "100%",
             }}
           >
             <MapPin size={14} color={theme.primary} />
@@ -248,33 +270,7 @@ export default function Explore() {
             <ChevronDown size={14} color={theme.primary} />
           </button>
 
-          <button
-            onClick={() => navigate("/mapa")}
-            style={{
-              position: "absolute",
-              right: 16,
-              top: 70,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 7,
-              background: "#141414",
-              border: "none",
-              cursor: "pointer",
-              borderRadius: 16,
-              height: 44,
-              padding: "0 15px",
-              color: "white",
-              fontSize: 14,
-              fontWeight: 700,
-              boxShadow: "0 8px 22px rgba(0,0,0,0.16)",
-            }}
-          >
-            <Map size={15} color="white" />
-            Mapa
-          </button>
-
-          {/* Row 2 — Todos · Alquiler · Venta · Más filtros (same horizontal margin) */}
+          {/* Row 2 — Todos · Alquiler · Venta · Más filtros */}
           <div
             style={{
               display: "flex",
@@ -332,6 +328,7 @@ export default function Explore() {
               </span>
             </button>
           </div>
+          </div>
         </div>
       </div>
 
@@ -342,6 +339,7 @@ export default function Explore() {
           if (el) el.style.setProperty("scrollbar-width", "none");
         }}
       >
+        <div style={listContentStyle}>
         {/* Results count */}
         <div
           style={{
@@ -397,6 +395,7 @@ export default function Explore() {
           </div>
         )}
         <div style={{ height: 8 }} />
+        </div>
       </div>
 
       {/* ── FOOTER ── */}

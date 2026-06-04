@@ -30,6 +30,9 @@ export type PropertyPin = {
   price: number;
   operationType: string;
   propertyType: string;
+  coverImage: string | null;
+  bedrooms?: number;
+  location: string | null;
 };
 
 export type ClusterPin = {

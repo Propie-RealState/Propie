@@ -4,6 +4,7 @@ import type {
   NearbyPropertiesResponse,
   PropertiesMapResponse,
 } from "../types/map.types";
+import { mapPropertyPinDto } from "../mappers/property-pin.mapper";
 import { API_URL } from "../../../../lib/api-base";
 
 function appendFilters(
@@ -81,7 +82,16 @@ export async function getMapProperties(
     );
   }
 
-  return response.json();
+  const data: PropertiesMapResponse =
+    await response.json();
+
+  return {
+    items: data.items.map((item) =>
+      item.type === "property"
+        ? mapPropertyPinDto(item)
+        : item
+    ),
+  };
 }
 
 export async function getNearbyProperties(

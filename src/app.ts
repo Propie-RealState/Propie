@@ -28,6 +28,8 @@ import { agentApplicationsRoutes } from "./modules/agent-applications/routes/age
 
 import { geocodingRoutes } from "./modules/geocoding/routes/geocoding.routes";
 
+import { searchRoutes } from "./modules/search/routes/search.routes";
+
 import { favoritesRoutes } from "./modules/favorites/routes/favorites.routes";
 
 import { chatsRoutes } from "./modules/chats/routes/chats.routes";
@@ -167,6 +169,13 @@ export async function buildApp() {
     geocodingRoutes,
     {
       prefix: "/geocoding",
+    }
+  );
+
+  await app.register(
+    searchRoutes,
+    {
+      prefix: "/search",
     }
   );
 
