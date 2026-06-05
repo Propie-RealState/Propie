@@ -99,3 +99,39 @@ export async function updateNotificationPreferences(
 
   return response?.data as NotificationPreferences;
 }
+
+export type PushVapidConfig = {
+  publicKey: string;
+  enabled: boolean;
+};
+
+export async function getPushVapidPublicKey() {
+  const response = await apiFetch("/notifications/push/vapid-public-key");
+  return (response?.data ?? {
+    publicKey: "",
+    enabled: false,
+  }) as PushVapidConfig;
+}
+
+export async function registerPushSubscription(input: {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  platform?: string;
+}) {
+  const response = await apiFetch("/notifications/push/subscribe", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+
+  return response?.data as { id: string; endpoint: string };
+}
+
+export async function unregisterPushSubscription(endpoint: string) {
+  const response = await apiFetch("/notifications/push/subscribe", {
+    method: "DELETE",
+    body: JSON.stringify({ endpoint }),
+  });
+
+  return Number(response?.data?.removed ?? 0);
+}

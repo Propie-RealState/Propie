@@ -5,6 +5,8 @@ import type {
 
 import {
   ListNotificationsQuerySchema,
+  RegisterPushSubscriptionSchema,
+  UnregisterPushSubscriptionSchema,
   UpdateNotificationPreferencesSchema,
 } from "../schemas/notification.schema";
 import {
@@ -15,6 +17,11 @@ import {
   markNotificationRead,
   updateNotificationPreferences,
 } from "../services/notification.service";
+import {
+  getPublicVapidKey,
+  registerPushSubscription,
+  unregisterPushSubscription,
+} from "../services/notification-push.service";
 
 export async function listNotificationsController(
   request: FastifyRequest,
@@ -118,5 +125,59 @@ export async function updateNotificationPreferencesController(
   return reply.send({
     success: true,
     data: preferences,
+  });
+}
+
+export async function getPushVapidPublicKeyController(
+  _request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  return reply.send({
+    success: true,
+    data: {
+      publicKey: getPublicVapidKey(),
+      enabled: getPublicVapidKey().length > 0,
+    },
+  });
+}
+
+export async function registerPushSubscriptionController(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const body = RegisterPushSubscriptionSchema.parse(request.body);
+  const subscription = await registerPushSubscription({
+    userId: request.user.id,
+    endpoint: body.endpoint,
+    p256dh: body.p256dh,
+    auth: body.auth,
+    userAgent: request.headers["user-agent"] ?? null,
+    platform: body.platform ?? null,
+  });
+
+  return reply.send({
+    success: true,
+    data: {
+      id: subscription.id,
+      endpoint: subscription.endpoint,
+    },
+  });
+}
+
+export async function unregisterPushSubscriptionController(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const body = UnregisterPushSubscriptionSchema.parse(request.body);
+  const removed = await unregisterPushSubscription({
+    userId: request.user.id,
+    endpoint: body.endpoint,
+  });
+
+  return reply.send({
+    success: true,
+    data: {
+      removed,
+    },
   });
 }

@@ -11,6 +11,7 @@ import {
 
 import { useAuth } from '../../../context/AuthContext';
 import { useNotificationCount } from '../../../hooks/useNotificationCount';
+import { emitPushEngagement } from '../../../lib/push-notifications';
 import { useAppTheme } from '../../../theme/useAppTheme';
 import {
   getNotifications,
@@ -122,7 +123,10 @@ export function NotificationsBell() {
       <button
         type="button"
         aria-label="Notificaciones"
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => {
+          emitPushEngagement();
+          setOpen((value) => !value);
+        }}
         style={{
           position: 'relative',
           background: open ? theme.lightBgSolid : '#f5f5f7',

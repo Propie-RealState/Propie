@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { useAppTheme } from "../../../../theme/useAppTheme";
+import { emitPushEngagement } from "../../../../lib/push-notifications";
 import { AppFooterNav } from "../../../components/navigation/AppFooterNav";
 import { NotificationsBell } from "../../../components/navigation/NotificationsBell";
 import { useNotifications } from "../../notifications/hooks/useNotifications";
@@ -56,6 +57,10 @@ export default function Notifications() {
     loadMore,
     getRoute,
   } = useNotifications();
+
+  useEffect(() => {
+    emitPushEngagement();
+  }, []);
 
   const unreadCount = items.filter((item) => !item.read).length;
 
