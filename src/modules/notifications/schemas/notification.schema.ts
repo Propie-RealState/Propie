@@ -37,3 +37,22 @@ export type UpdateNotificationPreferencesInput = z.infer<
 >;
 
 export { NotificationTypeSchema };
+
+export const RegisterPushSubscriptionSchema = z.object({
+  endpoint: z.string().url(),
+  p256dh: z.string().min(1),
+  auth: z.string().min(1),
+  platform: z.string().max(32).optional(),
+});
+
+export const UnregisterPushSubscriptionSchema = z.object({
+  endpoint: z.string().url(),
+});
+
+export type RegisterPushSubscriptionInput = z.infer<
+  typeof RegisterPushSubscriptionSchema
+>;
+
+export type UnregisterPushSubscriptionInput = z.infer<
+  typeof UnregisterPushSubscriptionSchema
+>;

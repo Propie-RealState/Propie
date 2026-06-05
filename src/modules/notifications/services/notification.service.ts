@@ -10,17 +10,36 @@ import {
   upsertNotificationPreferencesRepository,
 } from "../repositories/notifications.repository";
 import type { UpdateNotificationPreferencesInput } from "../schemas/notification.schema";
+import { sendPushForNotifications } from "./notification-push.service";
+
+async function dispatchPushForCreatedNotifications(
+  notifications: Awaited<ReturnType<typeof createNotificationsRepository>>,
+) {
+  if (notifications.length === 0) {
+    return;
+  }
+
+  try {
+    await sendPushForNotifications(notifications);
+  } catch (error) {
+    console.error("Failed to dispatch push notifications", error);
+  }
+}
 
 export async function createNotification(
   input: CreateNotificationInput,
 ) {
-  return createNotificationRepository(input);
+  const notification = await createNotificationRepository(input);
+  await dispatchPushForCreatedNotifications([notification]);
+  return notification;
 }
 
 export async function createNotifications(
   inputs: CreateNotificationInput[],
 ) {
-  return createNotificationsRepository(inputs);
+  const notifications = await createNotificationsRepository(inputs);
+  await dispatchPushForCreatedNotifications(notifications);
+  return notifications;
 }
 
 export async function listNotifications(input: {

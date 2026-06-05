@@ -1,7 +1,10 @@
 import { useCallback, useState } from "react";
 
+import {
+  getCurrentCoordinates,
+  persistNotificationLocation,
+} from "../../../../lib/location-preferences";
 import { useMapStore } from "../stores/useMapStore";
-import { updateNotificationPreferences } from "../../notifications/services/notifications.service";
 
 const CORDOBA_LOCATION = {
   lat: -31.4201,
@@ -14,70 +17,30 @@ export function useUserGeolocation() {
   const lastUserLocation =
     useMapStore((state) => state.lastUserLocation);
 
-  const [locating, setLocating] =
-    useState(false);
+  const [locating, setLocating] = useState(false);
 
-  const locate = useCallback(
-    async () => {
-      if (!navigator.geolocation) {
-        const fallback =
-          lastUserLocation ?? CORDOBA_LOCATION;
+  const locate = useCallback(async () => {
+    if (!navigator.geolocation) {
+      return lastUserLocation ?? CORDOBA_LOCATION;
+    }
 
-        return fallback;
-      }
+    setLocating(true);
 
-      setLocating(true);
+    try {
+      const location = await getCurrentCoordinates({
+        maximumAge: 1000 * 60 * 5,
+      });
 
-      try {
-        const position =
-          await new Promise<GeolocationPosition>(
-            (resolve, reject) => {
-              navigator.geolocation.getCurrentPosition(
-                resolve,
-                reject,
-                {
-                  enableHighAccuracy:
-                    true,
-                  timeout:
-                    7000,
-                  maximumAge:
-                    1000 * 60 * 5,
-                }
-              );
-            }
-          );
+      setLastUserLocation(location);
+      void persistNotificationLocation(location).catch(() => undefined);
 
-        const location = {
-          lat:
-            position.coords.latitude,
-          lng:
-            position.coords.longitude,
-        };
-
-        setLastUserLocation(location);
-
-        if (localStorage.getItem("accessToken")) {
-          void updateNotificationPreferences({
-            latitude: location.lat,
-            longitude: location.lng,
-          }).catch(() => undefined);
-        }
-
-        return location;
-      } catch {
-        const fallback =
-          lastUserLocation ?? CORDOBA_LOCATION;
-
-        return fallback;
-      } finally {
-        setLocating(false);
-      }
-    },
-    [
-      lastUserLocation,
-      setLastUserLocation,
-    ],
-  );
+      return location;
+    } catch {
+      return lastUserLocation ?? CORDOBA_LOCATION;
+    } finally {
+      setLocating(false);
+    }
+  }, [lastUserLocation, setLastUserLocation]);
 
   return {
     locate,

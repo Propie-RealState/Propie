@@ -6,10 +6,13 @@ import type {
 import { authMiddleware } from "@/middlewares/auth.middleware";
 import {
   getNotificationPreferencesController,
+  getPushVapidPublicKeyController,
   getUnreadNotificationCountController,
   listNotificationsController,
   markAllNotificationsReadController,
   markNotificationReadController,
+  registerPushSubscriptionController,
+  unregisterPushSubscriptionController,
   updateNotificationPreferencesController,
 } from "../controllers/notifications.controller";
 
@@ -44,6 +47,23 @@ export async function notificationsRoutes(
     "/preferences",
     { preHandler: authMiddleware },
     updateNotificationPreferencesController as RouteHandlerMethod,
+  );
+
+  app.get(
+    "/push/vapid-public-key",
+    getPushVapidPublicKeyController as RouteHandlerMethod,
+  );
+
+  app.post(
+    "/push/subscribe",
+    { preHandler: authMiddleware },
+    registerPushSubscriptionController as RouteHandlerMethod,
+  );
+
+  app.delete(
+    "/push/subscribe",
+    { preHandler: authMiddleware },
+    unregisterPushSubscriptionController as RouteHandlerMethod,
   );
 
   app.patch(

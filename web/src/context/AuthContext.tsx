@@ -8,6 +8,7 @@ import {
   loadFavoritesFromServer,
   syncLocalFavoritesToServer,
 } from "../lib/favorites-storage";
+import { AUTH_SESSION_READY_EVENT } from "../lib/location-preferences";
 
 
 
@@ -185,6 +186,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await refreshUser();
 
         void loadFavoritesFromServer();
+        window.dispatchEvent(new Event(AUTH_SESSION_READY_EVENT));
 
       } catch (error) {
 
@@ -245,6 +247,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     syncUserTypeFromRole(user.role);
 
     void syncLocalFavoritesToServer();
+    window.dispatchEvent(new Event(AUTH_SESSION_READY_EVENT));
 
   }
 

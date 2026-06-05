@@ -245,6 +245,9 @@ export async function upsertNotificationPreferencesRepository(input: {
   longitude?: number;
   radiusMeters?: number;
 }) {
+  const latitude = input.latitude ?? null;
+  const longitude = input.longitude ?? null;
+
   const result = await db.query(
     `
       INSERT INTO notification_preferences (
@@ -264,17 +267,17 @@ export async function upsertNotificationPreferencesRepository(input: {
         COALESCE($3, true),
         COALESCE($4, true),
         COALESCE($5, true),
-        $6,
-        $7,
+        $6::numeric,
+        $7::numeric,
         CASE
-          WHEN $6 IS NOT NULL AND $7 IS NOT NULL THEN
+          WHEN $8::double precision IS NOT NULL AND $9::double precision IS NOT NULL THEN
             ST_SetSRID(
-              ST_MakePoint($7::double precision, $6::double precision),
+              ST_MakePoint($9::double precision, $8::double precision),
               4326
             )::geography
           ELSE NULL
         END,
-        COALESCE($8, 5000)
+        COALESCE($10, 5000)
       )
       ON CONFLICT (user_id)
       DO UPDATE SET
@@ -285,20 +288,20 @@ export async function upsertNotificationPreferencesRepository(input: {
           $5,
           notification_preferences.agent_applications_enabled
         ),
-        latitude = COALESCE($6, notification_preferences.latitude),
-        longitude = COALESCE($7, notification_preferences.longitude),
+        latitude = COALESCE($6::numeric, notification_preferences.latitude),
+        longitude = COALESCE($7::numeric, notification_preferences.longitude),
         coordinates = CASE
-          WHEN $6 IS NOT NULL AND $7 IS NOT NULL THEN
+          WHEN $8::double precision IS NOT NULL AND $9::double precision IS NOT NULL THEN
             ST_SetSRID(
-              ST_MakePoint($7::double precision, $6::double precision),
+              ST_MakePoint($9::double precision, $8::double precision),
               4326
             )::geography
-          WHEN $6 IS NULL AND $7 IS NULL THEN
+          WHEN $8 IS NULL AND $9 IS NULL THEN
             notification_preferences.coordinates
           ELSE
             notification_preferences.coordinates
         END,
-        radius_meters = COALESCE($8, notification_preferences.radius_meters),
+        radius_meters = COALESCE($10, notification_preferences.radius_meters),
         updated_at = now()
       RETURNING *
     `,
@@ -308,8 +311,10 @@ export async function upsertNotificationPreferencesRepository(input: {
       input.favoritesEnabled ?? null,
       input.messagesEnabled ?? null,
       input.agentApplicationsEnabled ?? null,
-      input.latitude ?? null,
-      input.longitude ?? null,
+      latitude,
+      longitude,
+      latitude,
+      longitude,
       input.radiusMeters ?? null,
     ],
   );

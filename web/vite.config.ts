@@ -12,7 +12,9 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      // Inject the SW registration script automatically into index.html
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       injectRegister: 'auto',
       // Include all assets from public/ in the precache manifest
       includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png', 'logo.svg'],
