@@ -11,6 +11,11 @@ import {
   } from "../schemas/update-property-basic.schema";
 
   import { assertCanManageProperty } from "../utils/assert-can-manage-property";
+
+  import {
+    notifyPropertyPriceChanged,
+    notifyPropertyUpdated,
+  } from "@/modules/notifications/services/notification-dispatch.service";
   
   export async function updatePropertyBasicService(
     input: UpdatePropertyBasicInput & {
@@ -33,8 +38,13 @@ import {
       input.ownerId,
       input.propertyId,
     );
+
+    const previousPrice =
+      property.price !== null && property.price !== undefined
+        ? Number(property.price)
+        : null;
   
-    return updatePropertyBasicRepository({
+    const updatedProperty = await updatePropertyBasicRepository({
       propertyId:
         input.propertyId,
   
@@ -62,4 +72,27 @@ import {
       operationType:
         input.operationType,
     });
+
+    try {
+      if (
+        previousPrice !== null &&
+        previousPrice !== input.price
+      ) {
+        await notifyPropertyPriceChanged({
+          propertyId: input.propertyId,
+          oldPrice: previousPrice,
+          newPrice: input.price,
+          excludeUserId: input.ownerId,
+        });
+      } else {
+        await notifyPropertyUpdated({
+          propertyId: input.propertyId,
+          excludeUserId: input.ownerId,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to dispatch property update notifications", error);
+    }
+
+    return updatedProperty;
   }

@@ -1,18 +1,51 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Briefcase, Heart, MessageCircle, TrendingDown } from 'lucide-react';
+import {
+  Bell,
+  Briefcase,
+  Heart,
+  MapPin,
+  MessageCircle,
+  TrendingDown,
+} from 'lucide-react';
 
 import { useAuth } from '../../../context/AuthContext';
 import { useNotificationCount } from '../../../hooks/useNotificationCount';
 import { useAppTheme } from '../../../theme/useAppTheme';
-import { canPublishProperties } from '../../../lib/roles';
+import {
+  getNotifications,
+  type NotificationItem,
+} from '../../modules/notifications/services/notifications.service';
+import {
+  getNotificationRoute,
+} from '../../modules/notifications/utils/notification-ui';
 
-type NotificationPreview = {
-  id: string;
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-};
+function NotificationIcon({
+  type,
+  color,
+}: {
+  type: string;
+  color: string;
+}) {
+  switch (type) {
+    case 'NEW_PROPERTY_NEARBY':
+    case 'PROPERTY_PUBLISHED':
+      return <MapPin size={18} color={color} />;
+    case 'PROPERTY_PRICE_CHANGED':
+      return <TrendingDown size={18} color={color} />;
+    case 'PROPERTY_FAVORITE_UPDATED':
+    case 'PROPERTY_UPDATED':
+      return <Heart size={18} color={color} />;
+    case 'AGENT_APPLICATION_RECEIVED':
+    case 'AGENT_APPLICATION_ACCEPTED':
+    case 'AGENT_APPLICATION_REJECTED':
+      return <Briefcase size={18} color={color} />;
+    case 'MESSAGE_RECEIVED':
+      return <MessageCircle size={18} color={color} />;
+    default:
+      return <Bell size={18} color={color} />;
+  }
+}
 
 export function NotificationsBell() {
   const { user } = useAuth();
@@ -20,6 +53,8 @@ export function NotificationsBell() {
   const theme = useAppTheme();
   const count = useNotificationCount();
   const [open, setOpen] = useState(false);
+  const [items, setItems] = useState<NotificationItem[]>([]);
+  const [loading, setLoading] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,48 +76,46 @@ export function NotificationsBell() {
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!open || !user) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadPreview() {
+      setLoading(true);
+
+      try {
+        const response = await getNotifications({
+          limit: 5,
+          unreadOnly: true,
+        });
+
+        if (!cancelled) {
+          setItems(response.items);
+        }
+      } catch {
+        if (!cancelled) {
+          setItems([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadPreview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, user?.id]);
+
   if (!user) {
     return null;
   }
-
-  const previews: NotificationPreview[] = canPublishProperties(user.role)
-    ? count > 0
-      ? [
-          {
-            id: 'agent-requests',
-            title: 'Solicitudes de agentes',
-            description: `${count} pendiente${count === 1 ? '' : 's'} de revisión`,
-            icon: <Briefcase size={18} color={theme.primary} />,
-          },
-        ]
-      : [
-          {
-            id: 'empty-owner',
-            title: 'Sin novedades',
-            description: 'Te avisamos cuando haya actividad en tus propiedades',
-            icon: <Bell size={18} color="#9a9aa0" />,
-          },
-        ]
-    : [
-        {
-          id: 'messages',
-          title: 'Mensajes',
-          description: 'Respuestas de propietarios y agentes',
-          icon: <MessageCircle size={18} color={theme.primary} />,
-        },
-        {
-          id: 'price-drops',
-          title: 'Bajas de precio',
-          description: 'En propiedades que guardaste',
-          icon: <TrendingDown size={18} color={theme.primary} />,
-        },
-        {
-          id: 'favorites',
-          title: 'Favoritos',
-          description: 'Novedades en tus guardados',
-          icon: <Heart size={18} color={theme.primary} />,
-        },
-      ];
 
   return (
     <div ref={rootRef} style={{ position: 'relative' }}>
@@ -134,7 +167,7 @@ export function NotificationsBell() {
             position: 'absolute',
             top: 'calc(100% + 8px)',
             right: 0,
-            width: 300,
+            width: 320,
             background: 'white',
             borderRadius: 16,
             border: '1px solid #e5e5ea',
@@ -169,64 +202,77 @@ export function NotificationsBell() {
             )}
           </div>
 
-          <div style={{ maxHeight: 280, overflowY: 'auto' }}>
-            {previews.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => {
-                  setOpen(false);
-                  navigate('/notificaciones');
-                }}
-                style={{
-                  width: '100%',
-                  border: 'none',
-                  background: 'white',
-                  padding: '14px 16px',
-                  display: 'flex',
-                  gap: 12,
-                  alignItems: 'flex-start',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                }}
-              >
-                <div
+          <div style={{ maxHeight: 320, overflowY: 'auto' }}>
+            {loading ? (
+              <div style={{ padding: 18, fontSize: 13, color: '#6e6e73' }}>
+                Cargando...
+              </div>
+            ) : items.length === 0 ? (
+              <div style={{ padding: 18, fontSize: 13, color: '#6e6e73' }}>
+                No tenés notificaciones nuevas.
+              </div>
+            ) : (
+              items.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    navigate(getNotificationRoute(item));
+                  }}
                   style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 10,
-                    background: theme.lightBgSolid,
+                    width: '100%',
+                    border: 'none',
+                    background: 'white',
+                    padding: '14px 16px',
                     display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
+                    gap: 12,
+                    alignItems: 'flex-start',
+                    cursor: 'pointer',
+                    textAlign: 'left',
                   }}
                 >
-                  {item.icon}
-                </div>
-                <div>
                   <div
                     style={{
-                      fontSize: 14,
-                      fontWeight: 600,
-                      color: '#1a1a1a',
+                      width: 36,
+                      height: 36,
+                      borderRadius: 10,
+                      background: theme.lightBgSolid,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
                     }}
                   >
-                    {item.title}
+                    <NotificationIcon
+                      type={item.type}
+                      color={theme.primary}
+                    />
                   </div>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color: '#6e6e73',
-                      marginTop: 2,
-                      lineHeight: 1.45,
-                    }}
-                  >
-                    {item.description}
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: '#1a1a1a',
+                      }}
+                    >
+                      {item.title}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: '#6e6e73',
+                        marginTop: 2,
+                        lineHeight: 1.45,
+                      }}
+                    >
+                      {item.body}
+                    </div>
                   </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              ))
+            )}
           </div>
 
           <button

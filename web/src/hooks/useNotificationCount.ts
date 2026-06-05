@@ -1,52 +1,67 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { useAuth } from '../context/AuthContext';
-import { apiFetch } from '../lib/api';
+import { getUnreadNotificationCount } from '../app/modules/notifications/services/notifications.service';
 import { useOwnerApplicationCount } from '../app/modules/agent-applications/hooks/useOwnerApplicationCount';
 import { canPublishProperties } from '../lib/roles';
 
 export function useNotificationCount() {
   const { user } = useAuth();
   const { count: ownerPendingCount } = useOwnerApplicationCount();
-  const [clientCount, setClientCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  useEffect(() => {
-    if (!user || canPublishProperties(user.role)) {
-      setClientCount(0);
+  const refresh = useCallback(async () => {
+    if (!user) {
+      setUnreadCount(0);
       return;
     }
 
-    let cancelled = false;
-
-    async function loadNotifications() {
-      try {
-        const response = await apiFetch('/notifications');
-        const items = response?.data;
-
-        if (!cancelled && Array.isArray(items)) {
-          setClientCount(items.length);
-        }
-      } catch {
-        if (!cancelled) {
-          setClientCount(0);
-        }
-      }
+    try {
+      const count = await getUnreadNotificationCount();
+      setUnreadCount(count);
+    } catch {
+      setUnreadCount(0);
     }
+  }, [user?.id]);
 
-    loadNotifications();
+  useEffect(() => {
+    refresh();
 
+    const interval = window.setInterval(refresh, 60_000);
     return () => {
-      cancelled = true;
+      window.clearInterval(interval);
     };
-  }, [user?.id, user?.role]);
+  }, [refresh]);
 
   if (!user) {
     return 0;
   }
 
   if (canPublishProperties(user.role)) {
-    return ownerPendingCount;
+    return Math.max(unreadCount, ownerPendingCount);
   }
 
-  return clientCount;
+  return unreadCount;
+}
+
+export function useRefreshNotificationCount() {
+  const { user } = useAuth();
+  const [tick, setTick] = useState(0);
+
+  const refresh = useCallback(() => {
+    setTick((value) => value + 1);
+  }, []);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    window.addEventListener('notifications:changed', refresh);
+    return () => {
+      window.removeEventListener('notifications:changed', refresh);
+    };
+  }, [refresh, user?.id, tick]);
+
+  return refresh;
 }

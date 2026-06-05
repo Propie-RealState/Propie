@@ -15,6 +15,10 @@ import {
   } from "./geocode-property-location.service";
 
   import { assertCanManageProperty } from "../utils/assert-can-manage-property";
+
+  import {
+    notifyPropertyPublished,
+  } from "@/modules/notifications/services/notification-dispatch.service";
   
   type Input = {
     ownerId: string;
@@ -90,6 +94,12 @@ import {
       await publishPropertyRepository(
         input.propertyId
       );
+
+    try {
+      await notifyPropertyPublished(input.propertyId);
+    } catch (error) {
+      console.error("Failed to dispatch publish notifications", error);
+    }
   
     return publishedProperty;
   }

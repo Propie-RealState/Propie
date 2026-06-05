@@ -1,27 +1,54 @@
-import type { FastifyInstance } from 'fastify';
+import type {
+  FastifyInstance,
+  RouteHandlerMethod,
+} from "fastify";
 
-import { requireRoles } from '@/middlewares/require-roles.middleware';
+import { authMiddleware } from "@/middlewares/auth.middleware";
 import {
-  USER_ROLES,
-} from '@/constants/roles';
+  getNotificationPreferencesController,
+  getUnreadNotificationCountController,
+  listNotificationsController,
+  markAllNotificationsReadController,
+  markNotificationReadController,
+  updateNotificationPreferencesController,
+} from "../controllers/notifications.controller";
 
 export async function notificationsRoutes(
   app: FastifyInstance,
 ) {
-  const requireAuthenticated = requireRoles([
-    USER_ROLES.CLIENT,
-    USER_ROLES.OWNER,
-    USER_ROLES.AGENT,
-  ]);
+  app.get(
+    "/",
+    { preHandler: authMiddleware },
+    listNotificationsController as RouteHandlerMethod,
+  );
 
   app.get(
-    '/',
-    { preHandler: requireAuthenticated },
-    async (_request, reply) => {
-      return reply.send({
-        success: true,
-        data: [],
-      });
-    },
+    "/unread-count",
+    { preHandler: authMiddleware },
+    getUnreadNotificationCountController as RouteHandlerMethod,
+  );
+
+  app.patch(
+    "/read-all",
+    { preHandler: authMiddleware },
+    markAllNotificationsReadController as RouteHandlerMethod,
+  );
+
+  app.get(
+    "/preferences",
+    { preHandler: authMiddleware },
+    getNotificationPreferencesController as RouteHandlerMethod,
+  );
+
+  app.patch(
+    "/preferences",
+    { preHandler: authMiddleware },
+    updateNotificationPreferencesController as RouteHandlerMethod,
+  );
+
+  app.patch(
+    "/:id/read",
+    { preHandler: authMiddleware },
+    markNotificationReadController as RouteHandlerMethod,
   );
 }

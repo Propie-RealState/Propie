@@ -1,55 +1,40 @@
-import type { FastifyInstance } from 'fastify';
+import type {
+  FastifyInstance,
+  RouteHandlerMethod,
+} from "fastify";
 
-import { requireRoles } from '@/middlewares/require-roles.middleware';
+import { authMiddleware } from "@/middlewares/auth.middleware";
 import {
-  USER_ROLES,
-} from '@/constants/roles';
+  addFavoriteController,
+  listFavoritesController,
+  removeFavoriteController,
+  syncFavoritesController,
+} from "../controllers/favorites.controller";
 
 export async function favoritesRoutes(
   app: FastifyInstance,
 ) {
-  const requireClient = requireRoles([
-    USER_ROLES.CLIENT,
-    USER_ROLES.OWNER,
-    USER_ROLES.AGENT,
-  ]);
-
   app.get(
-    '/',
-    { preHandler: requireClient },
-    async (_request, reply) => {
-      return reply.send({
-        success: true,
-        data: [],
-      });
-    },
+    "/",
+    { preHandler: authMiddleware },
+    listFavoritesController as RouteHandlerMethod,
   );
 
   app.post(
-    '/:propertyId',
-    { preHandler: requireClient },
-    async (_request, reply) => {
-      return reply.status(501).send({
-        success: false,
-        error: {
-          code: 'NOT_IMPLEMENTED',
-          message: 'Favorites persistence is not implemented yet',
-        },
-      });
-    },
+    "/sync",
+    { preHandler: authMiddleware },
+    syncFavoritesController as RouteHandlerMethod,
+  );
+
+  app.post(
+    "/:propertyId",
+    { preHandler: authMiddleware },
+    addFavoriteController as RouteHandlerMethod,
   );
 
   app.delete(
-    '/:propertyId',
-    { preHandler: requireClient },
-    async (_request, reply) => {
-      return reply.status(501).send({
-        success: false,
-        error: {
-          code: 'NOT_IMPLEMENTED',
-          message: 'Favorites persistence is not implemented yet',
-        },
-      });
-    },
+    "/:propertyId",
+    { preHandler: authMiddleware },
+    removeFavoriteController as RouteHandlerMethod,
   );
 }
