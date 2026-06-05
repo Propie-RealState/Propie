@@ -4,6 +4,10 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 
 import { apiFetch } from "../lib/api";
 import { syncUserTypeFromRole } from "../theme/app-theme";
+import {
+  loadFavoritesFromServer,
+  syncLocalFavoritesToServer,
+} from "../lib/favorites-storage";
 
 
 
@@ -180,6 +184,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         await refreshUser();
 
+        void loadFavoritesFromServer();
+
       } catch (error) {
 
         console.error(error);
@@ -237,6 +243,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(user);
 
     syncUserTypeFromRole(user.role);
+
+    void syncLocalFavoritesToServer();
 
   }
 

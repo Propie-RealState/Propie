@@ -1,68 +1,63 @@
-import { useEffect, useMemo, useState } from "react";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Bell,
   Briefcase,
-  ChevronRight,
   Clock,
-  UserCheck,
+  Heart,
+  MapPin,
+  MessageCircle,
+  TrendingDown,
 } from "lucide-react";
 
 import { useAppTheme } from "../../../../theme/useAppTheme";
-import { useAuth } from "../../../../context/AuthContext";
-import { isClientRole } from "../../../../lib/roles";
 import { AppFooterNav } from "../../../components/navigation/AppFooterNav";
 import { NotificationsBell } from "../../../components/navigation/NotificationsBell";
-import { apiFetch } from "../../../../lib/api";
-import {
-  getOwnerAgentApplications,
-  type OwnerAgentApplication,
-} from "../services/agent-applications.service";
+import { useNotifications } from "../../notifications/hooks/useNotifications";
 
-function getAgentName(application: OwnerAgentApplication) {
-  return (
-    `${application.agent_first_name ?? ""} ${
-      application.agent_last_name ?? ""
-    }`.trim() || application.agent_email
-  );
+function NotificationIcon({
+  type,
+  color,
+}: {
+  type: string;
+  color: string;
+}) {
+  switch (type) {
+    case "NEW_PROPERTY_NEARBY":
+    case "PROPERTY_PUBLISHED":
+      return <MapPin size={19} color={color} />;
+    case "PROPERTY_PRICE_CHANGED":
+      return <TrendingDown size={19} color={color} />;
+    case "PROPERTY_FAVORITE_UPDATED":
+    case "PROPERTY_UPDATED":
+      return <Heart size={19} color={color} />;
+    case "AGENT_APPLICATION_RECEIVED":
+    case "AGENT_APPLICATION_ACCEPTED":
+    case "AGENT_APPLICATION_REJECTED":
+      return <Briefcase size={19} color={color} />;
+    case "MESSAGE_RECEIVED":
+      return <MessageCircle size={19} color={color} />;
+    default:
+      return <Bell size={19} color={color} />;
+  }
 }
 
 export default function Notifications() {
   const navigate = useNavigate();
   const colors = useAppTheme();
-  const { user } = useAuth();
-  const isClient = isClientRole(user?.role);
-  const [applications, setApplications] = useState<OwnerAgentApplication[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    items,
+    loading,
+    loadingMore,
+    hasMore,
+    markRead,
+    markAllRead,
+    loadMore,
+    getRoute,
+  } = useNotifications();
 
-  useEffect(() => {
-    async function loadApplications() {
-      try {
-        if (isClient) {
-          await apiFetch("/notifications");
-          setApplications([]);
-          return;
-        }
-
-        const data = await getOwnerAgentApplications();
-        setApplications(data);
-      } catch (error) {
-        console.error("Error loading notifications", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadApplications();
-  }, [isClient]);
-
-  const pendingApplications = useMemo(
-    () =>
-      applications.filter((application) => application.status === "PENDING"),
-    [applications],
-  );
+  const unreadCount = items.filter((item) => !item.read).length;
 
   return (
     <div
@@ -144,31 +139,57 @@ export default function Notifications() {
               borderRadius: 20,
               border: "1.5px solid #e5e5ea",
               padding: 20,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
             }}
           >
-            <h2
-              style={{
-                margin: 0,
-                fontSize: 20,
-                fontWeight: 800,
-                color: "#1a1a1a",
-                fontFamily: "'Sora', sans-serif",
-              }}
-            >
-              Centro de notificaciones
-            </h2>
-            <p
-              style={{
-                margin: "6px 0 0",
-                fontSize: 13,
-                color: "#6e6e73",
-                lineHeight: 1.5,
-              }}
-            >
-              {isClient
-                ? "Mensajes, bajas de precio y novedades de tus favoritos."
-                : "Solicitudes, actividad y avisos importantes de tus propiedades."}
-            </p>
+            <div>
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: 20,
+                  fontWeight: 800,
+                  color: "#1a1a1a",
+                  fontFamily: "'Sora', sans-serif",
+                }}
+              >
+                Centro de notificaciones
+              </h2>
+              <p
+                style={{
+                  margin: "6px 0 0",
+                  fontSize: 13,
+                  color: "#6e6e73",
+                  lineHeight: 1.5,
+                }}
+              >
+                Propiedades cercanas, favoritos, mensajes y solicitudes.
+              </p>
+            </div>
+
+            {unreadCount > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  void markAllRead();
+                }}
+                style={{
+                  border: "none",
+                  background: colors.lightBg,
+                  color: colors.primary,
+                  borderRadius: 12,
+                  padding: "10px 12px",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Marcar todas
+              </button>
+            )}
           </div>
 
           <section
@@ -179,230 +200,169 @@ export default function Notifications() {
               overflow: "hidden",
             }}
           >
-            <div
-              style={{
-                padding: "18px 18px 12px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                }}
-              >
-                <div
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 10,
-                    background: colors.lightBg,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Briefcase size={19} color={colors.primary} />
-                </div>
-                <div>
-                  <h3
-                    style={{
-                      margin: 0,
-                      fontSize: 15,
-                      fontWeight: 800,
-                      color: "#1a1a1a",
-                    }}
-                  >
-                    Solicitudes de agentes
-                  </h3>
-                  <p
-                    style={{
-                      margin: "2px 0 0",
-                      fontSize: 12,
-                      color: "#6e6e73",
-                    }}
-                  >
-                    {pendingApplications.length} pendiente
-                    {pendingApplications.length === 1 ? "" : "s"}
-                  </p>
-                </div>
-              </div>
-
-              {pendingApplications.length > 0 && (
-                <span
-                  style={{
-                    minWidth: 22,
-                    height: 22,
-                    borderRadius: 999,
-                    background: "#ef4444",
-                    color: "white",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 12,
-                    fontWeight: 800,
-                    padding: "0 7px",
-                  }}
-                >
-                  {pendingApplications.length}
-                </span>
-              )}
-            </div>
-
             {loading ? (
               <div style={{ padding: 22, color: "#6e6e73", fontSize: 14 }}>
                 Cargando notificaciones...
               </div>
-            ) : pendingApplications.length === 0 ? (
-              <div style={{ padding: 22, color: "#6e6e73", fontSize: 14 }}>
-                No hay solicitudes pendientes por ahora.
+            ) : items.length === 0 ? (
+              <div
+                style={{
+                  padding: "36px 22px",
+                  textAlign: "center",
+                  color: "#6e6e73",
+                }}
+              >
+                <div
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: 14,
+                    background: colors.lightBg,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: "0 auto 14px",
+                  }}
+                >
+                  <Bell size={24} color={colors.primary} />
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#1a1a1a" }}>
+                  Sin novedades por ahora
+                </div>
+                <div style={{ fontSize: 13, marginTop: 6, lineHeight: 1.5 }}>
+                  Te avisamos cuando haya actividad relevante para vos.
+                </div>
               </div>
             ) : (
-              pendingApplications.map((application) => {
-                const agentName = getAgentName(application);
-                return (
+              items.map((notification) => (
+                <button
+                  key={notification.id}
+                  type="button"
+                  onClick={() => {
+                    if (!notification.read) {
+                      void markRead(notification.id);
+                    }
+                    navigate(getRoute(notification));
+                  }}
+                  style={{
+                    width: "100%",
+                    border: "none",
+                    borderTop: "1px solid #f0f0f0",
+                    background: notification.read ? "white" : "#faf9ff",
+                    padding: "16px 18px",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 12,
+                    textAlign: "left",
+                  }}
+                >
                   <div
-                    key={application.id}
                     style={{
-                      borderTop: "1px solid #f0f0f0",
+                      width: 42,
+                      height: 42,
+                      borderRadius: 12,
+                      background: colors.lightBg,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
                     }}
                   >
-                    {/* Main row: navigate to messages */}
-                    <button
-                      onClick={() => navigate("/mensajes")}
+                    <NotificationIcon
+                      type={notification.type}
+                      color={colors.primary}
+                    />
+                  </div>
+
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
                       style={{
-                        width: "100%",
-                        border: "none",
-                        background: "white",
-                        padding: "16px 18px",
-                        cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
-                        gap: 12,
-                        textAlign: "left",
+                        gap: 8,
+                        marginBottom: 4,
                       }}
                     >
                       <div
                         style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: "50%",
-                          background: colors.lightBg,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          flexShrink: 0,
-                          overflow: "hidden",
+                          fontSize: 14,
+                          fontWeight: 800,
+                          color: "#1a1a1a",
                         }}
                       >
-                        {application.agent_avatar_url ? (
-                          <img
-                            src={application.agent_avatar_url}
-                            alt={agentName}
-                            loading="lazy"
-                            decoding="async"
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                            }}
-                          />
-                        ) : (
-                          <span
-                            style={{
-                              fontSize: 18,
-                              fontWeight: 700,
-                              color: colors.primary,
-                            }}
-                          >
-                            {agentName.charAt(0).toUpperCase()}
-                          </span>
-                        )}
+                        {notification.title}
                       </div>
-
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div
+                      {!notification.read && (
+                        <span
                           style={{
-                            fontSize: 14,
-                            fontWeight: 800,
-                            color: "#1a1a1a",
-                            marginBottom: 3,
+                            width: 8,
+                            height: 8,
+                            borderRadius: "50%",
+                            background: colors.primary,
+                            flexShrink: 0,
                           }}
-                        >
-                          {agentName} envió una solicitud
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 13,
-                            color: "#6e6e73",
-                            lineHeight: 1.4,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {application.property_title || "Propiedad sin título"}
-                        </div>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 5,
-                            color: "#9a9aa0",
-                            fontSize: 12,
-                            marginTop: 6,
-                          }}
-                        >
-                          <Clock size={13} />
-                          {new Date(application.created_at).toLocaleString(
-                            "es-AR",
-                            {
-                              day: "2-digit",
-                              month: "short",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            },
-                          )}
-                        </div>
-                      </div>
-
-                      <ChevronRight size={20} color="#9a9aa0" />
-                    </button>
-
-                    {/* Ver perfil link */}
-                    <button
-                      onClick={() =>
-                        navigate(`/agentes/${application.agent_id}`, {
-                          state: {
-                            reviewPropertyId: application.property_id,
-                            reviewPropertyTitle: application.property_title,
-                            canCreateReview: application.status === "ACCEPTED",
-                          },
-                        })
-                      }
+                        />
+                      )}
+                    </div>
+                    <div
                       style={{
-                        width: "100%",
-                        border: "none",
-                        background: "none",
-                        padding: "8px 18px 14px",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 6,
-                        color: colors.primary,
-                        fontSize: 12,
-                        fontWeight: 700,
+                        fontSize: 13,
+                        color: "#6e6e73",
+                        lineHeight: 1.45,
                       }}
                     >
-                      <UserCheck size={13} />
-                      Ver perfil de {agentName}
-                    </button>
+                      {notification.body}
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 5,
+                        color: "#9a9aa0",
+                        fontSize: 12,
+                        marginTop: 8,
+                      }}
+                    >
+                      <Clock size={13} />
+                      {new Date(notification.createdAt).toLocaleString(
+                        "es-AR",
+                        {
+                          day: "2-digit",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        },
+                      )}
+                    </div>
                   </div>
-                );
-              })
+                </button>
+              ))
+            )}
+
+            {hasMore && !loading && (
+              <div style={{ padding: 16, borderTop: "1px solid #f0f0f0" }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void loadMore();
+                  }}
+                  disabled={loadingMore}
+                  style={{
+                    width: "100%",
+                    border: "none",
+                    background: "#fafafa",
+                    borderRadius: 12,
+                    padding: "12px 16px",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: colors.primary,
+                    cursor: loadingMore ? "default" : "pointer",
+                  }}
+                >
+                  {loadingMore ? "Cargando..." : "Cargar más"}
+                </button>
+              </div>
             )}
           </section>
         </div>

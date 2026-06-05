@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 
 import { useMapStore } from "../stores/useMapStore";
+import { updateNotificationPreferences } from "../../notifications/services/notifications.service";
 
 const CORDOBA_LOCATION = {
   lat: -31.4201,
@@ -54,6 +55,13 @@ export function useUserGeolocation() {
         };
 
         setLastUserLocation(location);
+
+        if (localStorage.getItem("accessToken")) {
+          void updateNotificationPreferences({
+            latitude: location.lat,
+            longitude: location.lng,
+          }).catch(() => undefined);
+        }
 
         return location;
       } catch {
