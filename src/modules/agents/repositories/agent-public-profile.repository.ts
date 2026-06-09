@@ -1,4 +1,5 @@
 import { db } from "@/database/client";
+import { getAgentPropertyStatsRepository } from "./agent-property-stats.repository";
 
 export async function getAgentPublicProfileRepository(agentId: string) {
   const result = await db.query(
@@ -12,10 +13,7 @@ export async function getAgentPublicProfileRepository(agentId: string) {
       pr.location,
       pr.created_at AS member_since,
       COALESCE(rs.total_reviews, 0)::int AS total_reviews,
-      COALESCE(rs.average_rating, 0)::float AS average_rating,
-      COALESCE(wp.total_worked, 0)::int AS total_worked_properties,
-      COALESCE(wp.active_count, 0)::int AS active_properties,
-      COALESCE(wp.completed_count, 0)::int AS completed_properties
+      COALESCE(rs.average_rating, 0)::float AS average_rating
     FROM users u
     LEFT JOIN profiles pr ON pr.user_id = u.id
     LEFT JOIN (
@@ -26,19 +24,22 @@ export async function getAgentPublicProfileRepository(agentId: string) {
       FROM user_reviews
       GROUP BY target_user_id
     ) rs ON rs.target_user_id = u.id
-    LEFT JOIN (
-      SELECT
-        agent_id,
-        COUNT(*)::int AS total_worked,
-        COUNT(*) FILTER (WHERE is_active = true)::int AS active_count,
-        COUNT(*) FILTER (WHERE is_active = false)::int AS completed_count
-      FROM property_assignments
-      GROUP BY agent_id
-    ) wp ON wp.agent_id = u.id
     WHERE u.id = $1
       AND u.role = 'AGENT'
     `,
     [agentId],
   );
-  return result.rows[0] ?? null;
+
+  const profile = result.rows[0];
+
+  if (!profile) {
+    return null;
+  }
+
+  const stats = await getAgentPropertyStatsRepository(agentId);
+
+  return {
+    ...profile,
+    ...stats,
+  };
 }

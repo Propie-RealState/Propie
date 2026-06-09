@@ -1,14 +1,12 @@
 import { db } from "../../../database/client";
+import { getAgentPropertyStatsRepository } from "../../agents/repositories/agent-property-stats.repository";
 
 export async function findAgentStatsRepository(agentId: string) {
   const result = await db.query(
     `
     SELECT
       COALESCE(rs.total_reviews, 0)::int AS total_reviews,
-      COALESCE(rs.average_rating, 0)::float AS average_rating,
-      COALESCE(wp.total_worked, 0)::int AS total_worked_properties,
-      COALESCE(wp.active_count, 0)::int AS active_properties,
-      COALESCE(wp.completed_count, 0)::int AS completed_properties
+      COALESCE(rs.average_rating, 0)::float AS average_rating
     FROM (SELECT $1::uuid AS agent_id) base
     LEFT JOIN (
       SELECT
@@ -18,19 +16,18 @@ export async function findAgentStatsRepository(agentId: string) {
       FROM user_reviews
       GROUP BY target_user_id
     ) rs ON rs.target_user_id = base.agent_id
-    LEFT JOIN (
-      SELECT
-        agent_id,
-        COUNT(*)::int AS total_worked,
-        COUNT(*) FILTER (WHERE is_active = true)::int AS active_count,
-        COUNT(*) FILTER (WHERE is_active = false)::int AS completed_count
-      FROM property_assignments
-      GROUP BY agent_id
-    ) wp ON wp.agent_id = base.agent_id
     `,
     [agentId],
   );
-  return result.rows[0] ?? null;
+
+  const reviewStats = result.rows[0];
+  const propertyStats = await getAgentPropertyStatsRepository(agentId);
+
+  return {
+    total_reviews: reviewStats?.total_reviews ?? 0,
+    average_rating: reviewStats?.average_rating ?? 0,
+    ...propertyStats,
+  };
 }
 
 type CreateProfileInput = {

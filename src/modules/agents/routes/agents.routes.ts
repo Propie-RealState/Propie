@@ -2,6 +2,9 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { authMiddleware } from "../../../middlewares/auth.middleware";
 import { getAgentPublicProfileRepository } from "../repositories/agent-public-profile.repository";
+import { getAgentCommercializedPropertiesRepository } from "../repositories/get-agent-commercialized-properties.repository";
+import { getOwnerPublishedPropertiesRepository } from "../repositories/get-owner-published-properties.repository";
+import { getAgentPropertyStatsRepository } from "../repositories/agent-property-stats.repository";
 import {
   createUserReviewRepository,
   getUserReviewsRepository,
@@ -46,11 +49,6 @@ export async function agentsRoutes(app: FastifyInstance) {
         COALESCE(rs.three_stars, 0)::int AS three_stars,
         COALESCE(rs.two_stars, 0)::int AS two_stars,
         COALESCE(rs.one_star, 0)::int AS one_star,
-        -- Agent-specific: properties worked
-        COALESCE(wp.total_worked, 0)::int AS total_worked_properties,
-        COALESCE(wp.active_count, 0)::int AS active_properties,
-        COALESCE(wp.completed_count, 0)::int AS completed_properties,
-        -- Owner-specific: published properties
         COALESCE(opc.active_count, 0)::int AS owner_active_properties
       FROM users u
       LEFT JOIN profiles pr ON pr.user_id = u.id
@@ -67,15 +65,6 @@ export async function agentsRoutes(app: FastifyInstance) {
         FROM user_reviews
         GROUP BY target_user_id
       ) rs ON rs.target_user_id = u.id
-      LEFT JOIN (
-        SELECT
-          agent_id,
-          COUNT(*)::int AS total_worked,
-          COUNT(*) FILTER (WHERE is_active = true)::int AS active_count,
-          COUNT(*) FILTER (WHERE is_active = false)::int AS completed_count
-        FROM property_assignments
-        GROUP BY agent_id
-      ) wp ON wp.agent_id = u.id
       LEFT JOIN (
         SELECT owner_id, COUNT(*) FILTER (WHERE status = 'PUBLISHED')::int AS active_count
         FROM properties
@@ -95,6 +84,15 @@ export async function agentsRoutes(app: FastifyInstance) {
         error: { code: "USER_NOT_FOUND", message: "User not found" },
       });
     }
+
+    const agentStats =
+      row.role === "AGENT"
+        ? await getAgentPropertyStatsRepository(userId)
+        : {
+            total_worked_properties: 0,
+            active_properties: 0,
+            completed_properties: 0,
+          };
 
     return reply.send({
       success: true,
@@ -116,12 +114,12 @@ export async function agentsRoutes(app: FastifyInstance) {
           two: row.two_stars,
           one: row.one_star,
         },
-        total_worked_properties: row.total_worked_properties,
+        total_worked_properties: agentStats.total_worked_properties,
         active_properties:
           row.role === "AGENT"
-            ? row.active_properties
+            ? agentStats.active_properties
             : row.owner_active_properties,
-        completed_properties: row.completed_properties,
+        completed_properties: agentStats.completed_properties,
       },
     });
   });
@@ -262,6 +260,32 @@ export async function agentsRoutes(app: FastifyInstance) {
       return reply.status(201).send({ success: true, data: review });
     },
   );
+
+  // ============================================================
+  // GET /agents/:agentId/commercialized-properties — public
+  // Properties where the agent has an accepted application
+  // ============================================================
+
+  app.get("/:agentId/commercialized-properties", async (request, reply) => {
+    const { agentId } = request.params as { agentId: string };
+
+    const properties = await getAgentCommercializedPropertiesRepository(agentId);
+
+    return reply.send({ success: true, data: properties });
+  });
+
+  // ============================================================
+  // GET /agents/users/:userId/published-properties — public
+  // Published properties owned by the user
+  // ============================================================
+
+  app.get("/users/:userId/published-properties", async (request, reply) => {
+    const { userId } = request.params as { userId: string };
+
+    const properties = await getOwnerPublishedPropertiesRepository(userId);
+
+    return reply.send({ success: true, data: properties });
+  });
 
   // ============================================================
   // GET /agents/:agentId/profile — public full agent profile

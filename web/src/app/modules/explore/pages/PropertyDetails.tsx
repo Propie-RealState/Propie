@@ -42,6 +42,7 @@ import {
   type AgentApplicationStatus,
 } from "../../agent-applications/services/agent-applications.service";
 import { NotificationsBell } from "../../../components/navigation/NotificationsBell";
+import { EnabledAgentsSection } from "../components/EnabledAgentsSection";
 import {
   isFavorite,
   toggleFavoriteId,
@@ -825,6 +826,17 @@ export default function PropertyDetails() {
             />
           )}
 
+          {/* Agentes habilitados — visible to everyone */}
+          {!canManageProperty && (
+            <EnabledAgentsSection
+              agents={property.agents}
+              primaryColor={colors.primary}
+              lightBg={colors.lightBg}
+              propertyId={property.id}
+              propertyTitle={property.title}
+            />
+          )}
+
           {/* CASO 2: Propie - Estado y gestión */}
           {canManageProperty && (
             <>
@@ -919,165 +931,15 @@ export default function PropertyDetails() {
                 </div>
               </div>
 
-              {/* Agentes activos */}
-              {property.agents.length > 0 && (
-                <div
-                  style={{
-                    background: "white",
-                    borderRadius: 16,
-                    padding: "20px",
-                    border: "1.5px solid #e5e5ea",
-                  }}
-                >
-                  <h3
-                    style={{
-                      margin: "0 0 16px",
-                      fontSize: 16,
-                      fontWeight: 700,
-                      color: "#1a1a1a",
-                      fontFamily: "'Sora', sans-serif",
-                    }}
-                  >
-                    Agentes activos
-                  </h3>
-
-                  {property.agents.map((agent) => {
-                    const a = agent as {
-                      id?: string;
-                      name?: string;
-                      photo?: string;
-                      rating?: number;
-                      totalReviews?: number;
-                      activeListings?: number;
-                    };
-                    const listingCount = a.activeListings ?? 0;
-                    return (
-                      <div
-                        key={a.id ?? Math.random()}
-                        style={{
-                          background: colors.lightBg,
-                          borderRadius: 14,
-                          padding: "16px",
-                          marginBottom: 12,
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 12,
-                            marginBottom: 12,
-                          }}
-                        >
-                          {a.photo && (
-                            <img
-                              src={a.photo}
-                              alt={a.name}
-                              loading="lazy"
-                              decoding="async"
-                              style={{
-                                width: 48,
-                                height: 48,
-                                borderRadius: "50%",
-                                objectFit: "cover",
-                              }}
-                            />
-                          )}
-                          <div style={{ flex: 1 }}>
-                            <div
-                              style={{
-                                fontSize: 15,
-                                fontWeight: 600,
-                                color: "#1a1a1a",
-                                marginBottom: 2,
-                              }}
-                            >
-                              {a.name ?? ""}
-                            </div>
-                            <div style={{ fontSize: 12, color: "#6e6e73", display: "flex", alignItems: "center", gap: 4 }}>
-                              <Star
-                                size={12}
-                                color="#f59e0b"
-                                fill={a.rating ? "#f59e0b" : "none"}
-                              />
-                              <span style={{ fontWeight: 600, color: "#1a1a1a" }}>
-                                {a.rating ? a.rating.toFixed(1) : "—"}
-                              </span>
-                              {a.totalReviews !== undefined && a.totalReviews > 0 && (
-                                <span>({a.totalReviews})</span>
-                              )}
-                            </div>
-                          </div>
-                          <div
-                            style={{
-                              background: colors.primary,
-                              color: "white",
-                              padding: "4px 10px",
-                              borderRadius: 6,
-                              fontSize: 11,
-                              fontWeight: 600,
-                            }}
-                          >
-                            Autorizado
-                          </div>
-                        </div>
-                        <div style={{ display: "flex", gap: 8 }}>
-                          <button
-                            onClick={() => handleOpenChat(a.name ?? "Agente")}
-                            style={{
-                              flex: 1,
-                              background: colors.primary,
-                              border: "none",
-                              borderRadius: 10,
-                              padding: "10px",
-                              color: "white",
-                              fontSize: 14,
-                              fontWeight: 600,
-                              cursor: "pointer",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: 6,
-                            }}
-                          >
-                            <MessageCircle size={16} />
-                            Abrir chat
-                          </button>
-                          {a.id && (
-                            <button
-                              onClick={() =>
-                                navigate(`/agentes/${a.id}`, {
-                                  state: {
-                                    reviewPropertyId: property.id,
-                                    reviewPropertyTitle: property.title,
-                                  },
-                                })
-                              }
-                              style={{
-                                background: "white",
-                                border: "1.5px solid #e5e5ea",
-                                borderRadius: 10,
-                                padding: "10px 14px",
-                                cursor: "pointer",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                gap: 5,
-                                fontSize: 12,
-                                fontWeight: 600,
-                                color: "#1a1a1a",
-                              }}
-                            >
-                              <UserCheck size={15} color={colors.primary} />
-                              Perfil
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              <EnabledAgentsSection
+                agents={property.agents}
+                primaryColor={colors.primary}
+                lightBg={colors.lightBg}
+                propertyId={property.id}
+                propertyTitle={property.title}
+                showManagementActions
+                onOpenChat={handleOpenChat}
+              />
 
             </>
           )}

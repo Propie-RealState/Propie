@@ -1,5 +1,6 @@
 import { apiFetch } from "../../../../lib/api";
 import { API_URL } from "../../../../lib/api-base";
+import type { PropertyDTO } from "../../explore/types/property.dto";
 
 export type AgentReview = {
   id: string;
@@ -57,6 +58,38 @@ export type CanReviewResult = {
   reason: "OK" | "SELF_REVIEW" | "NO_ASSIGNMENT" | "ALREADY_REVIEWED";
   reviewableProperties: Array<{ property_id: string; property_title: string }>;
 };
+
+// ─── Public property lists for profiles ──────────────────────────────────────
+
+export async function getAgentCommercializedProperties(
+  agentId: string,
+): Promise<PropertyDTO[]> {
+  try {
+    const response = await fetch(
+      `${API_URL}/agents/${agentId}/commercialized-properties`,
+    );
+    if (!response.ok) return [];
+    const data = await response.json();
+    return data.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function getOwnerPublishedProperties(
+  ownerId: string,
+): Promise<PropertyDTO[]> {
+  try {
+    const response = await fetch(
+      `${API_URL}/agents/users/${ownerId}/published-properties`,
+    );
+    if (!response.ok) return [];
+    const data = await response.json();
+    return data.data ?? [];
+  } catch {
+    return [];
+  }
+}
 
 // ─── Full agent profile (for /agentes/:agentId page) ─────────────────────────
 

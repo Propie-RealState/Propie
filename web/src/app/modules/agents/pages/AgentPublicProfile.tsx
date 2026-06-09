@@ -24,6 +24,7 @@ import {
   type AgentPublicProfile as AgentProfile,
 } from "../services/agents.service";
 import { resolveMediaUrl } from "../../../../lib/api-base";
+import { ProfilePropertiesList } from "../components/ProfilePropertiesList";
 
 type AgentProfileLocationState = {
   reviewPropertyId?: string;
@@ -541,6 +542,15 @@ export default function AgentPublicProfile() {
               </div>
             </div>
           </div>
+
+          {agentId && (
+            <ProfilePropertiesList
+              title="Propiedades que comercializa"
+              userId={agentId}
+              variant="agent"
+              backTo={`/agentes/${agentId}`}
+            />
+          )}
 
           {/* Reviews */}
           <div

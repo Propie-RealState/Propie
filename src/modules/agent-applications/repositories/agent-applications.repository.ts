@@ -149,7 +149,7 @@ export async function updateOwnerAgentApplicationStatusRepository(input: {
             assigned_by
           )
           VALUES ($1, $2, $3)
-          ON CONFLICT (property_id)
+          ON CONFLICT (property_id, agent_id)
           WHERE is_active = true
           DO NOTHING
         `,
