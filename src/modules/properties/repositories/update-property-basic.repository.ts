@@ -11,6 +11,8 @@ export async function updatePropertyBasicRepository(input: {
 
   price: number;
 
+  currency: string;
+
   bedrooms: number;
 
   bathrooms: number;
@@ -34,9 +36,10 @@ export async function updatePropertyBasicRepository(input: {
         area_m2 = $6,
         property_type = $7,
         operation_type = $8,
+        currency = $9,
         updated_at = now()
 
-      WHERE id = $9
+      WHERE id = $10
     `,
     [
       input.title,
@@ -54,6 +57,8 @@ export async function updatePropertyBasicRepository(input: {
       input.propertyType,
 
       input.operationType,
+
+      input.currency,
 
       input.propertyId
     ],

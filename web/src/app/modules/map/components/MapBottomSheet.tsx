@@ -147,7 +147,7 @@ export const MapBottomSheet = memo(
 
                   <div className="propie-map-sheet-card-body">
                     <div className="propie-map-sheet-card-copy">
-                      <strong>{formatMapPrice(property.price)}</strong>
+                      <strong>{formatMapPrice(property.price, property.currency)}</strong>
                       <span>
                         {formatOperationType(property.operationType)} ·{" "}
                         {formatPropertyType(property.propertyType)}

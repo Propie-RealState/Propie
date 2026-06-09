@@ -5,6 +5,7 @@ import { useMyProperties } from "../hooks/useMyProperties";
 import { usePropertyPublish } from "../../publish/context/PropertyPublishContext";
 import { useAppTheme, useIsAgent } from "../../../../theme/useAppTheme";
 import { resolveMediaUrl } from "../../../../lib/api-base";
+import { formatPrice } from "../../explore/utils/formatPrice";
 
 export default function MyProperties() {
   const navigate = useNavigate();
@@ -272,7 +273,10 @@ export default function MyProperties() {
                     color: "#1a1a1a",
                   }}
                 >
-                  US$ {property.price}
+                  {formatPrice(
+                    property.price,
+                    property.currency === "ARS" ? "ARS" : "USD",
+                  )}
                 </div>
 
                 <button

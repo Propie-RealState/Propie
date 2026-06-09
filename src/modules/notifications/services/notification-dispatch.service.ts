@@ -11,6 +11,11 @@ import {
   findFavoriteUserIdsByPropertyRepository,
   findUsersNearPropertyRepository,
 } from "../repositories/notifications.repository";
+import {
+  DEFAULT_PROPERTY_CURRENCY,
+  formatPropertyPriceLabel,
+  type PropertyCurrency,
+} from "@/modules/properties/types/property-currency.types";
 
 function uniqueUserIds(userIds: string[]) {
   return [...new Set(userIds)];
@@ -20,10 +25,11 @@ async function getPropertySummary(propertyId: string) {
   const result = await db.query(
     `
       SELECT
-        p.id,
-        p.title,
-        p.price,
-        p.owner_id,
+      p.id,
+      p.title,
+      p.price,
+      p.currency,
+      p.owner_id,
         pl.city,
         pl.neighborhood
       FROM properties p
@@ -79,6 +85,7 @@ export async function notifyNewPropertyNearby(propertyId: string) {
     metadata: {
       propertyTitle: property.title,
       price: property.price,
+      currency: property.currency ?? "USD",
     },
   }));
 
@@ -125,11 +132,41 @@ export async function notifyPropertyPriceChanged(input: {
   propertyId: string;
   oldPrice: number;
   newPrice: number;
+  oldCurrency?: PropertyCurrency;
+  newCurrency?: PropertyCurrency;
   excludeUserId?: string;
 }) {
   const property = await getPropertySummary(input.propertyId);
+  const newCurrency =
+    input.newCurrency ??
+    property?.currency ??
+    DEFAULT_PROPERTY_CURRENCY;
+  const oldCurrency =
+    input.oldCurrency ??
+    property?.currency ??
+    DEFAULT_PROPERTY_CURRENCY;
   const title = "Cambio de precio";
-  const body = `${property?.title || "Una propiedad guardada"} ahora cuesta $${Number(input.newPrice).toLocaleString("es-AR")}`;
+  const propertyTitle = property?.title || "Una propiedad guardada";
+  const newPriceLabel = formatPropertyPriceLabel(
+    input.newPrice,
+    newCurrency,
+  );
+  const oldPriceLabel = formatPropertyPriceLabel(
+    input.oldPrice,
+    oldCurrency,
+  );
+
+  let body: string;
+  const priceChanged = input.oldPrice !== input.newPrice;
+  const currencyChanged = oldCurrency !== newCurrency;
+
+  if (priceChanged && currencyChanged) {
+    body = `${propertyTitle} ahora cuesta ${newPriceLabel} (antes ${oldPriceLabel})`;
+  } else if (currencyChanged) {
+    body = `${propertyTitle} ahora se publica en ${newCurrency} (${newPriceLabel})`;
+  } else {
+    body = `${propertyTitle} ahora cuesta ${newPriceLabel}`;
+  }
 
   return notifyFavoriteUsersOfPropertyChange({
     propertyId: input.propertyId,
@@ -139,6 +176,8 @@ export async function notifyPropertyPriceChanged(input: {
     metadata: {
       oldPrice: input.oldPrice,
       newPrice: input.newPrice,
+      oldCurrency,
+      newCurrency,
       propertyTitle: property?.title ?? null,
     },
     excludeUserId: input.excludeUserId,

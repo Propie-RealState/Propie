@@ -111,6 +111,7 @@ export async function getMapPropertiesRepository(
             ST_Y(pl.coordinates::geometry) AS lat,
             ST_X(pl.coordinates::geometry) AS lng,
             p.price,
+            p.currency,
             p.operation_type,
             p.property_type,
             p.bedrooms,
@@ -162,6 +163,7 @@ export async function getMapPropertiesRepository(
           SELECT
             p.id,
             p.price,
+            p.currency,
             p.operation_type,
             p.property_type,
             pl.coordinates::geometry AS geom,

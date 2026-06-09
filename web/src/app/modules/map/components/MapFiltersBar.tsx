@@ -135,7 +135,7 @@ export const MapFiltersBar = memo(
           aria-label="Precio minimo"
           inputMode="numeric"
           onChange={(event) => updateMinPrice(event.target.value)}
-          placeholder="Min USD"
+          placeholder="Precio mín."
           type="number"
           value={filters.minPrice ?? ""}
         />
@@ -143,7 +143,7 @@ export const MapFiltersBar = memo(
           aria-label="Precio maximo"
           inputMode="numeric"
           onChange={(event) => updateMaxPrice(event.target.value)}
-          placeholder="Max USD"
+          placeholder="Precio máx."
           type="number"
           value={filters.maxPrice ?? ""}
         />

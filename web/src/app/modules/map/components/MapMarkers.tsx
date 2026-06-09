@@ -39,7 +39,7 @@ const PropertyMarker = memo(
           }}
           type="button"
         >
-          {formatMapPrice(property.price)}
+          {formatMapPrice(property.price, property.currency)}
         </button>
       </Marker>
     );

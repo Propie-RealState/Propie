@@ -19,6 +19,8 @@ export function mapPropertyToPublishData(
 
     price: property.price || null,
 
+    currency: property.currency === "ARS" ? "ARS" : "USD",
+
     country: property.country || "",
     province: property.province || "",
     city: property.city || "",

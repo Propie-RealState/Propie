@@ -62,6 +62,8 @@ export default function EditProperty() {
 
           price: property.price,
 
+          currency: property.currency === "ARS" ? "ARS" : "USD",
+
           images: property.images.map((image: { url: string }) => image.url),
         });
 

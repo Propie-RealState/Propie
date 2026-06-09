@@ -1,15 +1,18 @@
+import type { PropertyCurrency } from "../../publish/types/property-publish.types";
+
 export function formatMapPrice(
-  price: number
+  price: number,
+  currency: PropertyCurrency = "USD",
 ) {
   if (price >= 1000000) {
-    return `USD ${(price / 1000000).toFixed(1)}M`;
+    return `${currency} ${(price / 1000000).toFixed(1)}M`;
   }
 
   if (price >= 1000) {
-    return `USD ${Math.round(price / 1000)}k`;
+    return `${currency} ${Math.round(price / 1000)}k`;
   }
 
-  return `USD ${Math.round(price)}`;
+  return `${currency} ${Math.round(price)}`;
 }
 
 export function formatOperationType(

@@ -4,6 +4,8 @@ export interface PropertyDTO {
     title: string;
   
     price: string;
+
+    currency?: string | null;
   
     property_type: string;
   

@@ -110,6 +110,7 @@ export default function PublishStep1() {
         title: data.title ?? "",
         description: data.description ?? "",
         price: Number(data.price ?? 0),
+        currency: data.currency ?? "USD",
         bedrooms: Number(data.bedrooms ?? 0),
         bathrooms: Number(data.bathrooms ?? 0),
         areaM2: Number(data.areaM2 ?? 0),

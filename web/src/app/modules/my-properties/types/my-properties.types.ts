@@ -7,6 +7,7 @@ export interface OwnedProperty {
   id: string;
   title: string;
   price: string;
+  currency?: string | null;
   property_type: string;
   operation_type: string;
   bedrooms: number;

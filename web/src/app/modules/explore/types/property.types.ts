@@ -1,3 +1,5 @@
+import type { PropertyCurrency } from "../../publish/types/property-publish.types";
+
 export interface Property {
   id: string;
 
@@ -6,6 +8,8 @@ export interface Property {
   location: string;
 
   price: string;
+
+  currency: PropertyCurrency;
 
   propertyType: string;
 
