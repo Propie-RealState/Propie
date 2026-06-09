@@ -25,6 +25,7 @@ import {
   type AgentReview,
   type UserPublicProfile as UserPublicProfileType,
 } from "../services/agents.service";
+import { ProfilePropertiesList } from "../components/ProfilePropertiesList";
 
 type UserProfileLocationState = {
   reviewPropertyId?: string;
@@ -517,6 +518,15 @@ export default function UserPublicProfile() {
               )}
             </div>
           </div>
+
+          {userId && profile.role === "OWNER" && (
+            <ProfilePropertiesList
+              title="Propiedades publicadas"
+              userId={userId}
+              variant="owner"
+              backTo={`/perfil/${userId}`}
+            />
+          )}
 
           {/* Reviews section */}
           <div

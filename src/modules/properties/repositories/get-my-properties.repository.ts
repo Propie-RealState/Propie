@@ -33,13 +33,14 @@ export async function getMyPropertiesRepository(userId: string) {
       ON pi.property_id = p.id
       AND pi.is_cover = true
 
-    LEFT JOIN property_assignments pa
-      ON pa.property_id = p.id
-      AND pa.agent_id = $1
-      AND pa.is_active = true
-  
     WHERE p.owner_id = $1
-      OR pa.agent_id = $1
+      OR EXISTS (
+        SELECT 1
+        FROM agent_applications aa
+        WHERE aa.property_id = p.id
+          AND aa.agent_id = $1
+          AND aa.status = 'ACCEPTED'
+      )
   
     ORDER BY p.id, p.created_at DESC
   `,

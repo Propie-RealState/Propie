@@ -87,11 +87,12 @@ export async function findPropertyByIdRepository(propertyId: string) {
                 'average_rating', COALESCE(ars.average_rating, 0),
                 'total_reviews', COALESCE(ars.total_reviews, 0)
               )
+              ORDER BY aa.updated_at DESC
             ),
             '[]'
           )
-          FROM property_assignments pa2
-          INNER JOIN users au ON au.id = pa2.agent_id
+          FROM agent_applications aa
+          INNER JOIN users au ON au.id = aa.agent_id
           LEFT JOIN profiles apr ON apr.user_id = au.id
           LEFT JOIN (
             SELECT
@@ -101,8 +102,8 @@ export async function findPropertyByIdRepository(propertyId: string) {
             FROM user_reviews
             GROUP BY target_user_id
           ) ars ON ars.target_user_id = au.id
-          WHERE pa2.property_id = p.id
-            AND pa2.is_active = true
+          WHERE aa.property_id = p.id
+            AND aa.status = 'ACCEPTED'
         ) AS agents
 
       FROM properties p

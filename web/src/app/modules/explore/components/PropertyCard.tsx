@@ -10,12 +10,16 @@ interface PropertyCardProps {
   property: Property;
   isFav: boolean;
   onToggleFav: () => void;
+  showFavorite?: boolean;
+  backTo?: string;
 }
 
 export default function PropertyCard({
   property,
   isFav,
-  onToggleFav
+  onToggleFav,
+  showFavorite = true,
+  backTo,
 }: PropertyCardProps) {
   const navigate = useNavigate();
   const theme = useAppTheme();
@@ -80,31 +84,32 @@ export default function PropertyCard({
                   : property.propertyType}
         </div>
 
-        {/* Favorite */}
-        <button
-          onClick={onToggleFav}
-          style={{
-            position: "absolute",
-            top: 18,
-            right: 18,
-            width: 46,
-            height: 46,
-            borderRadius: "50%",
-            border: "none",
-            background: "#fff",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            boxShadow: "0 4px 16px rgba(0,0,0,.12)",
-          }}
-        >
-          <Heart
-            size={22}
-            fill={isFav ? "#ef4444" : "transparent"}
-            color={isFav ? "#ef4444" : "#111"}
-          />
-        </button>
+        {showFavorite && (
+          <button
+            onClick={onToggleFav}
+            style={{
+              position: "absolute",
+              top: 18,
+              right: 18,
+              width: 46,
+              height: 46,
+              borderRadius: "50%",
+              border: "none",
+              background: "#fff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              boxShadow: "0 4px 16px rgba(0,0,0,.12)",
+            }}
+          >
+            <Heart
+              size={22}
+              fill={isFav ? "#ef4444" : "transparent"}
+              color={isFav ? "#ef4444" : "#111"}
+            />
+          </button>
+        )}
 
         {/* Price */}
         <div
@@ -201,7 +206,11 @@ export default function PropertyCard({
         </div>
 
         <button
-          onClick={() => navigate(`/propiedad/${property.id}`)}
+          onClick={() =>
+            navigate(`/propiedad/${property.id}`, {
+              state: backTo ? { backTo } : undefined,
+            })
+          }
           style={{
             marginTop: 10,
             border: "none",
