@@ -1,3 +1,5 @@
+import type { PropertyCurrency } from "../../publish/types/property-publish.types";
+
 export type MapMode =
   | "explore"
   | "nearby";
@@ -28,6 +30,7 @@ export type PropertyPin = {
   lat: number;
   lng: number;
   price: number;
+  currency: PropertyCurrency;
   operationType: string;
   propertyType: string;
   coverImage: string | null;

@@ -27,6 +27,7 @@ export type PropertyPin = {
   lat: number;
   lng: number;
   price: number;
+  currency: string;
   operationType: string;
   propertyType: string;
   coverImage: string | null;

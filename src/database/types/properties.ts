@@ -50,6 +50,20 @@ export type PropertyStatus =
 
 
 // ========================================================
+// PROPERTY CURRENCY
+// ========================================================
+
+export const PropertyCurrencySchema = z.enum([
+  'USD',
+  'ARS',
+]);
+
+export type PropertyCurrency =
+  z.infer<typeof PropertyCurrencySchema>;
+
+
+
+// ========================================================
 // PROPERTY IMAGE
 // ========================================================
 
@@ -122,6 +136,8 @@ export const PropertySchema = z.object({
 
   price: z.number().positive(),
 
+  currency: PropertyCurrencySchema.default('USD'),
+
   bedrooms: z
     .number()
     .int()
@@ -164,6 +180,8 @@ export const PublicPropertySchema =
     operationType: true,
 
     price: true,
+
+    currency: true,
 
     bedrooms: true,
 

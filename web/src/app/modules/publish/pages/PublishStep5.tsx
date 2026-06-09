@@ -11,6 +11,7 @@ import {
 } from "../services/publish-property";
 import PublishSuccessModal from "./PublishSuccess";
 import { useAppTheme } from "../../../../theme/useAppTheme";
+import { formatPrice } from "../../explore/utils/formatPrice";
 
 const propertyTypeLabel: Record<string, string> = {
   HOUSE:      "Casa",
@@ -83,7 +84,7 @@ export default function PublishStep5() {
   const isFormValid = checklist.autorizado && checklist.terminos && checklist.identidad;
 
   const previewPrice = data.price
-    ? `USD ${data.price.toLocaleString("es-AR")}`
+    ? formatPrice(data.price, data.currency ?? "USD")
     : "Sin precio";
 
   const previewAddress = data.address || data.city || "Sin ubicación";

@@ -10,6 +10,10 @@ export type ListingType =
   | "RENT"
   | "TEMPORARY";
 
+export type PropertyCurrency = "USD" | "ARS";
+
+export const PROPERTY_CURRENCIES: PropertyCurrency[] = ["USD", "ARS"];
+
 export type PublishMode = "create" | "edit";
 
 export interface PropertyPublishData {
@@ -36,6 +40,8 @@ export interface PropertyPublishData {
   areaM2: number | null;
 
   price: number | null;
+
+  currency: PropertyCurrency;
 
   images: string[];
 

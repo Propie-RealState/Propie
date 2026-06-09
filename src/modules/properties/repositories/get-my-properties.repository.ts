@@ -7,6 +7,7 @@ export async function getMyPropertiesRepository(userId: string) {
       p.id,
       p.title,
       p.price,
+      p.currency,
       p.property_type,
       p.operation_type,
       p.bedrooms,

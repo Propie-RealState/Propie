@@ -44,6 +44,8 @@ import {
     areaM2: null,
   
     price: null,
+
+    currency: "USD",
   
     images: [],
     commercializationType: "",

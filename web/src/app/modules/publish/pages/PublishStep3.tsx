@@ -8,6 +8,7 @@ import { usePropertyPublish } from "../context/PropertyPublishContext";
 import { updatePropertyBasic } from "../services/updatePropertyBasic";
 import { useAppTheme } from "../../../../theme/useAppTheme";
 import { amenitiesMap } from "../mappers/map-amenities-to-api";
+import type { PropertyCurrency } from "../types/property-publish.types";
   
 type AmenityType = "pileta" | "patio" | "balcon" | "mascotas" | "seguridad";
 
@@ -19,6 +20,7 @@ export default function PublishStep3() {
     title: "",
     description: "",
     price: "",
+    currency: "USD" as PropertyCurrency,
     rooms: "",
     bathrooms: "",
     sqm: "",
@@ -36,6 +38,7 @@ export default function PublishStep3() {
       title: data.title || "",
       description: data.description || "",
       price: data.price?.toString() || "",
+      currency: data.currency || "USD",
       rooms: data.bedrooms?.toString() || "",
       bathrooms: data.bathrooms?.toString() || "",
       sqm: data.areaM2?.toString() || "",
@@ -44,6 +47,7 @@ export default function PublishStep3() {
     data.title,
     data.description,
     data.price,
+    data.currency,
     data.bedrooms,
     data.bathrooms,
     data.areaM2,
@@ -99,6 +103,7 @@ export default function PublishStep3() {
         title: formData.title,
         description: formData.description,
         price: Number(formData.price),
+        currency: formData.currency,
         bedrooms: Number(formData.rooms),
         bathrooms: Number(formData.bathrooms),
         areaM2: Number(formData.sqm),
@@ -117,6 +122,8 @@ export default function PublishStep3() {
         description: formData.description,
 
         price: Number(formData.price),
+
+        currency: formData.currency,
 
         bedrooms: Number(formData.rooms),
 
@@ -449,20 +456,86 @@ export default function PublishStep3() {
             >
               Precio
             </label>
-            <div style={{ position: "relative" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "stretch",
+                borderRadius: 14,
+                border: formData.price
+                  ? "1.5px solid #34C759"
+                  : "1.5px solid #e5e5ea",
+                overflow: "hidden",
+                background: "white",
+                transition: "all 0.15s ease",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
+              }}
+            >
               <div
+                role="group"
+                aria-label="Moneda"
                 style={{
-                  position: "absolute",
-                  left: 16,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  fontSize: 15,
-                  color: "#6e6e73",
-                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                  padding: 6,
+                  borderRight: "1.5px solid #e5e5ea",
+                  background:
+                    "linear-gradient(180deg, #fafafa 0%, #f3f3f5 100%)",
                 }}
               >
-                USD
+                {(["USD", "ARS"] as PropertyCurrency[]).map((currency) => {
+                  const isActive = formData.currency === currency;
+
+                  return (
+                    <button
+                      key={currency}
+                      type="button"
+                      aria-pressed={isActive}
+                      onClick={() =>
+                        setFormData({
+                          ...formData,
+                          currency,
+                        })
+                      }
+                      style={{
+                        border: isActive
+                          ? `1.5px solid ${theme.primary}`
+                          : "1.5px solid transparent",
+                        borderRadius: 10,
+                        padding: "8px 11px",
+                        minWidth: 52,
+                        fontSize: 13,
+                        fontWeight: 700,
+                        letterSpacing: 0.2,
+                        cursor: "pointer",
+                        transition: "all 0.15s ease",
+                        background: isActive ? theme.primary : "white",
+                        color: isActive ? "white" : "#6e6e73",
+                        boxShadow: isActive
+                          ? "0 2px 8px rgba(197,46,62,0.18)"
+                          : "0 1px 2px rgba(0,0,0,0.04)",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (isActive) return;
+                        (e.currentTarget as HTMLButtonElement).style.color =
+                          theme.primary;
+                        (e.currentTarget as HTMLButtonElement).style.borderColor =
+                          "rgba(197,46,62,0.25)";
+                      }}
+                      onMouseLeave={(e) => {
+                        if (isActive) return;
+                        (e.currentTarget as HTMLButtonElement).style.color =
+                          "#6e6e73";
+                        (e.currentTarget as HTMLButtonElement).style.borderColor =
+                          "transparent";
+                      }}
+                    >
+                      {currency}
+                    </button>
+                  );
+                })}
               </div>
+              <div style={{ position: "relative", flex: 1 }}>
               <input
                 id="price"
                 type="text"
@@ -474,30 +547,29 @@ export default function PublishStep3() {
                 placeholder="0"
                 style={{
                   width: "100%",
-                  padding: "14px 48px 14px 56px",
-                  borderRadius: 14,
-                  border: formData.price
-                    ? "1.5px solid #34C759"
-                    : "1.5px solid #e5e5ea",
+                  padding: "14px 48px 14px 16px",
+                  border: "none",
                   fontSize: 15,
                   color: "#1a1a1a",
                   outline: "none",
-                  transition: "all 0.15s ease",
                   boxSizing: "border-box",
+                  background: "transparent",
                 }}
                 onFocus={(e) => {
-                  if (!formData.price) {
-                    (e.target as HTMLInputElement).style.borderColor =
-                      theme.primary;
-                    (e.target as HTMLInputElement).style.boxShadow =
+                  const container = (e.target as HTMLInputElement).parentElement
+                    ?.parentElement as HTMLDivElement | null;
+                  if (!formData.price && container) {
+                    container.style.borderColor = theme.primary;
+                    container.style.boxShadow =
                       "0 0 0 3px rgba(197,46,62,0.08)";
                   }
                 }}
                 onBlur={(e) => {
-                  if (!formData.price) {
-                    (e.target as HTMLInputElement).style.borderColor =
-                      "#e5e5ea";
-                    (e.target as HTMLInputElement).style.boxShadow = "none";
+                  const container = (e.target as HTMLInputElement).parentElement
+                    ?.parentElement as HTMLDivElement | null;
+                  if (!formData.price && container) {
+                    container.style.borderColor = "#e5e5ea";
+                    container.style.boxShadow = "none";
                   }
                 }}
               />
@@ -516,6 +588,7 @@ export default function PublishStep3() {
                   <Check size={18} color="#34C759" strokeWidth={2.5} />
                 </div>
               )}
+              </div>
             </div>
           </div>
 

@@ -4,7 +4,14 @@ import type {
     PropertyImageDTO,
     PropertyOwnerInfoDTO,
   } from "../types/property-details.dto";
+import type { PropertyCurrency } from "../../publish/types/property-publish.types";
 import { resolveMediaUrl } from "../../../../lib/api-base";
+
+function normalizeCurrency(
+  currency: string | null | undefined,
+): PropertyCurrency {
+  return currency === "ARS" ? "ARS" : "USD";
+}
   
   export function mapPropertyDetails(
     property: PropertyDetailsDTO
@@ -43,7 +50,9 @@ import { resolveMediaUrl } from "../../../../lib/api-base";
       operationType: property.operation_type,
   
       price: Number(property.price || 0),
-  
+
+      currency: normalizeCurrency(property.currency),
+
       bedrooms: property.bedrooms || 0,
   
       bathrooms: property.bathrooms || 0,

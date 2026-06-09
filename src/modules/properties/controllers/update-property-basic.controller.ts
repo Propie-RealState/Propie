@@ -38,6 +38,9 @@ import {
           price:
             request.body.price,
 
+          currency:
+            request.body.currency,
+
           bedrooms:
             request.body.bedrooms,
 

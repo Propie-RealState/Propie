@@ -12,6 +12,7 @@ type MapRow = {
   lat: string | number;
   lng: string | number;
   price?: string | number;
+  currency?: string;
   operation_type?: string;
   property_type?: string;
   count?: string | number;
@@ -25,6 +26,7 @@ type NearbyRow = {
   lat: string | number;
   lng: string | number;
   price: string | number;
+  currency?: string;
   operation_type: string;
   property_type: string;
   distance_meters: string | number;
@@ -47,6 +49,8 @@ export function mapPropertyPinRow(
       Number(row.lng),
     price:
       Number(row.price),
+    currency:
+      row.currency ?? "USD",
     operationType:
       row.operation_type ?? "",
     propertyType:

@@ -4,6 +4,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../../../context/AuthContext";
 import { mapPropertyDetails } from "../mappers/property-details.mapper";
 import { getPropertyById } from "../services/property-details.service";
+import { formatPrice } from "../utils/formatPrice";
 import {
   ArrowLeft,
   Share2,
@@ -256,14 +257,6 @@ function formatOperationType(type: string) {
   if (type === "SALE") return "En venta";
   if (type === "RENT") return "En alquiler";
   return type;
-}
-
-function formatPrice(price: number) {
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(price);
 }
 
 type PropertyDetailsLocationState = {
@@ -738,7 +731,7 @@ export default function PropertyDetails() {
                 fontFamily: "'Sora', sans-serif",
               }}
             >
-              {formatPrice(property.price)}
+              {formatPrice(property.price, property.currency)}
             </h1>
             <div
               style={{

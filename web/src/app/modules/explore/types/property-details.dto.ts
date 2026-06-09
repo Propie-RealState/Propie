@@ -22,6 +22,8 @@ export interface PropertyImageDTO {
     operation_type: string;
   
     price: string | null;
+
+    currency?: string | null;
   
     bedrooms: number | null;
   
