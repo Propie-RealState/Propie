@@ -136,6 +136,111 @@ export async function seedConversationFixture(): Promise<ConversationFixture> {
   };
 }
 
+export type StartConversationPropertyFixture = {
+  ownerId: string;
+  agentId: string;
+  clientId: string;
+  propertyId: string;
+  setAllowChat: (allowChat: boolean) => Promise<void>;
+};
+
+export async function seedStartConversationProperty(): Promise<StartConversationPropertyFixture> {
+  const ownerId = await createTestUser("OWNER");
+  const agentId = await createTestUser("AGENT");
+  const clientId = await createTestUser("CLIENT");
+
+  const property = await db.query<{ id: string }>(
+    `
+      INSERT INTO properties (
+        owner_id,
+        title,
+        property_type,
+        operation_type,
+        status
+      )
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING id
+    `,
+    [ownerId, "Start Conversation Property", "HOUSE", "SALE", "PUBLISHED"],
+  );
+
+  const propertyId = property.rows[0].id;
+
+  await db.query(
+    `
+      INSERT INTO property_commercialization (
+        property_id,
+        commercialization_type,
+        allow_chat
+      )
+      VALUES ($1, $2, true)
+    `,
+    [propertyId, "AGENTS"],
+  );
+
+  await db.query(
+    `
+      INSERT INTO property_assignments (
+        property_id,
+        agent_id,
+        assigned_by,
+        is_active
+      )
+      VALUES ($1, $2, $3, true)
+    `,
+    [propertyId, agentId, ownerId],
+  );
+
+  async function setAllowChat(allowChat: boolean) {
+    await db.query(
+      `
+        UPDATE property_commercialization
+        SET allow_chat = $2,
+            updated_at = now()
+        WHERE property_id = $1
+      `,
+      [propertyId, allowChat],
+    );
+  }
+
+  return {
+    ownerId,
+    agentId,
+    clientId,
+    propertyId,
+    setAllowChat,
+  };
+}
+
+export async function cleanupStartConversationProperty(
+  fixture: StartConversationPropertyFixture,
+) {
+  await db.query(
+    `DELETE FROM property_conversations WHERE property_id = $1`,
+    [fixture.propertyId],
+  );
+
+  await db.query(
+    `DELETE FROM property_commercialization WHERE property_id = $1`,
+    [fixture.propertyId],
+  );
+
+  await db.query(
+    `DELETE FROM property_assignments WHERE property_id = $1`,
+    [fixture.propertyId],
+  );
+
+  await db.query(
+    `DELETE FROM properties WHERE id = $1`,
+    [fixture.propertyId],
+  );
+
+  await db.query(
+    `DELETE FROM users WHERE id = ANY($1::uuid[])`,
+    [[fixture.ownerId, fixture.agentId, fixture.clientId]],
+  );
+}
+
 export async function cleanupFixture(fixture: ConversationFixture) {
   await db.query(
     `DELETE FROM property_conversations WHERE id = $1`,

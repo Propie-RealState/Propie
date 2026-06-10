@@ -79,3 +79,19 @@ export async function isActiveParticipant(
 
   return isActiveAgentOnProperty(userId, context.propertyId);
 }
+
+export async function getActiveAgentIdsForProperty(
+  propertyId: string,
+): Promise<string[]> {
+  const result = await db.query<{ agent_id: string }>(
+    `
+      SELECT agent_id
+      FROM property_assignments
+      WHERE property_id = $1
+        AND is_active = true
+    `,
+    [propertyId],
+  );
+
+  return result.rows.map((row) => row.agent_id);
+}

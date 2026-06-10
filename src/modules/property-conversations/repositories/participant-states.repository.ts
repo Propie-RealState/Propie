@@ -28,3 +28,36 @@ export async function getParticipantState(input: {
 
   return result.rows[0] ?? null;
 }
+
+type ParticipantSeed = {
+  userId: string;
+  role: "CLIENT" | "OWNER" | "AGENT";
+};
+
+export async function upsertParticipantStates(input: {
+  conversationId: string;
+  participants: ParticipantSeed[];
+}) {
+  for (const participant of input.participants) {
+    await db.query(
+      `
+        INSERT INTO property_conversation_participant_states (
+          conversation_id,
+          user_id,
+          participant_role
+        )
+        VALUES ($1, $2, $3)
+        ON CONFLICT (conversation_id, user_id)
+        DO UPDATE SET
+          participant_role = EXCLUDED.participant_role,
+          revoked_at = NULL,
+          updated_at = now()
+      `,
+      [
+        input.conversationId,
+        participant.userId,
+        participant.role,
+      ],
+    );
+  }
+}
