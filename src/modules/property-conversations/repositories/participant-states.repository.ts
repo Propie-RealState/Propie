@@ -108,13 +108,22 @@ export async function markConversationReadRepository(input: {
 }) {
   await db.query(
     `
-      UPDATE property_conversation_participant_states
+      UPDATE property_conversation_participant_states ps
       SET unread_count = 0,
           last_read_at = now(),
+          last_read_message_id = latest.id,
           updated_at = now()
-      WHERE conversation_id = $1
-        AND user_id = $2
-        AND revoked_at IS NULL
+      FROM (
+        SELECT id
+        FROM property_conversation_messages
+        WHERE conversation_id = $1
+          AND deleted_at IS NULL
+        ORDER BY created_at DESC
+        LIMIT 1
+      ) AS latest
+      WHERE ps.conversation_id = $1
+        AND ps.user_id = $2
+        AND ps.revoked_at IS NULL
     `,
     [input.conversationId, input.userId],
   );

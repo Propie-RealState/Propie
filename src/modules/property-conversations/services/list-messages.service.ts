@@ -1,7 +1,4 @@
-import {
-  canAccessConversation,
-  canReadMessageHistorically,
-} from "../repositories/can-access-conversation.repository";
+import { canAccessConversation } from "../repositories/can-access-conversation.repository";
 import { listConversationMessagesRepository } from "../repositories/messages.repository";
 import { getParticipantState } from "../repositories/participant-states.repository";
 import { findConversationByIdRepository } from "../repositories/property-conversations.repository";
@@ -39,25 +36,8 @@ export async function listMessagesService(input: {
     conversationId: input.conversationId,
     limit: input.limit,
     offset: input.offset,
+    createdBefore: canAccess ? null : state?.revoked_at ?? null,
   });
 
-  if (canAccess) {
-    return rows.map(mapMessageRow);
-  }
-
-  const historicalMessages = [];
-
-  for (const row of rows) {
-    const allowed = await canReadMessageHistorically({
-      userId: input.userId,
-      conversationId: input.conversationId,
-      messageCreatedAt: row.created_at,
-    });
-
-    if (allowed) {
-      historicalMessages.push(mapMessageRow(row));
-    }
-  }
-
-  return historicalMessages;
+  return rows.map(mapMessageRow);
 }

@@ -48,6 +48,14 @@ function handleConversationError(
           message: "Chat is disabled for this property",
         },
       });
+    case "CONVERSATION_CLOSED":
+      return reply.status(403).send({
+        success: false,
+        error: {
+          code: "CONVERSATION_CLOSED",
+          message: "Conversation is not open for new messages",
+        },
+      });
     case "EMPTY_MESSAGE":
       return reply.status(400).send({
         success: false,

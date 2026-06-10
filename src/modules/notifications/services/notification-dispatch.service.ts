@@ -4,6 +4,7 @@ import {
   NOTIFICATION_TYPES,
   type CreateNotificationInput,
 } from "../types/notification.types";
+import { getNotificationPreferencesRepository } from "../repositories/notifications.repository";
 import {
   createNotifications,
 } from "./notification.service";
@@ -286,8 +287,22 @@ export async function notifyPropertyConversationMessage(input: {
     return [];
   }
 
+  const enabledRecipientUserIds = [];
+
+  for (const userId of input.recipientUserIds) {
+    const preferences = await getNotificationPreferencesRepository(userId);
+
+    if (preferences?.messages_enabled ?? true) {
+      enabledRecipientUserIds.push(userId);
+    }
+  }
+
+  if (enabledRecipientUserIds.length === 0) {
+    return [];
+  }
+
   const inputs: CreateNotificationInput[] =
-    input.recipientUserIds.map((userId) => ({
+    enabledRecipientUserIds.map((userId) => ({
       userId,
       type: NOTIFICATION_TYPES.MESSAGE_RECEIVED,
       title: "Nuevo mensaje",

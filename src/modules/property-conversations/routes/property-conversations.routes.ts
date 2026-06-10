@@ -44,7 +44,10 @@ export async function propertyConversationsRoutes(
   app.get(
     "/historical",
     {
-      preHandler: [authMiddleware, requireAuthenticated],
+      preHandler: [
+        authMiddleware,
+        requireRoles([USER_ROLES.AGENT]),
+      ],
     },
     listHistoricalConversationsController as RouteHandlerMethod,
   );

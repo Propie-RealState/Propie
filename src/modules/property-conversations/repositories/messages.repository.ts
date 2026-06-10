@@ -51,6 +51,7 @@ export async function listConversationMessagesRepository(input: {
   conversationId: string;
   limit: number;
   offset: number;
+  createdBefore?: string | null;
 }) {
   const result = await db.query<PropertyConversationMessageRow>(
     `
@@ -68,11 +69,20 @@ export async function listConversationMessagesRepository(input: {
       FROM property_conversation_messages
       WHERE conversation_id = $1
         AND deleted_at IS NULL
+        AND (
+          $4::timestamptz IS NULL
+          OR created_at <= $4::timestamptz
+        )
       ORDER BY created_at ASC
       LIMIT $2
       OFFSET $3
     `,
-    [input.conversationId, input.limit, input.offset],
+    [
+      input.conversationId,
+      input.limit,
+      input.offset,
+      input.createdBefore ?? null,
+    ],
   );
 
   return result.rows;

@@ -7,6 +7,10 @@ import {
 } from "../repositories/participant-states.repository";
 import { getConversationContext } from "../repositories/participants.repository";
 import {
+  findConversationByIdRepository,
+  getPropertyChatGate,
+} from "../repositories/property-conversations.repository";
+import {
   insertConversationMessage,
   updateConversationLastMessage,
 } from "../repositories/messages.repository";
@@ -85,6 +89,24 @@ export async function sendMessageService(input: {
 
   if (!sender) {
     throw new Error("FORBIDDEN");
+  }
+
+  const conversation = await findConversationByIdRepository(
+    input.conversationId,
+  );
+
+  if (!conversation) {
+    throw new Error("CONVERSATION_NOT_FOUND");
+  }
+
+  if (conversation.status !== "OPEN") {
+    throw new Error("CONVERSATION_CLOSED");
+  }
+
+  const gate = await getPropertyChatGate(conversation.property_id);
+
+  if (!gate?.allowChat) {
+    throw new Error("CHAT_DISABLED");
   }
 
   const context = await getConversationContext(input.conversationId);

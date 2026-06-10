@@ -108,7 +108,8 @@ export async function listConversationsForUserRepository(
         OR p.owner_id = $1
         OR (
           pa.agent_id IS NOT NULL
-          AND (ps.user_id IS NULL OR ps.revoked_at IS NULL)
+          AND ps.user_id IS NOT NULL
+          AND ps.revoked_at IS NULL
         )
       ORDER BY pc.last_message_at DESC NULLS LAST, pc.updated_at DESC
     `,

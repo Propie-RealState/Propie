@@ -101,27 +101,15 @@ export async function seedConversationFixture(): Promise<ConversationFixture> {
   }
 
   async function deactivateAgent() {
-    await db.query(
-      `
-        UPDATE property_assignments
-        SET is_active = false,
-            ended_at = now()
-        WHERE property_id = $1
-          AND agent_id = $2
-      `,
-      [propertyId, agentId],
+    const { deactivatePropertyAgentAssignment } = await import(
+      "@/modules/property-conversations/services/deactivate-property-agent.service"
     );
 
-    await db.query(
-      `
-        UPDATE property_conversation_participant_states
-        SET revoked_at = now(),
-            updated_at = now()
-        WHERE conversation_id = $1
-          AND user_id = $2
-      `,
-      [conversationId, agentId],
-    );
+    await deactivatePropertyAgentAssignment({
+      propertyId,
+      agentId,
+      deactivatedBy: ownerId,
+    });
   }
 
   return {
