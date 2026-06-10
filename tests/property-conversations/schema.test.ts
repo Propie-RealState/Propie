@@ -1,4 +1,4 @@
-import { afterAll, describe, it, expect } from "vitest";
+import { describe, it, expect } from "vitest";
 
 import { db } from "@/database/client";
 
@@ -9,10 +9,6 @@ const EXPECTED_TABLES = [
 ] as const;
 
 describe("property conversations schema", () => {
-  afterAll(async () => {
-    await db.end();
-  });
-
   it("creates all property conversation tables", async () => {
     const result = await db.query<{ table_name: string }>(
       `
