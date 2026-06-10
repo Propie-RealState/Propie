@@ -44,6 +44,10 @@ import {
 import { NotificationsBell } from "../../../components/navigation/NotificationsBell";
 import { EnabledAgentsSection } from "../components/EnabledAgentsSection";
 import {
+  sendPropertyConversationMessage,
+  startPropertyConversation,
+} from "../../property-conversations/services/property-conversations.service";
+import {
   isFavorite,
   toggleFavoriteId,
 } from "../../../../lib/favorites-storage";
@@ -301,6 +305,7 @@ export default function PropertyDetails() {
   const [showChat, setShowChat] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [chatMessage, setChatMessage] = useState("");
+  const [isSendingChatMessage, setIsSendingChatMessage] = useState(false);
   const [chatMessages, setChatMessages] = useState<
     Array<{ from: string; message: string; time: string }>
   >([]);
@@ -431,19 +436,44 @@ export default function PropertyDetails() {
     });
   };
 
-  const handleSendMessage = () => {
-    if (chatMessage.trim()) {
-      const newMessage = {
-        from: "Propie",
-        message: chatMessage,
-        time: new Date().toLocaleTimeString("es-AR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
-      setChatMessages((prev) => [...prev, newMessage]);
-      setChatMessage("");
+  const handleSendMessage = async () => {
+    if (!chatMessage.trim()) {
+      return;
     }
+
+    if (userType === "client" && property?.id) {
+      try {
+        setIsSendingChatMessage(true);
+
+        const conversation = await startPropertyConversation(property.id);
+        await sendPropertyConversationMessage(
+          conversation.id,
+          chatMessage.trim(),
+        );
+
+        setShowChat(false);
+        setChatMessage("");
+        navigate(`/mensajes/${conversation.id}`);
+      } catch (error) {
+        console.error("Error starting property conversation:", error);
+        alert("No pudimos iniciar la conversación. Intentá nuevamente.");
+      } finally {
+        setIsSendingChatMessage(false);
+      }
+
+      return;
+    }
+
+    const newMessage = {
+      from: "Propie",
+      message: chatMessage,
+      time: new Date().toLocaleTimeString("es-AR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+    setChatMessages((prev) => [...prev, newMessage]);
+    setChatMessage("");
   };
 
   const handleEdit = async () => {
@@ -1176,7 +1206,7 @@ export default function PropertyDetails() {
                 type="text"
                 value={chatMessage}
                 onChange={(e) => setChatMessage(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                onKeyDown={(e) => e.key === "Enter" && void handleSendMessage()}
                 placeholder="Escribí tu mensaje..."
                 style={{
                   flex: 1,
@@ -1190,8 +1220,8 @@ export default function PropertyDetails() {
                 }}
               />
               <button
-                onClick={handleSendMessage}
-                disabled={!chatMessage.trim()}
+                onClick={() => void handleSendMessage()}
+                disabled={!chatMessage.trim() || isSendingChatMessage}
                 style={{
                   background: chatMessage.trim() ? colors.primary : "#e5e5ea",
                   border: "none",

@@ -36,7 +36,8 @@ import AgentPublicProfile from "./modules/agents/pages/AgentPublicProfile.tsx";
 import UserPublicProfile from "./modules/agents/pages/UserPublicProfile.tsx";
 import { PropertyPublishProvider } from "./modules/publish/context/PropertyPublishContext";
 import MyProperties from "./modules/my-properties/pages/MyProperties";
-import Messages from "./modules/agent-applications/pages/Messages";
+import ConversationsInbox from "./modules/property-conversations/pages/ConversationsInbox";
+import ConversationThread from "./modules/property-conversations/pages/ConversationThread";
 import Notifications from "./modules/agent-applications/pages/Notifications";
 
 const PropertyMap = lazy(
@@ -228,7 +229,16 @@ export const router =
           path: "mensajes",
           element: (
             <ProtectedRoute>
-              <Messages />
+              <ConversationsInbox />
+            </ProtectedRoute>
+          ),
+        },
+
+        {
+          path: "mensajes/:conversationId",
+          element: (
+            <ProtectedRoute>
+              <ConversationThread />
             </ProtectedRoute>
           ),
         },
