@@ -266,18 +266,40 @@ export async function notifyMessageReceived(input: {
   senderName: string;
   preview: string;
 }) {
-  return createNotifications([
-    {
-      userId: input.recipientUserId,
+  return notifyPropertyConversationMessage({
+    conversationId: input.conversationId,
+    propertyId: null,
+    senderName: input.senderName,
+    preview: input.preview,
+    recipientUserIds: [input.recipientUserId],
+  });
+}
+
+export async function notifyPropertyConversationMessage(input: {
+  conversationId: string;
+  propertyId: string | null;
+  senderName: string;
+  preview: string;
+  recipientUserIds: string[];
+}) {
+  if (input.recipientUserIds.length === 0) {
+    return [];
+  }
+
+  const inputs: CreateNotificationInput[] =
+    input.recipientUserIds.map((userId) => ({
+      userId,
       type: NOTIFICATION_TYPES.MESSAGE_RECEIVED,
       title: "Nuevo mensaje",
       body: `${input.senderName}: ${input.preview}`,
-      entityType: "conversation",
+      entityType: "property_conversation",
       entityId: input.conversationId,
       metadata: {
         senderName: input.senderName,
         preview: input.preview,
+        propertyId: input.propertyId,
       },
-    },
-  ]);
+    }));
+
+  return createNotifications(inputs);
 }

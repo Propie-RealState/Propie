@@ -26,6 +26,10 @@ export function getNotificationRoute(notification: {
   metadata: Record<string, unknown>;
 }) {
   if (notification.type === 'MESSAGE_RECEIVED') {
+    if (notification.entityId) {
+      return `/mensajes/${notification.entityId}`;
+    }
+
     return '/mensajes';
   }
 

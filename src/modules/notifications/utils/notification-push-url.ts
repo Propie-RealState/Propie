@@ -7,6 +7,10 @@ export function buildNotificationDeepLink(input: {
   entityId: string | null;
 }) {
   if (input.type === NOTIFICATION_TYPES.MESSAGE_RECEIVED) {
+    if (input.entityId) {
+      return `/mensajes/${input.entityId}`;
+    }
+
     return "/mensajes";
   }
 

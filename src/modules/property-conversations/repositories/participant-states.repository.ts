@@ -1,3 +1,5 @@
+import type { PoolClient } from "pg";
+
 import { db } from "@/database/client";
 
 import type { PropertyConversationParticipantStateRow } from "@/database/types/property-conversations";
@@ -60,4 +62,42 @@ export async function upsertParticipantStates(input: {
       ],
     );
   }
+}
+
+export async function incrementUnreadCountsForRecipients(
+  input: {
+    conversationId: string;
+    senderId: string;
+  },
+  client: PoolClient,
+) {
+  await client.query(
+    `
+      UPDATE property_conversation_participant_states
+      SET unread_count = unread_count + 1,
+          updated_at = now()
+      WHERE conversation_id = $1
+        AND user_id <> $2
+        AND revoked_at IS NULL
+    `,
+    [input.conversationId, input.senderId],
+  );
+}
+
+export async function listActiveNotificationRecipientIds(
+  conversationId: string,
+  senderId: string,
+): Promise<string[]> {
+  const result = await db.query<{ user_id: string }>(
+    `
+      SELECT user_id
+      FROM property_conversation_participant_states
+      WHERE conversation_id = $1
+        AND user_id <> $2
+        AND revoked_at IS NULL
+    `,
+    [conversationId, senderId],
+  );
+
+  return result.rows.map((row) => row.user_id);
 }
