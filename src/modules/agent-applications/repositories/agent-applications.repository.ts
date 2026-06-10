@@ -1,4 +1,5 @@
 import { db } from "@/database/client";
+import { syncParticipantsOnAgentEnabled } from "@/modules/property-conversations/services/sync-participants.service";
 
 export async function createAgentApplicationRepository(input: {
   propertyId: string;
@@ -159,9 +160,17 @@ export async function updateOwnerAgentApplicationStatusRepository(input: {
           input.ownerId,
         ],
       );
+
     }
 
     await client.query("COMMIT");
+
+    if (application && input.status === "ACCEPTED") {
+      await syncParticipantsOnAgentEnabled({
+        propertyId: application.property_id,
+        agentId: application.agent_id,
+      });
+    }
 
     return application ?? null;
   } catch (error) {
