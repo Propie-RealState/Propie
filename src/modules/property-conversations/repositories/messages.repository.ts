@@ -47,6 +47,37 @@ export async function insertConversationMessage(
   return result.rows[0];
 }
 
+export async function listConversationMessagesRepository(input: {
+  conversationId: string;
+  limit: number;
+  offset: number;
+}) {
+  const result = await db.query<PropertyConversationMessageRow>(
+    `
+      SELECT
+        id,
+        conversation_id,
+        sender_id,
+        sender_role,
+        content_type,
+        body,
+        metadata,
+        created_at,
+        edited_at,
+        deleted_at
+      FROM property_conversation_messages
+      WHERE conversation_id = $1
+        AND deleted_at IS NULL
+      ORDER BY created_at ASC
+      LIMIT $2
+      OFFSET $3
+    `,
+    [input.conversationId, input.limit, input.offset],
+  );
+
+  return result.rows;
+}
+
 export async function updateConversationLastMessage(
   input: {
     conversationId: string;

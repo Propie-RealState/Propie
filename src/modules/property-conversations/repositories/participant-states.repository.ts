@@ -101,3 +101,21 @@ export async function listActiveNotificationRecipientIds(
 
   return result.rows.map((row) => row.user_id);
 }
+
+export async function markConversationReadRepository(input: {
+  userId: string;
+  conversationId: string;
+}) {
+  await db.query(
+    `
+      UPDATE property_conversation_participant_states
+      SET unread_count = 0,
+          last_read_at = now(),
+          updated_at = now()
+      WHERE conversation_id = $1
+        AND user_id = $2
+        AND revoked_at IS NULL
+    `,
+    [input.conversationId, input.userId],
+  );
+}
