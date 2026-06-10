@@ -10,12 +10,19 @@ export type PropertyConversation = {
   leadScore: number | null;
   lastMessageAt: string | null;
   lastMessagePreview: string | null;
+  unreadCount?: number;
+  readOnly?: boolean;
   createdAt: string;
   updatedAt: string;
 };
 
+export type ConversationListRow = PropertyConversationRow & {
+  unread_count: number;
+};
+
 export function mapConversationRow(
   row: PropertyConversationRow,
+  unreadCount?: number,
 ): PropertyConversation {
   return {
     id: row.id,
@@ -27,7 +34,14 @@ export function mapConversationRow(
     leadScore: row.lead_score,
     lastMessageAt: row.last_message_at,
     lastMessagePreview: row.last_message_preview,
+    unreadCount,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+export function mapConversationListRow(
+  row: ConversationListRow,
+): PropertyConversation {
+  return mapConversationRow(row, row.unread_count);
 }

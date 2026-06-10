@@ -2,6 +2,8 @@ import { db } from "@/database/client";
 
 import type { PropertyConversationRow } from "@/database/types/property-conversations";
 
+import type { ConversationListRow } from "../utils/map-conversation";
+
 type PropertyChatGate = {
   propertyId: string;
   allowChat: boolean;
@@ -76,8 +78,8 @@ export async function upsertPropertyConversation(input: {
 
 export async function listConversationsForUserRepository(
   userId: string,
-): Promise<PropertyConversationRow[]> {
-  const result = await db.query<PropertyConversationRow>(
+): Promise<ConversationListRow[]> {
+  const result = await db.query<ConversationListRow>(
     `
       SELECT DISTINCT
         pc.id,
@@ -90,7 +92,8 @@ export async function listConversationsForUserRepository(
         pc.last_message_at,
         pc.last_message_preview,
         pc.created_at,
-        pc.updated_at
+        pc.updated_at,
+        COALESCE(ps.unread_count, 0) AS unread_count
       FROM property_conversations pc
       INNER JOIN properties p
         ON p.id = pc.property_id
