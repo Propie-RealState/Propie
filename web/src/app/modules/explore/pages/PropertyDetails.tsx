@@ -45,6 +45,7 @@ import { NotificationsBell } from "../../../components/navigation/NotificationsB
 import { EnabledAgentsSection } from "../components/EnabledAgentsSection";
 import {
   listPropertyConversations,
+  startInternalPropertyConversation,
   startPropertyConversation,
 } from "../../property-conversations/services/property-conversations.service";
 import {
@@ -302,13 +303,8 @@ export default function PropertyDetails() {
     useState<AgentApplicationStatus | null>(null);
   const [approvedRequests, setApprovedRequests] = useState<string[]>([]);
   const [rejectedRequests, setRejectedRequests] = useState<string[]>([]);
-  const [showChat, setShowChat] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
-  const [chatMessage, setChatMessage] = useState("");
-  const [chatMessages, setChatMessages] = useState<
-    Array<{ from: string; message: string; time: string }>
-  >([]);
   const [isStartingConversation, setIsStartingConversation] = useState(false);
+  const [isOpeningInternalChat, setIsOpeningInternalChat] = useState(false);
   const [propertyConversationCount, setPropertyConversationCount] = useState(0);
 
   const getUserType = (): UserType => {
@@ -430,10 +426,8 @@ export default function PropertyDetails() {
     }
   };
 
-  const handleApproveRequest = (requestId: string, agentName: string) => {
+  const handleApproveRequest = (requestId: string) => {
     setApprovedRequests((prev) => [...prev, requestId]);
-    setSelectedAgent(agentName);
-    setTimeout(() => setShowChat(true), 1000);
   };
 
   const handleRejectRequest = (requestId: string) => {
@@ -444,26 +438,41 @@ export default function PropertyDetails() {
     setRejectedRequests((prev) => prev.filter((rid) => rid !== requestId));
   };
 
-  const handleOpenChat = (agentName: string) => {
-    setSelectedAgent(agentName);
-    setShowChat(true);
-  };
-
-  const handleSendMessage = () => {
-    if (!chatMessage.trim()) {
+  const handleOpenChat = async (agentId: string) => {
+    if (!property?.id || isOpeningInternalChat) {
       return;
     }
 
-    const newMessage = {
-      from: "Propie",
-      message: chatMessage,
-      time: new Date().toLocaleTimeString("es-AR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-    setChatMessages((prev) => [...prev, newMessage]);
-    setChatMessage("");
+    try {
+      setIsOpeningInternalChat(true);
+      const conversation = await startInternalPropertyConversation(
+        property.id,
+        agentId,
+      );
+      navigate(`/mensajes/${conversation.id}`);
+    } catch (error) {
+      console.error("Error opening internal conversation:", error);
+      alert("No pudimos abrir el chat. Intentá nuevamente.");
+    } finally {
+      setIsOpeningInternalChat(false);
+    }
+  };
+
+  const handleOpenOwnerChat = async () => {
+    if (!property?.id || isOpeningInternalChat) {
+      return;
+    }
+
+    try {
+      setIsOpeningInternalChat(true);
+      const conversation = await startInternalPropertyConversation(property.id);
+      navigate(`/mensajes/${conversation.id}`);
+    } catch (error) {
+      console.error("Error opening owner conversation:", error);
+      alert("No pudimos abrir el chat. Intentá nuevamente.");
+    } finally {
+      setIsOpeningInternalChat(false);
+    }
   };
 
   const handleOpenOwnerProfile = () => {
@@ -996,286 +1005,16 @@ export default function PropertyDetails() {
                 lightBg={colors.lightBg}
                 propertyId={property.id}
                 propertyTitle={property.title}
-                showManagementActions
-                onOpenChat={handleOpenChat}
+                showManagementActions={isOwner}
+                showOwnerChat={isAgent}
+                onOpenChat={isOwner ? handleOpenChat : undefined}
+                onOpenOwnerChat={isAgent ? handleOpenOwnerChat : undefined}
               />
 
             </>
           )}
         </div>
       </div>
-
-      {/* Modal: Chat owner ↔ agente */}
-      {showChat && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "center",
-            zIndex: 100,
-            padding: 0,
-            animation: "fadeIn 0.2s ease",
-          }}
-          onClick={() => setShowChat(false)}
-        >
-          <div
-            style={{
-              background: "white",
-              borderRadius: "20px 20px 0 0",
-              maxWidth: 640,
-              width: "100%",
-              height: "80vh",
-              display: "flex",
-              flexDirection: "column",
-              animation: "slideUp 0.3s ease",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              style={{
-                padding: "20px",
-                borderBottom: "1px solid #e5e5ea",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: "50%",
-                    background: colors.lightBg,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <UserCheck size={22} color={colors.primary} />
-                </div>
-                <div>
-                  <div
-                    style={{
-                      fontSize: 16,
-                      fontWeight: 700,
-                      color: "#1a1a1a",
-                      fontFamily: "'Sora', sans-serif",
-                    }}
-                  >
-                    {selectedAgent}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color: "#10b981",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: "50%",
-                        background: "#10b981",
-                      }}
-                    />
-                    En línea
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowChat(false)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 4,
-                }}
-              >
-                <X size={24} color="#1a1a1a" />
-              </button>
-            </div>
-
-            <div
-              style={{
-                flex: 1,
-                overflowY: "auto",
-                padding: "20px",
-                display: "flex",
-                flexDirection: "column",
-                gap: 16,
-              }}
-            >
-              <div style={{ textAlign: "center", padding: "12px 0" }}>
-                <div
-                  style={{
-                    background: "#f5f5f7",
-                    display: "inline-block",
-                    padding: "8px 16px",
-                    borderRadius: 12,
-                    fontSize: 12,
-                    color: "#6e6e73",
-                  }}
-                >
-                  Chat iniciado con {selectedAgent}
-                </div>
-              </div>
-
-              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                <div
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: "50%",
-                    background: "linear-gradient(135deg, #fff4ed 0%, #ffe8d6 100%)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <UserCheck size={16} color="#C52E3E" />
-                </div>
-                <div>
-                  <div
-                    style={{
-                      background: "#f5f5f7",
-                      padding: "12px 16px",
-                      borderRadius: "16px 16px 16px 4px",
-                      maxWidth: 280,
-                    }}
-                  >
-                    <div style={{ fontSize: 14, color: "#1a1a1a", lineHeight: 1.5 }}>
-                      ¡Gracias por aprobar mi solicitud! Me encantaría coordinar una
-                      visita para conocer mejor la propiedad.
-                    </div>
-                  </div>
-                  <div
-                    style={{ fontSize: 11, color: "#9a9aa0", marginTop: 4, marginLeft: 4 }}
-                  >
-                    Ahora
-                  </div>
-                </div>
-              </div>
-
-              {chatMessages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    display: "flex",
-                    gap: 10,
-                    alignItems: "flex-start",
-                    flexDirection: msg.from === "Propie" ? "row-reverse" : "row",
-                  }}
-                >
-                  {msg.from !== "Propie" && (
-                    <div
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: "50%",
-                        background: "linear-gradient(135deg, #fff4ed 0%, #ffe8d6 100%)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                      }}
-                    >
-                      <UserCheck size={16} color="#C52E3E" />
-                    </div>
-                  )}
-                  <div style={{ textAlign: msg.from === "Propie" ? "right" : "left" }}>
-                    <div
-                      style={{
-                        background: msg.from === "Propie" ? colors.primary : "#f5f5f7",
-                        color: msg.from === "Propie" ? "white" : "#1a1a1a",
-                        padding: "12px 16px",
-                        borderRadius:
-                          msg.from === "Propie"
-                            ? "16px 16px 4px 16px"
-                            : "16px 16px 16px 4px",
-                        maxWidth: 280,
-                        display: "inline-block",
-                      }}
-                    >
-                      <div style={{ fontSize: 14, lineHeight: 1.5 }}>{msg.message}</div>
-                    </div>
-                    <div
-                      style={{ fontSize: 11, color: "#9a9aa0", marginTop: 4, marginLeft: 4 }}
-                    >
-                      {msg.time}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div
-              style={{
-                padding: "16px 20px",
-                borderTop: "1px solid #e5e5ea",
-                display: "flex",
-                gap: 12,
-                alignItems: "center",
-              }}
-            >
-              <input
-                type="text"
-                value={chatMessage}
-                onChange={(e) => setChatMessage(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                placeholder="Escribí tu mensaje..."
-                style={{
-                  flex: 1,
-                  padding: "12px 16px",
-                  borderRadius: 14,
-                  border: "1.5px solid #e5e5ea",
-                  fontSize: 14,
-                  color: "#1a1a1a",
-                  outline: "none",
-                  fontFamily: "'Inter', sans-serif",
-                }}
-              />
-              <button
-                onClick={handleSendMessage}
-                disabled={!chatMessage.trim()}
-                style={{
-                  background: chatMessage.trim() ? colors.primary : "#e5e5ea",
-                  border: "none",
-                  borderRadius: 12,
-                  padding: "12px 16px",
-                  cursor: chatMessage.trim() ? "pointer" : "not-allowed",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Send size={18} color={chatMessage.trim() ? "white" : "#9a9aa0"} />
-              </button>
-            </div>
-          </div>
-
-          <style>{`
-            @keyframes fadeIn {
-              from { opacity: 0; }
-              to { opacity: 1; }
-            }
-            @keyframes slideUp {
-              from { transform: translateY(100%); }
-              to { transform: translateY(0); }
-            }
-          `}</style>
-        </div>
-      )}
 
       {/* Modal: Solicitud de agente */}
       {showRequestModal && (

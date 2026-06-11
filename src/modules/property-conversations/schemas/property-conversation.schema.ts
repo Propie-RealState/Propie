@@ -4,6 +4,11 @@ export const StartConversationSchema = z.object({
   propertyId: z.string().uuid(),
 });
 
+export const StartInternalConversationSchema = z.object({
+  propertyId: z.string().uuid(),
+  agentId: z.string().uuid().optional(),
+});
+
 export const SendMessageSchema = z.object({
   body: z.string().min(1).max(4000),
 });

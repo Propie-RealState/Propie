@@ -1,7 +1,10 @@
 import { MessageCircle } from "lucide-react";
 
 import type { PropertyConversation } from "../types/property-conversation.types";
-import { CONVERSATION_ROLE_COLORS } from "../utils/conversation-role-ui";
+import {
+  CONVERSATION_ROLE_COLORS,
+  getConversationRoleColor,
+} from "../utils/conversation-role-ui";
 
 type ConversationListItemProps = {
   conversation: PropertyConversation;
@@ -13,7 +16,19 @@ export function ConversationListItem({
   onClick,
 }: ConversationListItemProps) {
   const unread = conversation.unreadCount ?? 0;
-  const clientColor = CONVERSATION_ROLE_COLORS.CLIENT;
+  const roleLabel = conversation.inboxRoleLabel ?? "Cliente";
+  const subtitle = conversation.inboxSubtitle ?? "Consulta de propiedad";
+  const propertyTitle = conversation.propertyTitle;
+  const roleColor =
+    conversation.conversationType === "PROPERTY_INTERNAL"
+      ? getConversationRoleColor(
+          roleLabel === "Agente"
+            ? "AGENT"
+            : roleLabel === "Propietario"
+              ? "OWNER"
+              : "CLIENT",
+        )
+      : CONVERSATION_ROLE_COLORS.CLIENT;
 
   return (
     <button
@@ -37,14 +52,14 @@ export function ConversationListItem({
           width: 44,
           height: 44,
           borderRadius: 12,
-          background: `${clientColor}14`,
+          background: `${roleColor}14`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           flexShrink: 0,
         }}
       >
-        <MessageCircle size={22} color={clientColor} />
+        <MessageCircle size={22} color={roleColor} />
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -65,10 +80,10 @@ export function ConversationListItem({
               fontFamily: "'Sora', sans-serif",
             }}
           >
-            <span style={{ color: clientColor }}>Cliente</span>
+            <span style={{ color: roleColor }}>{roleLabel}</span>
             <span style={{ color: "#9a9aa0", fontWeight: 600 }}>
               {" "}
-              · Consulta de propiedad
+              · {subtitle}
             </span>
           </h3>
           {unread > 0 && (
@@ -77,7 +92,7 @@ export function ConversationListItem({
                 minWidth: 22,
                 height: 22,
                 borderRadius: 999,
-                background: clientColor,
+                background: roleColor,
                 color: "white",
                 fontSize: 12,
                 fontWeight: 700,
@@ -91,6 +106,22 @@ export function ConversationListItem({
             </span>
           )}
         </div>
+
+        {propertyTitle && (
+          <p
+            style={{
+              margin: "4px 0 0",
+              fontSize: 13,
+              fontWeight: 600,
+              color: "#1a1a1a",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {propertyTitle}
+          </p>
+        )}
 
         <p
           style={{

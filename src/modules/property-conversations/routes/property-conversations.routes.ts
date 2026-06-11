@@ -11,6 +11,7 @@ import {
   markReadController,
   sendMessageController,
   startConversationController,
+  startInternalConversationController,
 } from "../controllers/property-conversations.controller";
 
 export async function propertyConversationsRoutes(
@@ -31,6 +32,17 @@ export async function propertyConversationsRoutes(
       ],
     },
     startConversationController as RouteHandlerMethod,
+  );
+
+  app.post(
+    "/internal",
+    {
+      preHandler: [
+        authMiddleware,
+        requireRoles([USER_ROLES.OWNER, USER_ROLES.AGENT]),
+      ],
+    },
+    startInternalConversationController as RouteHandlerMethod,
   );
 
   app.get(

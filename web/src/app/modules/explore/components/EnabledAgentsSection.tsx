@@ -16,7 +16,9 @@ type EnabledAgentsSectionProps = {
   propertyId?: string;
   propertyTitle?: string;
   showManagementActions?: boolean;
-  onOpenChat?: (agentName: string) => void;
+  onOpenChat?: (agentId: string) => void;
+  onOpenOwnerChat?: () => void;
+  showOwnerChat?: boolean;
 };
 
 export function EnabledAgentsSection({
@@ -27,6 +29,8 @@ export function EnabledAgentsSection({
   propertyTitle,
   showManagementActions = false,
   onOpenChat,
+  onOpenOwnerChat,
+  showOwnerChat = false,
 }: EnabledAgentsSectionProps) {
   const navigate = useNavigate();
 
@@ -45,6 +49,38 @@ export function EnabledAgentsSection({
 
   return (
     <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+      }}
+    >
+      {showOwnerChat && onOpenOwnerChat && (
+        <button
+          type="button"
+          onClick={onOpenOwnerChat}
+          style={{
+            width: "100%",
+            background: primaryColor,
+            border: "none",
+            borderRadius: 10,
+            padding: "12px",
+            color: "white",
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+          }}
+        >
+          <MessageCircle size={16} />
+          Abrir chat con propietario
+        </button>
+      )}
+
+      <div
       style={{
         background: "white",
         borderRadius: 16,
@@ -171,7 +207,7 @@ export function EnabledAgentsSection({
                 <div style={{ display: "flex", gap: 8 }}>
                   <button
                     type="button"
-                    onClick={() => onOpenChat(agent.name)}
+                    onClick={() => onOpenChat(agent.id)}
                     style={{
                       flex: 1,
                       background: primaryColor,
@@ -218,6 +254,7 @@ export function EnabledAgentsSection({
           );
         })}
       </div>
+    </div>
     </div>
   );
 }

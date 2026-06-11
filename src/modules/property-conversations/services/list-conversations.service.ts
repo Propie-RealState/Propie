@@ -6,5 +6,5 @@ export async function listConversationsService(input: {
 }) {
   const rows = await listConversationsForUserRepository(input.userId);
 
-  return rows.map(mapConversationListRow);
+  return rows.map((row) => mapConversationListRow(row, input.userId));
 }

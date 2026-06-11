@@ -53,10 +53,11 @@ export async function seedConversationFixture(): Promise<ConversationFixture> {
     `
       INSERT INTO property_conversations (
         property_id,
+        conversation_type,
         client_id,
         status
       )
-      VALUES ($1, $2, 'OPEN')
+      VALUES ($1, 'PROPERTY_CLIENT', $2, 'OPEN')
       RETURNING id
     `,
     [propertyId, clientId],
@@ -231,8 +232,8 @@ export async function cleanupStartConversationProperty(
 
 export async function cleanupFixture(fixture: ConversationFixture) {
   await db.query(
-    `DELETE FROM property_conversations WHERE id = $1`,
-    [fixture.conversationId],
+    `DELETE FROM property_conversations WHERE property_id = $1`,
+    [fixture.propertyId],
   );
 
   await db.query(

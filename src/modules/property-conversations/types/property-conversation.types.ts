@@ -1,3 +1,11 @@
+export const PROPERTY_CONVERSATION_TYPES = [
+  "PROPERTY_CLIENT",
+  "PROPERTY_INTERNAL",
+] as const;
+
+export type PropertyConversationType =
+  (typeof PROPERTY_CONVERSATION_TYPES)[number];
+
 export const PROPERTY_CONVERSATION_STATUSES = [
   "OPEN",
   "ARCHIVED",

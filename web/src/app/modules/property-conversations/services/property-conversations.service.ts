@@ -35,6 +35,21 @@ export async function startPropertyConversation(propertyId: string) {
   return response.data;
 }
 
+export async function startInternalPropertyConversation(
+  propertyId: string,
+  agentId?: string,
+) {
+  const response = await apiFetch("/property-conversations/internal", {
+    method: "POST",
+    body: JSON.stringify({
+      propertyId,
+      ...(agentId ? { agentId } : {}),
+    }),
+  }) as ApiResponse<PropertyConversation>;
+
+  return response.data;
+}
+
 export async function getPropertyConversation(conversationId: string) {
   const response = await apiFetch(
     `/property-conversations/${conversationId}`,
