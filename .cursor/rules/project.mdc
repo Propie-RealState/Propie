@@ -1,0 +1,25 @@
+# Propie Project Rules
+
+This is a real estate marketplace platform.
+
+Tech Stack:
+- Next.js
+- TypeScript
+- GraphQL
+- Supabase
+- PostgreSQL
+- Tailwind
+- Playwright
+
+Architecture:
+- Owner
+- Agent
+- Client
+
+Rules:
+- Use TypeScript strictly.
+- Avoid any.
+- Prefer server components.
+- Follow existing GraphQL patterns.
+- Create Playwright tests for new features.
+- Keep UI responsive.

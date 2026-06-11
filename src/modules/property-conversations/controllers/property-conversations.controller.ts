@@ -5,6 +5,7 @@ import {
   ListMessagesQuerySchema,
   SendMessageSchema,
   StartConversationSchema,
+  StartInternalConversationSchema,
 } from "../schemas/property-conversation.schema";
 import { getConversationService } from "../services/get-conversation.service";
 import { listConversationsService } from "../services/list-conversations.service";
@@ -13,6 +14,7 @@ import { listMessagesService } from "../services/list-messages.service";
 import { markReadService } from "../services/mark-read.service";
 import { sendMessageService } from "../services/send-message.service";
 import { startConversationService } from "../services/start-conversation.service";
+import { startInternalConversationService } from "../services/start-internal-conversation.service";
 
 function handleConversationError(
   error: unknown,
@@ -57,11 +59,20 @@ function handleConversationError(
         },
       });
     case "EMPTY_MESSAGE":
+    case "AGENT_REQUIRED":
       return reply.status(400).send({
         success: false,
         error: {
-          code: "EMPTY_MESSAGE",
-          message: "Message body is required",
+          code: error.message,
+          message: error.message,
+        },
+      });
+    case "AGENT_NOT_ACTIVE":
+      return reply.status(403).send({
+        success: false,
+        error: {
+          code: "AGENT_NOT_ACTIVE",
+          message: "Agent is not active on this property",
         },
       });
     default:
@@ -79,6 +90,28 @@ export async function startConversationController(
     const conversation = await startConversationService({
       clientId: request.user.id,
       propertyId: body.propertyId,
+    });
+
+    return reply.status(201).send({
+      success: true,
+      data: conversation,
+    });
+  } catch (error) {
+    return handleConversationError(error, reply);
+  }
+}
+
+export async function startInternalConversationController(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const body = StartInternalConversationSchema.parse(request.body);
+
+    const conversation = await startInternalConversationService({
+      userId: request.user.id,
+      propertyId: body.propertyId,
+      agentId: body.agentId,
     });
 
     return reply.status(201).send({

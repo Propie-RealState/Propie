@@ -13,6 +13,14 @@
 - Status enum: `OPEN`, `ARCHIVED`, `CLOSED`
 - Preserve `assigned_agent_id` and `metadata JSONB`
 
+## Unification (approved 2026-06-11)
+
+- `conversation_type`: `PROPERTY_CLIENT` | `PROPERTY_INTERNAL`
+- `internal_agent_id`: agent participant in owner↔agent threads (≠ `assigned_agent_id`)
+- `assigned_agent_id` remains reserved for CRM / lead ownership / Propie Brain
+- Single inbox at `/mensajes`; owner-agent modal removed
+- Plan: `docs/superpowers/plans/2026-06-11-property-conversations-unification.md`
+
 ## Implementation plan
 
 See `docs/superpowers/plans/2026-06-09-property-conversations.md`

@@ -4,6 +4,7 @@ import {
   MESSAGE_CONTENT_TYPES,
   PARTICIPANT_ROLES,
   PROPERTY_CONVERSATION_STATUSES,
+  PROPERTY_CONVERSATION_TYPES,
 } from "@/modules/property-conversations/types/property-conversation.types";
 
 export const PropertyConversationStatusSchema = z.enum(
@@ -18,10 +19,16 @@ export const MessageContentTypeSchema = z.enum(MESSAGE_CONTENT_TYPES);
 
 export const ParticipantRoleSchema = z.enum(PARTICIPANT_ROLES);
 
+export const PropertyConversationTypeSchema = z.enum(
+  PROPERTY_CONVERSATION_TYPES,
+);
+
 export const PropertyConversationRowSchema = z.object({
   id: z.string().uuid(),
   property_id: z.string().uuid(),
-  client_id: z.string().uuid(),
+  conversation_type: PropertyConversationTypeSchema,
+  client_id: z.string().uuid().nullable(),
+  internal_agent_id: z.string().uuid().nullable(),
   status: PropertyConversationStatusSchema,
   assigned_agent_id: z.string().uuid().nullable(),
   metadata: z.record(z.string(), z.unknown()),

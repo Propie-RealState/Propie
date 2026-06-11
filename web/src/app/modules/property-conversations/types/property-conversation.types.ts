@@ -1,9 +1,15 @@
 export type PropertyConversationStatus = "OPEN" | "ARCHIVED" | "CLOSED";
 
+export type PropertyConversationType =
+  | "PROPERTY_CLIENT"
+  | "PROPERTY_INTERNAL";
+
 export type PropertyConversation = {
   id: string;
   propertyId: string;
-  clientId: string;
+  conversationType: PropertyConversationType;
+  clientId: string | null;
+  internalAgentId: string | null;
   status: PropertyConversationStatus;
   assignedAgentId: string | null;
   metadata: Record<string, unknown>;
@@ -12,6 +18,12 @@ export type PropertyConversation = {
   lastMessagePreview: string | null;
   unreadCount?: number;
   readOnly?: boolean;
+  propertyTitle?: string;
+  inboxRoleLabel?: string;
+  inboxSubtitle?: string;
+  headerParticipantRole?: "CLIENT" | "OWNER" | "AGENT";
+  headerParticipantName?: string;
+  headerParticipantIsOnline?: boolean;
   createdAt: string;
   updatedAt: string;
 };

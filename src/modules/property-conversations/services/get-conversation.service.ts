@@ -2,14 +2,14 @@ import {
   canAccessConversation,
 } from "../repositories/can-access-conversation.repository";
 import { getParticipantState } from "../repositories/participant-states.repository";
-import { findConversationByIdRepository } from "../repositories/property-conversations.repository";
-import { mapConversationRow } from "../utils/map-conversation";
+import { findConversationDetailByIdRepository } from "../repositories/property-conversations.repository";
+import { mapConversationDetailRow } from "../utils/map-conversation";
 
 export async function getConversationService(input: {
   userId: string;
   conversationId: string;
 }) {
-  const conversation = await findConversationByIdRepository(
+  const conversation = await findConversationDetailByIdRepository(
     input.conversationId,
   );
 
@@ -23,10 +23,9 @@ export async function getConversationService(input: {
   });
 
   if (canAccess) {
-    return {
-      ...mapConversationRow(conversation),
+    return mapConversationDetailRow(conversation, input.userId, {
       readOnly: false,
-    };
+    });
   }
 
   const state = await getParticipantState({
@@ -35,10 +34,9 @@ export async function getConversationService(input: {
   });
 
   if (state?.revoked_at) {
-    return {
-      ...mapConversationRow(conversation),
+    return mapConversationDetailRow(conversation, input.userId, {
       readOnly: true,
-    };
+    });
   }
 
   throw new Error("FORBIDDEN");

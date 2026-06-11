@@ -20,6 +20,7 @@ import {
   emitPropertyConversationsChanged,
   formatMessageAuthorLabel,
   getConversationRoleColor,
+  getConversationRoleLabel,
 } from "../utils/conversation-role-ui";
 
 function formatAuthUserName(user: {
@@ -181,7 +182,7 @@ export default function ConversationThread() {
           <ArrowLeft size={20} />
         </button>
 
-        <div>
+        <div style={{ minWidth: 0 }}>
           <h1
             style={{
               margin: 0,
@@ -189,10 +190,55 @@ export default function ConversationThread() {
               fontWeight: 700,
               color: "#1a1a1a",
               fontFamily: "'Sora', sans-serif",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
             }}
           >
-            Conversación
+            {conversation?.propertyTitle || "Conversación"}
           </h1>
+          {conversation?.headerParticipantRole && (
+            <p
+              style={{
+                margin: "2px 0 0",
+                fontSize: 13,
+                fontWeight: 600,
+                color: getConversationRoleColor(conversation.headerParticipantRole),
+              }}
+            >
+              {getConversationRoleLabel(conversation.headerParticipantRole)}
+              {" · "}
+              {conversation.headerParticipantName || "Usuario"}
+            </p>
+          )}
+          {conversation?.headerParticipantRole && (
+            <p
+              style={{
+                margin: "2px 0 0",
+                fontSize: 12,
+                color: conversation.headerParticipantIsOnline
+                  ? "#10b981"
+                  : "#9a9aa0",
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: conversation.headerParticipantIsOnline
+                    ? "#10b981"
+                    : "#9a9aa0",
+                }}
+              />
+              {conversation.headerParticipantIsOnline
+                ? "En línea"
+                : "Desconectado"}
+            </p>
+          )}
           {conversation?.readOnly && (
             <p style={{ margin: "2px 0 0", fontSize: 12, color: "#6e6e73" }}>
               Solo lectura

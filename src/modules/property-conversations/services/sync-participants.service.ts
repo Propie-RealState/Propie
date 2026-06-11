@@ -12,6 +12,7 @@ export async function syncParticipantsOnAgentEnabled(input: {
       FROM property_conversations
       WHERE property_id = $1
         AND status = 'OPEN'
+        AND conversation_type = 'PROPERTY_CLIENT'
     `,
     [input.propertyId],
   );
