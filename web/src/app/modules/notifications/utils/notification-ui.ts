@@ -26,14 +26,19 @@ export function getNotificationRoute(notification: {
   metadata: Record<string, unknown>;
 }) {
   if (notification.type === 'MESSAGE_RECEIVED') {
+    if (notification.entityId) {
+      return `/mensajes/${notification.entityId}`;
+    }
+
     return '/mensajes';
   }
 
-  if (
-    notification.type === 'AGENT_APPLICATION_RECEIVED' ||
-    notification.type.startsWith('AGENT_APPLICATION_')
-  ) {
-    return '/notificaciones';
+  if (notification.type === 'AGENT_APPLICATION_RECEIVED') {
+    return '/solicitudes-agentes';
+  }
+
+  if (notification.type.startsWith('AGENT_APPLICATION_')) {
+    return '/solicitudes-agentes';
   }
 
   if (

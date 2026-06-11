@@ -33,6 +33,7 @@ import { searchRoutes } from "./modules/search/routes/search.routes";
 import { favoritesRoutes } from "./modules/favorites/routes/favorites.routes";
 
 import { chatsRoutes } from "./modules/chats/routes/chats.routes";
+import { propertyConversationsRoutes } from "./modules/property-conversations/routes/property-conversations.routes";
 
 import { notificationsRoutes } from "./modules/notifications/routes/notifications.routes";
 
@@ -190,6 +191,13 @@ export async function buildApp() {
     chatsRoutes,
     {
       prefix: "/chats",
+    }
+  );
+
+  await app.register(
+    propertyConversationsRoutes,
+    {
+      prefix: "/property-conversations",
     }
   );
 

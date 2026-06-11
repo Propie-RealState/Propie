@@ -1,14 +1,16 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Bell,
   Briefcase,
+  Check,
   Clock,
   Heart,
   MapPin,
   MessageCircle,
   TrendingDown,
+  X,
 } from "lucide-react";
 
 import { useAppTheme } from "../../../../theme/useAppTheme";
@@ -16,6 +18,13 @@ import { emitPushEngagement } from "../../../../lib/push-notifications";
 import { AppFooterNav } from "../../../components/navigation/AppFooterNav";
 import { NotificationsBell } from "../../../components/navigation/NotificationsBell";
 import { useNotifications } from "../../notifications/hooks/useNotifications";
+import {
+  getOwnerAgentApplications,
+  updateOwnerAgentApplicationStatus,
+  type AgentApplicationStatus,
+  type OwnerAgentApplication,
+} from "../services/agent-applications.service";
+import type { NotificationItem } from "../../notifications/services/notifications.service";
 
 function NotificationIcon({
   type,
@@ -44,6 +53,26 @@ function NotificationIcon({
   }
 }
 
+function isAgentApplicationRequest(notification: NotificationItem) {
+  return (
+    notification.type === "AGENT_APPLICATION_RECEIVED" &&
+    Boolean(notification.entityId)
+  );
+}
+
+function getApplicationStatusLabel(status: AgentApplicationStatus) {
+  switch (status) {
+    case "ACCEPTED":
+      return "Aceptada";
+    case "REJECTED":
+      return "Rechazada";
+    case "CANCELLED":
+      return "Cancelada";
+    default:
+      return "Pendiente";
+  }
+}
+
 export default function Notifications() {
   const navigate = useNavigate();
   const colors = useAppTheme();
@@ -56,11 +85,82 @@ export default function Notifications() {
     markAllRead,
     loadMore,
     getRoute,
+    reload,
   } = useNotifications();
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [applicationStatuses, setApplicationStatuses] = useState<
+    Record<string, AgentApplicationStatus>
+  >({});
 
   useEffect(() => {
     emitPushEngagement();
   }, []);
+
+  useEffect(() => {
+    async function loadApplicationStatuses() {
+      try {
+        const applications = await getOwnerAgentApplications();
+        setApplicationStatuses(
+          Object.fromEntries(
+            applications.map((application: OwnerAgentApplication) => [
+              application.id,
+              application.status,
+            ]),
+          ),
+        );
+      } catch (error) {
+        console.error("Error loading agent applications", error);
+      }
+    }
+
+    void loadApplicationStatuses();
+
+    const refresh = () => {
+      void loadApplicationStatuses();
+    };
+
+    window.addEventListener("agent-applications:changed", refresh);
+
+    return () => {
+      window.removeEventListener("agent-applications:changed", refresh);
+    };
+  }, []);
+
+  async function handleApplicationStatus(
+    notification: NotificationItem,
+    status: "ACCEPTED" | "REJECTED",
+  ) {
+    if (!notification.entityId) {
+      return;
+    }
+
+    try {
+      setUpdatingId(notification.entityId);
+      await updateOwnerAgentApplicationStatus(notification.entityId, status);
+      setApplicationStatuses((current) => ({
+        ...current,
+        [notification.entityId!]: status,
+      }));
+      if (!notification.read) {
+        await markRead(notification.id);
+      }
+      await reload();
+      window.dispatchEvent(new Event("agent-applications:changed"));
+    } catch (error) {
+      console.error("Error updating application", error);
+      const message =
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error &&
+        typeof error.message === "string"
+          ? error.message
+          : "No pudimos actualizar la solicitud.";
+      alert(message);
+      window.dispatchEvent(new Event("agent-applications:changed"));
+    } finally {
+      setUpdatingId(null);
+    }
+  }
 
   const unreadCount = items.filter((item) => !item.read).length;
 
@@ -170,7 +270,7 @@ export default function Notifications() {
                   lineHeight: 1.5,
                 }}
               >
-                Propiedades cercanas, favoritos, mensajes y solicitudes.
+                Propiedades cercanas, favoritos y solicitudes de agente.
               </p>
             </div>
 
@@ -239,110 +339,220 @@ export default function Notifications() {
                 </div>
               </div>
             ) : (
-              items.map((notification) => (
-                <button
-                  key={notification.id}
-                  type="button"
-                  onClick={() => {
-                    if (!notification.read) {
-                      void markRead(notification.id);
-                    }
-                    navigate(getRoute(notification));
-                  }}
-                  style={{
-                    width: "100%",
-                    border: "none",
-                    borderTop: "1px solid #f0f0f0",
-                    background: notification.read ? "white" : "#faf9ff",
-                    padding: "16px 18px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: 12,
-                    textAlign: "left",
-                  }}
-                >
+              items.map((notification) => {
+                const applicationId = notification.entityId;
+                const applicationStatus = applicationId
+                  ? applicationStatuses[applicationId]
+                  : undefined;
+                const isPendingApplication =
+                  isAgentApplicationRequest(notification) &&
+                  applicationStatus === "PENDING";
+                const isResolvedApplication =
+                  isAgentApplicationRequest(notification) &&
+                  applicationStatus !== undefined &&
+                  applicationStatus !== "PENDING";
+                const isUpdating =
+                  applicationId !== null && updatingId === applicationId;
+
+                return (
                   <div
+                    key={notification.id}
                     style={{
-                      width: 42,
-                      height: 42,
-                      borderRadius: 12,
-                      background: colors.lightBg,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
+                      width: "100%",
+                      borderTop: "1px solid #f0f0f0",
+                      background: notification.read ? "white" : "#faf9ff",
+                      padding: "16px 18px",
                     }}
                   >
-                    <NotificationIcon
-                      type={notification.type}
-                      color={colors.primary}
-                    />
-                  </div>
-
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!notification.read) {
+                          void markRead(notification.id);
+                        }
+                        navigate(getRoute(notification));
+                      }}
                       style={{
+                        width: "100%",
+                        border: "none",
+                        background: "transparent",
+                        padding: 0,
+                        cursor: "pointer",
                         display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        marginBottom: 4,
+                        alignItems: "flex-start",
+                        gap: 12,
+                        textAlign: "left",
                       }}
                     >
                       <div
                         style={{
-                          fontSize: 14,
-                          fontWeight: 800,
-                          color: "#1a1a1a",
+                          width: 42,
+                          height: 42,
+                          borderRadius: 12,
+                          background: colors.lightBg,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
                         }}
                       >
-                        {notification.title}
-                      </div>
-                      {!notification.read && (
-                        <span
-                          style={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: "50%",
-                            background: colors.primary,
-                            flexShrink: 0,
-                          }}
+                        <NotificationIcon
+                          type={notification.type}
+                          color={colors.primary}
                         />
-                      )}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        color: "#6e6e73",
-                        lineHeight: 1.45,
-                      }}
-                    >
-                      {notification.body}
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 5,
-                        color: "#9a9aa0",
-                        fontSize: 12,
-                        marginTop: 8,
-                      }}
-                    >
-                      <Clock size={13} />
-                      {new Date(notification.createdAt).toLocaleString(
-                        "es-AR",
-                        {
-                          day: "2-digit",
-                          month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        },
-                      )}
-                    </div>
+                      </div>
+
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            marginBottom: 4,
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 14,
+                              fontWeight: 800,
+                              color: "#1a1a1a",
+                            }}
+                          >
+                            {notification.title}
+                          </div>
+                          {!notification.read && (
+                            <span
+                              style={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: "50%",
+                                background: colors.primary,
+                                flexShrink: 0,
+                              }}
+                            />
+                          )}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 13,
+                            color: "#6e6e73",
+                            lineHeight: 1.45,
+                          }}
+                        >
+                          {notification.body}
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 5,
+                            color: "#9a9aa0",
+                            fontSize: 12,
+                            marginTop: 8,
+                          }}
+                        >
+                          <Clock size={13} />
+                          {new Date(notification.createdAt).toLocaleString(
+                            "es-AR",
+                            {
+                              day: "2-digit",
+                              month: "short",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            },
+                          )}
+                        </div>
+                      </div>
+                    </button>
+
+                    {isPendingApplication && applicationId && (
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 10,
+                          marginTop: 12,
+                          marginLeft: 54,
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void handleApplicationStatus(
+                              notification,
+                              "REJECTED",
+                            );
+                          }}
+                          disabled={isUpdating}
+                          style={{
+                            flex: 1,
+                            background: "white",
+                            border: "1.5px solid #fee2e2",
+                            borderRadius: 12,
+                            padding: "11px 12px",
+                            color: "#ef4444",
+                            fontSize: 13,
+                            fontWeight: 800,
+                            cursor: isUpdating ? "not-allowed" : "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 6,
+                          }}
+                        >
+                          <X size={15} />
+                          Rechazar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void handleApplicationStatus(
+                              notification,
+                              "ACCEPTED",
+                            );
+                          }}
+                          disabled={isUpdating}
+                          style={{
+                            flex: 1,
+                            background: colors.primary,
+                            border: "none",
+                            borderRadius: 12,
+                            padding: "11px 12px",
+                            color: "white",
+                            fontSize: 13,
+                            fontWeight: 800,
+                            cursor: isUpdating ? "not-allowed" : "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 6,
+                            boxShadow: colors.buttonShadow,
+                          }}
+                        >
+                          <Check size={15} />
+                          Aceptar
+                        </button>
+                      </div>
+                    )}
+
+                    {isResolvedApplication && applicationStatus && (
+                      <div
+                        style={{
+                          marginTop: 12,
+                          marginLeft: 54,
+                          fontSize: 12,
+                          fontWeight: 700,
+                          color:
+                            applicationStatus === "ACCEPTED"
+                              ? "#166534"
+                              : "#6e6e73",
+                        }}
+                      >
+                        Solicitud {getApplicationStatusLabel(applicationStatus).toLowerCase()}
+                      </div>
+                    )}
                   </div>
-                </button>
-              ))
+                );
+              })
             )}
 
             {hasMore && !loading && (

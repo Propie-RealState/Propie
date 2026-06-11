@@ -1,9 +1,7 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance } from "fastify";
 
-import { requireRoles } from '@/middlewares/require-roles.middleware';
-import {
-  USER_ROLES,
-} from '@/constants/roles';
+import { requireRoles } from "@/middlewares/require-roles.middleware";
+import { USER_ROLES } from "@/constants/roles";
 
 export async function chatsRoutes(
   app: FastifyInstance,
@@ -15,25 +13,28 @@ export async function chatsRoutes(
   ]);
 
   app.get(
-    '/',
+    "/",
     { preHandler: requireAuthenticated },
     async (_request, reply) => {
-      return reply.send({
-        success: true,
-        data: [],
+      return reply.status(410).send({
+        success: false,
+        error: {
+          code: "DEPRECATED",
+          message: "Use /property-conversations",
+        },
       });
     },
   );
 
   app.post(
-    '/',
+    "/",
     { preHandler: requireAuthenticated },
     async (_request, reply) => {
-      return reply.status(501).send({
+      return reply.status(410).send({
         success: false,
         error: {
-          code: 'NOT_IMPLEMENTED',
-          message: 'Chat messaging is not implemented yet',
+          code: "DEPRECATED",
+          message: "Use /property-conversations",
         },
       });
     },

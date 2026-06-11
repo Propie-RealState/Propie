@@ -7,6 +7,10 @@ export function buildNotificationDeepLink(input: {
   entityId: string | null;
 }) {
   if (input.type === NOTIFICATION_TYPES.MESSAGE_RECEIVED) {
+    if (input.entityId) {
+      return `/mensajes/${input.entityId}`;
+    }
+
     return "/mensajes";
   }
 
@@ -14,7 +18,7 @@ export function buildNotificationDeepLink(input: {
     input.type === NOTIFICATION_TYPES.AGENT_APPLICATION_RECEIVED ||
     input.type.startsWith("AGENT_APPLICATION_")
   ) {
-    return "/notificaciones";
+    return "/solicitudes-agentes";
   }
 
   if (input.entityType === "property" && input.entityId) {

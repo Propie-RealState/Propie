@@ -6,6 +6,7 @@ import {
   markNotificationRead,
   type NotificationItem,
 } from "../services/notifications.service";
+import { excludePropertyConversationNotifications } from "../utils/notification-filters";
 import { getNotificationRoute } from "../utils/notification-ui";
 
 export function useNotifications() {
@@ -28,8 +29,12 @@ export function useNotifications() {
         offset: nextOffset,
       });
 
+      const visibleItems = excludePropertyConversationNotifications(
+        response.items,
+      );
+
       setItems((current) =>
-        append ? [...current, ...response.items] : response.items,
+        append ? [...current, ...visibleItems] : visibleItems,
       );
       setOffset(nextOffset + response.items.length);
       setHasMore(Boolean(response.meta?.hasMore));

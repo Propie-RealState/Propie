@@ -6,6 +6,13 @@ import {
   mapNotificationRow,
 } from "../utils/map-notification";
 
+const EXCLUDE_PROPERTY_CONVERSATION_NOTIFICATIONS = `
+  NOT (
+    type = 'MESSAGE_RECEIVED'
+    AND entity_type = 'property_conversation'
+  )
+`;
+
 export async function createNotificationRepository(
   input: CreateNotificationInput,
 ) {
@@ -79,7 +86,7 @@ export async function listNotificationsRepository(input: {
   unreadOnly?: boolean;
 }) {
   const values: unknown[] = [input.userId];
-  const filters = ["user_id = $1"];
+  const filters = ["user_id = $1", EXCLUDE_PROPERTY_CONVERSATION_NOTIFICATIONS];
 
   if (input.unreadOnly) {
     filters.push("read_at IS NULL");
@@ -111,7 +118,7 @@ export async function countNotificationsRepository(input: {
   unreadOnly?: boolean;
 }) {
   const values: unknown[] = [input.userId];
-  const filters = ["user_id = $1"];
+  const filters = ["user_id = $1", EXCLUDE_PROPERTY_CONVERSATION_NOTIFICATIONS];
 
   if (input.unreadOnly) {
     filters.push("read_at IS NULL");

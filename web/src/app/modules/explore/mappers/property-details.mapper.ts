@@ -60,6 +60,8 @@ function normalizeCurrency(
       areaM2: property.area_m2 || 0,
   
       status: property.status,
+
+      allowChat: property.allow_chat ?? true,
   
       createdAt: property.created_at,
   

@@ -14,10 +14,10 @@ export async function canManageProperty(
             p.owner_id = $1
             OR EXISTS (
               SELECT 1
-              FROM agent_applications aa
-              WHERE aa.property_id = p.id
-                AND aa.agent_id = $1
-                AND aa.status = 'ACCEPTED'
+              FROM property_assignments pa
+              WHERE pa.property_id = p.id
+                AND pa.agent_id = $1
+                AND pa.is_active = true
             )
           )
       ) AS can_manage

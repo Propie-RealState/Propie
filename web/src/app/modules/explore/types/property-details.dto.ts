@@ -55,6 +55,8 @@ export interface PropertyImageDTO {
   
     images: PropertyImageDTO[];
 
+    allow_chat?: boolean | null;
+
     agents?: PropertyAgentDTO[] | null;
 
     owner_info?: PropertyOwnerInfoDTO | null;
