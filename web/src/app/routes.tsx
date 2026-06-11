@@ -39,6 +39,7 @@ import MyProperties from "./modules/my-properties/pages/MyProperties";
 import ConversationsInbox from "./modules/property-conversations/pages/ConversationsInbox";
 import ConversationThread from "./modules/property-conversations/pages/ConversationThread";
 import Notifications from "./modules/agent-applications/pages/Notifications";
+import AgentApplications from "./modules/agent-applications/pages/Messages";
 
 const PropertyMap = lazy(
   () => import("./modules/map/pages/PropertyMap")
@@ -248,6 +249,15 @@ export const router =
           element: (
             <ProtectedRoute>
               <Notifications />
+            </ProtectedRoute>
+          ),
+        },
+
+        {
+          path: "solicitudes-agentes",
+          element: (
+            <ProtectedRoute>
+              <AgentApplications />
             </ProtectedRoute>
           ),
         },

@@ -9,6 +9,7 @@ export type AppTheme = {
   buttonShadow: string;
   buttonHoverShadow: string;
   saleBadge: string;
+  conversationClient: string;
   rgb: string;
 };
 
@@ -24,6 +25,7 @@ export const PROPIE_THEME: AppTheme = {
   buttonShadow: "0 4px 16px rgba(68,23,230,0.24)",
   buttonHoverShadow: "0 6px 20px rgba(68,23,230,0.32)",
   saleBadge: "#4f46e5",
+  conversationClient: "#10B981",
   rgb: "68, 23, 230",
 };
 
@@ -39,6 +41,7 @@ export const AGENT_THEME: AppTheme = {
   buttonShadow: "0 4px 16px rgba(197,46,62,0.24)",
   buttonHoverShadow: "0 6px 20px rgba(197,46,62,0.32)",
   saleBadge: "#C52E3E",
+  conversationClient: "#10B981",
   rgb: "197, 46, 62",
 };
 

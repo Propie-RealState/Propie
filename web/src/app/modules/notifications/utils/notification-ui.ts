@@ -33,11 +33,12 @@ export function getNotificationRoute(notification: {
     return '/mensajes';
   }
 
-  if (
-    notification.type === 'AGENT_APPLICATION_RECEIVED' ||
-    notification.type.startsWith('AGENT_APPLICATION_')
-  ) {
-    return '/notificaciones';
+  if (notification.type === 'AGENT_APPLICATION_RECEIVED') {
+    return '/solicitudes-agentes';
+  }
+
+  if (notification.type.startsWith('AGENT_APPLICATION_')) {
+    return '/solicitudes-agentes';
   }
 
   if (

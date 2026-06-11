@@ -1,8 +1,10 @@
 import {
   countPendingOwnerAgentApplicationsRepository,
   createAgentApplicationRepository,
+  findOwnerAgentApplicationByIdRepository,
   getAgentApplicationByPropertyRepository,
   getOwnerAgentApplicationsRepository,
+  revokeOwnerAgentApplicationRepository,
   updateOwnerAgentApplicationStatusRepository,
 } from "../repositories/agent-applications.repository";
 import {
@@ -73,6 +75,20 @@ export async function getAgentApplicationByProperty(input: {
 
 export async function countPendingOwnerAgentApplications(ownerId: string) {
   return countPendingOwnerAgentApplicationsRepository(ownerId);
+}
+
+export async function findOwnerAgentApplicationById(input: {
+  applicationId: string;
+  ownerId: string;
+}) {
+  return findOwnerAgentApplicationByIdRepository(input);
+}
+
+export async function revokeOwnerAgentApplication(input: {
+  applicationId: string;
+  ownerId: string;
+}) {
+  return revokeOwnerAgentApplicationRepository(input);
 }
 
 export async function updateOwnerAgentApplicationStatus(input: {

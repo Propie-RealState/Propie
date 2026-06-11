@@ -16,7 +16,6 @@ import {
   ChevronLeft,
   ChevronRight,
   MessageCircle,
-  UserCheck,
   Star,
   Send,
   Edit,
@@ -29,6 +28,7 @@ import {
   Clock,
   X,
   Briefcase,
+  UserCheck,
 } from "lucide-react";
 
 import { findPropertyById } from "../../publish/services/find-property-by-id";
@@ -44,7 +44,7 @@ import {
 import { NotificationsBell } from "../../../components/navigation/NotificationsBell";
 import { EnabledAgentsSection } from "../components/EnabledAgentsSection";
 import {
-  sendPropertyConversationMessage,
+  listPropertyConversations,
   startPropertyConversation,
 } from "../../property-conversations/services/property-conversations.service";
 import {
@@ -305,10 +305,11 @@ export default function PropertyDetails() {
   const [showChat, setShowChat] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [chatMessage, setChatMessage] = useState("");
-  const [isSendingChatMessage, setIsSendingChatMessage] = useState(false);
   const [chatMessages, setChatMessages] = useState<
     Array<{ from: string; message: string; time: string }>
   >([]);
+  const [isStartingConversation, setIsStartingConversation] = useState(false);
+  const [propertyConversationCount, setPropertyConversationCount] = useState(0);
 
   const getUserType = (): UserType => {
     if (!isLoggedIn) return "guest";
@@ -325,6 +326,8 @@ export default function PropertyDetails() {
   const isAgent = userType === "agente";
   const canManageProperty =
     isOwner || agentApplicationStatus === "ACCEPTED";
+  const canContactProperty =
+    property?.status === "PUBLISHED" && property?.allowChat !== false;
   const requestSent =
     agentApplicationStatus === "PENDING" ||
     agentApplicationStatus === "REJECTED";
@@ -362,6 +365,29 @@ export default function PropertyDetails() {
 
     loadAgentApplicationStatus();
   }, [id, user?.id, user?.role]);
+
+  useEffect(() => {
+    async function loadPropertyConversationCount() {
+      if (!property?.id || !canManageProperty) {
+        setPropertyConversationCount(0);
+        return;
+      }
+
+      try {
+        const conversations = await listPropertyConversations();
+        setPropertyConversationCount(
+          conversations.filter(
+            (conversation) => conversation.propertyId === property.id,
+          ).length,
+        );
+      } catch (error) {
+        console.error("Error loading property conversation count:", error);
+        setPropertyConversationCount(0);
+      }
+    }
+
+    void loadPropertyConversationCount();
+  }, [property?.id, canManageProperty, user?.id]);
 
   const nextPhoto = () => {
     if (!totalPhotos) return;
@@ -423,44 +449,8 @@ export default function PropertyDetails() {
     setShowChat(true);
   };
 
-  const handleOpenOwnerProfile = () => {
-    if (!property?.ownerId || !property?.id) {
-      return;
-    }
-
-    navigate(`/perfil/${property.ownerId}`, {
-      state: {
-        reviewPropertyId: property.id,
-        reviewPropertyTitle: property.title,
-      },
-    });
-  };
-
-  const handleSendMessage = async () => {
+  const handleSendMessage = () => {
     if (!chatMessage.trim()) {
-      return;
-    }
-
-    if (userType === "client" && property?.id) {
-      try {
-        setIsSendingChatMessage(true);
-
-        const conversation = await startPropertyConversation(property.id);
-        await sendPropertyConversationMessage(
-          conversation.id,
-          chatMessage.trim(),
-        );
-
-        setShowChat(false);
-        setChatMessage("");
-        navigate(`/mensajes/${conversation.id}`);
-      } catch (error) {
-        console.error("Error starting property conversation:", error);
-        alert("No pudimos iniciar la conversación. Intentá nuevamente.");
-      } finally {
-        setIsSendingChatMessage(false);
-      }
-
       return;
     }
 
@@ -474,6 +464,43 @@ export default function PropertyDetails() {
     };
     setChatMessages((prev) => [...prev, newMessage]);
     setChatMessage("");
+  };
+
+  const handleOpenOwnerProfile = () => {
+    if (!property?.ownerId || !property?.id) {
+      return;
+    }
+
+    navigate(`/perfil/${property.ownerId}`, {
+      state: {
+        reviewPropertyId: property.id,
+        reviewPropertyTitle: property.title,
+      },
+    });
+  };
+
+  const handleContactar = async () => {
+    if (!property?.id) {
+      return;
+    }
+
+    if (!canContactProperty) {
+      alert("El chat no está disponible para esta propiedad.");
+      return;
+    }
+
+    try {
+      setIsStartingConversation(true);
+      const conversation = await startPropertyConversation(property.id);
+      navigate(`/mensajes/${conversation.id}`);
+    } catch (error) {
+      console.error("Error starting property conversation:", error);
+      alert(
+        "No pudimos iniciar la conversación. Verificá que la propiedad esté publicada.",
+      );
+    } finally {
+      setIsStartingConversation(false);
+    }
   };
 
   const handleEdit = async () => {
@@ -955,7 +982,9 @@ export default function PropertyDetails() {
                       color={colors.primary}
                       style={{ margin: "0 auto 6px" }}
                     />
-                    <div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a" }}>0</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a" }}>
+                      {propertyConversationCount}
+                    </div>
                     <div style={{ fontSize: 11, color: "#6e6e73" }}>Chats</div>
                   </div>
                 </div>
@@ -976,7 +1005,7 @@ export default function PropertyDetails() {
         </div>
       </div>
 
-      {/* Modal: Chat */}
+      {/* Modal: Chat owner ↔ agente */}
       {showChat && (
         <div
           style={{
@@ -1008,7 +1037,6 @@ export default function PropertyDetails() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Chat Header */}
             <div
               style={{
                 padding: "20px",
@@ -1077,7 +1105,6 @@ export default function PropertyDetails() {
               </button>
             </div>
 
-            {/* Chat Messages */}
             <div
               style={{
                 flex: 1,
@@ -1192,7 +1219,6 @@ export default function PropertyDetails() {
               ))}
             </div>
 
-            {/* Chat Input */}
             <div
               style={{
                 padding: "16px 20px",
@@ -1206,7 +1232,7 @@ export default function PropertyDetails() {
                 type="text"
                 value={chatMessage}
                 onChange={(e) => setChatMessage(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && void handleSendMessage()}
+                onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                 placeholder="Escribí tu mensaje..."
                 style={{
                   flex: 1,
@@ -1220,8 +1246,8 @@ export default function PropertyDetails() {
                 }}
               />
               <button
-                onClick={() => void handleSendMessage()}
-                disabled={!chatMessage.trim() || isSendingChatMessage}
+                onClick={handleSendMessage}
+                disabled={!chatMessage.trim()}
                 style={{
                   background: chatMessage.trim() ? colors.primary : "#e5e5ea",
                   border: "none",
@@ -1434,17 +1460,22 @@ export default function PropertyDetails() {
           </button>
           <button
             type="button"
-            onClick={() => setShowChat(true)}
+            onClick={() => void handleContactar()}
+            disabled={isStartingConversation || !canContactProperty}
             style={{
               flex: 1,
-              background: colors.primary,
+              background: canContactProperty ? colors.primary : "#e5e5ea",
               border: "none",
               borderRadius: 12,
               padding: "14px",
-              color: "white",
+              color: canContactProperty ? "white" : "#9a9aa0",
               fontSize: 16,
               fontWeight: 700,
-              cursor: "pointer",
+              cursor:
+                isStartingConversation || !canContactProperty
+                  ? "not-allowed"
+                  : "pointer",
+              opacity: isStartingConversation ? 0.7 : 1,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -1452,7 +1483,11 @@ export default function PropertyDetails() {
             }}
           >
             <MessageCircle size={20} />
-            Contactar
+            {isStartingConversation
+              ? "Abriendo..."
+              : canContactProperty
+                ? "Contactar"
+                : "Chat no disponible"}
           </button>
         </div>
       )}

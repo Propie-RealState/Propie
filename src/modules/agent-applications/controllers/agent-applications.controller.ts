@@ -6,8 +6,10 @@ import type {
 import {
   countPendingOwnerAgentApplications,
   createAgentApplication,
+  findOwnerAgentApplicationById,
   getAgentApplicationByProperty,
   getOwnerAgentApplications,
+  revokeOwnerAgentApplication,
   updateOwnerAgentApplicationStatus,
 } from "../services/agent-applications.service";
 import {
@@ -102,11 +104,44 @@ export async function updateOwnerAgentApplicationStatusController(
 ) {
   const body = updateAgentApplicationStatusSchema.parse(request.body);
 
-  const application = await updateOwnerAgentApplicationStatus({
+  const existing = await findOwnerAgentApplicationById({
     applicationId: request.params.id,
     ownerId: request.user.id,
-    status: body.status,
   });
+
+  if (!existing) {
+    return reply.status(404).send({
+      success: false,
+      message: "Application not found",
+    });
+  }
+
+  const isPendingDecision =
+    existing.status === "PENDING" &&
+    (body.status === "ACCEPTED" || body.status === "REJECTED");
+  const isRevokeAcceptedAgent =
+    existing.status === "ACCEPTED" && body.status === "REJECTED";
+
+  if (!isPendingDecision && !isRevokeAcceptedAgent) {
+    return reply.status(409).send({
+      success: false,
+      message: "Esta solicitud ya fue procesada",
+      data: {
+        status: existing.status,
+      },
+    });
+  }
+
+  const application = isRevokeAcceptedAgent
+    ? await revokeOwnerAgentApplication({
+        applicationId: request.params.id,
+        ownerId: request.user.id,
+      })
+    : await updateOwnerAgentApplicationStatus({
+        applicationId: request.params.id,
+        ownerId: request.user.id,
+        status: body.status,
+      });
 
   if (!application) {
     return reply.status(404).send({

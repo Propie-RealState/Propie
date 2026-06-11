@@ -78,6 +78,13 @@ export async function findPropertyByIdRepository(propertyId: string) {
         ) AS owner_info,
 
         (
+          SELECT COALESCE(pc.allow_chat, true)
+          FROM property_commercialization pc
+          WHERE pc.property_id = p.id
+          LIMIT 1
+        ) AS allow_chat,
+
+        (
           SELECT COALESCE(
             json_agg(
               jsonb_build_object(

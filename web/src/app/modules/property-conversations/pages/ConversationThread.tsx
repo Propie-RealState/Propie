@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Send } from "lucide-react";
 
 import { useAppTheme } from "../../../../theme/useAppTheme";
 import { useAuth } from "../../../../context/AuthContext";
+import { getUserPublicProfile } from "../../agents/services/agents.service";
 import { useConversationPolling } from "../hooks/useConversationPolling";
 import {
   getPropertyConversation,
@@ -15,6 +16,23 @@ import type {
   PropertyConversation,
   PropertyConversationMessage,
 } from "../types/property-conversation.types";
+import {
+  emitPropertyConversationsChanged,
+  formatMessageAuthorLabel,
+  getConversationRoleColor,
+} from "../utils/conversation-role-ui";
+
+function formatAuthUserName(user: {
+  profile?: { first_name?: string | null; last_name?: string | null } | null;
+  email?: string;
+}) {
+  const name = [user.profile?.first_name, user.profile?.last_name]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  return name || user.email || "Usuario";
+}
 
 export default function ConversationThread() {
   const { conversationId } = useParams<{ conversationId: string }>();
@@ -24,6 +42,7 @@ export default function ConversationThread() {
 
   const [conversation, setConversation] = useState<PropertyConversation | null>(null);
   const [messages, setMessages] = useState<PropertyConversationMessage[]>([]);
+  const [senderNames, setSenderNames] = useState<Record<string, string>>({});
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -44,6 +63,7 @@ export default function ConversationThread() {
 
       if (!conversationData.readOnly) {
         await markPropertyConversationRead(conversationId);
+        emitPropertyConversationsChanged();
       }
     } catch (error) {
       console.error("Error loading conversation thread", error);
@@ -58,6 +78,44 @@ export default function ConversationThread() {
 
   useConversationPolling(loadThread, Boolean(conversationId));
 
+  const senderIds = useMemo(
+    () => [...new Set(messages.map((message) => message.senderId))],
+    [messages],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSenderNames() {
+      const entries = await Promise.all(
+        senderIds.map(async (senderId) => {
+          if (senderId === user?.id) {
+            return [senderId, formatAuthUserName(user)] as const;
+          }
+
+          const profile = await getUserPublicProfile(senderId);
+          const displayName = profile
+            ? [profile.first_name, profile.last_name].filter(Boolean).join(" ").trim()
+            : "";
+
+          return [senderId, displayName || "Usuario"] as const;
+        }),
+      );
+
+      if (!cancelled) {
+        setSenderNames(Object.fromEntries(entries));
+      }
+    }
+
+    if (senderIds.length > 0) {
+      void loadSenderNames();
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [senderIds, user]);
+
   async function handleSend() {
     if (!conversationId || !draft.trim() || conversation?.readOnly) {
       return;
@@ -70,8 +128,16 @@ export default function ConversationThread() {
         draft.trim(),
       );
 
+      if (user) {
+        setSenderNames((current) => ({
+          ...current,
+          [user.id]: formatAuthUserName(user),
+        }));
+      }
+
       setMessages((current) => [...current, message]);
       setDraft("");
+      emitPropertyConversationsChanged();
     } catch (error) {
       console.error("Error sending message", error);
       alert("No pudimos enviar el mensaje. Intentá nuevamente.");
@@ -152,6 +218,13 @@ export default function ConversationThread() {
         ) : (
           messages.map((message) => {
             const isMine = message.senderId === user?.id;
+            const role =
+              message.contentType === "SYSTEM" ? "SYSTEM" : message.senderRole;
+            const roleColor = getConversationRoleColor(role);
+            const authorLabel = formatMessageAuthorLabel({
+              role,
+              displayName: senderNames[message.senderId],
+            });
 
             return (
               <div
@@ -161,21 +234,33 @@ export default function ConversationThread() {
                   justifyContent: isMine ? "flex-end" : "flex-start",
                 }}
               >
-                <div
-                  style={{
-                    maxWidth: "78%",
-                    background: isMine ? colors.primary : "white",
-                    color: isMine ? "white" : "#1a1a1a",
-                    border: isMine ? "none" : "1.5px solid #e5e5ea",
-                    borderRadius: isMine
-                      ? "16px 16px 4px 16px"
-                      : "16px 16px 16px 4px",
-                    padding: "12px 16px",
-                    fontSize: 14,
-                    lineHeight: 1.5,
-                  }}
-                >
-                  {message.body}
+                <div style={{ maxWidth: "78%" }}>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: roleColor,
+                      marginBottom: 6,
+                      textAlign: isMine ? "right" : "left",
+                    }}
+                  >
+                    {authorLabel}
+                  </div>
+                  <div
+                    style={{
+                      background: isMine ? colors.primary : "white",
+                      color: isMine ? "white" : "#1a1a1a",
+                      border: isMine ? "none" : "1.5px solid #e5e5ea",
+                      borderRadius: isMine
+                        ? "16px 16px 4px 16px"
+                        : "16px 16px 16px 4px",
+                      padding: "12px 16px",
+                      fontSize: 14,
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {message.body}
+                  </div>
                 </div>
               </div>
             );

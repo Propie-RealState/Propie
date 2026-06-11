@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 
@@ -8,6 +8,7 @@ import { isAgentRole } from "../../../../lib/roles";
 import { AppFooterNav } from "../../../components/navigation/AppFooterNav";
 import { NotificationsBell } from "../../../components/navigation/NotificationsBell";
 import { ConversationListItem } from "../components/ConversationListItem";
+import { emitPropertyConversationsChanged } from "../utils/conversation-role-ui";
 import {
   listHistoricalPropertyConversations,
   listPropertyConversations,
@@ -33,6 +34,7 @@ export default function ConversationsInbox() {
 
       setConversations(active);
       setHistorical(archived);
+      emitPropertyConversationsChanged();
     } catch (error) {
       console.error("Error loading conversations", error);
     } finally {
@@ -44,7 +46,18 @@ export default function ConversationsInbox() {
     void loadConversations();
   }, [loadConversations]);
 
-  const allConversations = [...conversations, ...historical];
+  const allConversations = useMemo(() => {
+    const seen = new Set<string>();
+
+    return [...conversations, ...historical].filter((conversation) => {
+      if (seen.has(conversation.id)) {
+        return false;
+      }
+
+      seen.add(conversation.id);
+      return true;
+    });
+  }, [conversations, historical]);
 
   return (
     <div
@@ -149,7 +162,6 @@ export default function ConversationsInbox() {
               <ConversationListItem
                 key={conversation.id}
                 conversation={conversation}
-                primaryColor={colors.primary}
                 onClick={() => navigate(`/mensajes/${conversation.id}`)}
               />
             ))

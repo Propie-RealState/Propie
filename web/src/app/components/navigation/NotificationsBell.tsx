@@ -17,6 +17,7 @@ import {
   getNotifications,
   type NotificationItem,
 } from '../../modules/notifications/services/notifications.service';
+import { excludePropertyConversationNotifications } from '../../modules/notifications/utils/notification-filters';
 import {
   getNotificationRoute,
 } from '../../modules/notifications/utils/notification-ui';
@@ -94,7 +95,7 @@ export function NotificationsBell() {
         });
 
         if (!cancelled) {
-          setItems(response.items);
+          setItems(excludePropertyConversationNotifications(response.items));
         }
       } catch {
         if (!cancelled) {

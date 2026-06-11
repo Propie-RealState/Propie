@@ -1,4 +1,5 @@
 import { db } from "@/database/client";
+import { deactivatePropertyAgentAssignment } from "@/modules/property-conversations/services/deactivate-property-agent.service";
 import { syncParticipantsOnAgentEnabled } from "@/modules/property-conversations/services/sync-participants.service";
 
 export async function createAgentApplicationRepository(input: {
@@ -111,6 +112,28 @@ export async function countPendingOwnerAgentApplicationsRepository(
   return result.rows[0]?.count ?? 0;
 }
 
+export async function findOwnerAgentApplicationByIdRepository(input: {
+  applicationId: string;
+  ownerId: string;
+}) {
+  const result = await db.query(
+    `
+      SELECT
+        aa.id,
+        aa.status
+      FROM agent_applications aa
+      INNER JOIN properties p
+        ON p.id = aa.property_id
+      WHERE aa.id = $1
+        AND p.owner_id = $2
+      LIMIT 1
+    `,
+    [input.applicationId, input.ownerId],
+  );
+
+  return result.rows[0] ?? null;
+}
+
 export async function updateOwnerAgentApplicationStatusRepository(input: {
   applicationId: string;
   ownerId: string;
@@ -169,6 +192,54 @@ export async function updateOwnerAgentApplicationStatusRepository(input: {
       await syncParticipantsOnAgentEnabled({
         propertyId: application.property_id,
         agentId: application.agent_id,
+      });
+    }
+
+    return application ?? null;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function revokeOwnerAgentApplicationRepository(input: {
+  applicationId: string;
+  ownerId: string;
+}) {
+  const client = await db.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const result = await client.query(
+      `
+        UPDATE agent_applications aa
+        SET
+          status = 'REJECTED',
+          updated_at = now()
+        FROM properties p
+        WHERE aa.id = $1
+          AND aa.property_id = p.id
+          AND p.owner_id = $2
+          AND aa.status = 'ACCEPTED'
+        RETURNING
+          aa.*,
+          p.owner_id
+      `,
+      [input.applicationId, input.ownerId],
+    );
+
+    const application = result.rows[0];
+
+    await client.query("COMMIT");
+
+    if (application) {
+      await deactivatePropertyAgentAssignment({
+        propertyId: application.property_id,
+        agentId: application.agent_id,
+        deactivatedBy: input.ownerId,
       });
     }
 

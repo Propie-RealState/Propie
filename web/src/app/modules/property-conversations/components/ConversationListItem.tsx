@@ -1,19 +1,19 @@
 import { MessageCircle } from "lucide-react";
 
 import type { PropertyConversation } from "../types/property-conversation.types";
+import { CONVERSATION_ROLE_COLORS } from "../utils/conversation-role-ui";
 
 type ConversationListItemProps = {
   conversation: PropertyConversation;
-  primaryColor: string;
   onClick: () => void;
 };
 
 export function ConversationListItem({
   conversation,
-  primaryColor,
   onClick,
 }: ConversationListItemProps) {
   const unread = conversation.unreadCount ?? 0;
+  const clientColor = CONVERSATION_ROLE_COLORS.CLIENT;
 
   return (
     <button
@@ -37,14 +37,14 @@ export function ConversationListItem({
           width: 44,
           height: 44,
           borderRadius: 12,
-          background: `${primaryColor}14`,
+          background: `${clientColor}14`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           flexShrink: 0,
         }}
       >
-        <MessageCircle size={22} color={primaryColor} />
+        <MessageCircle size={22} color={clientColor} />
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -65,7 +65,11 @@ export function ConversationListItem({
               fontFamily: "'Sora', sans-serif",
             }}
           >
-            Consulta de propiedad
+            <span style={{ color: clientColor }}>Cliente</span>
+            <span style={{ color: "#9a9aa0", fontWeight: 600 }}>
+              {" "}
+              · Consulta de propiedad
+            </span>
           </h3>
           {unread > 0 && (
             <span
@@ -73,7 +77,7 @@ export function ConversationListItem({
                 minWidth: 22,
                 height: 22,
                 borderRadius: 999,
-                background: primaryColor,
+                background: clientColor,
                 color: "white",
                 fontSize: 12,
                 fontWeight: 700,

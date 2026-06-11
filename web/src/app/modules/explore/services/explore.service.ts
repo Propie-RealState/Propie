@@ -18,5 +18,15 @@ export async function getPublishedProperties(): Promise<Property[]> {
   const data: PropertyDTO[] =
     await response.json();
 
-  return data.map(mapPropertyDtoToProperty);
+  const properties = data.map(mapPropertyDtoToProperty);
+  const seen = new Set<string>();
+
+  return properties.filter((property) => {
+    if (seen.has(property.id)) {
+      return false;
+    }
+
+    seen.add(property.id);
+    return true;
+  });
 }

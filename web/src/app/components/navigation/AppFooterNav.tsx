@@ -15,6 +15,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { getNavAudience } from '../../../lib/roles';
 import { useAppTheme } from '../../../theme/useAppTheme';
 import { usePropertyPublish } from '../../modules/publish/context/PropertyPublishContext';
+import { useUnreadConversationCount } from '../../../hooks/useUnreadConversationCount';
 
 export function AppFooterNav() {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ export function AppFooterNav() {
   const { user } = useAuth();
   const { startCreatePublish } = usePropertyPublish();
   const audience = getNavAudience(user);
+  const unreadConversations = useUnreadConversationCount();
 
   const navBtn = (
     Icon: React.ComponentType<{
@@ -33,6 +35,7 @@ export function AppFooterNav() {
     label: string,
     path: string,
     onNavigate?: () => void,
+    badgeCount?: number,
   ) => {
     const isActive =
       location.pathname === path ||
@@ -58,9 +61,34 @@ export function AppFooterNav() {
           padding: '6px 10px',
           borderRadius: 12,
           flex: 1,
+          position: 'relative',
         }}
       >
-        <Icon size={22} color={color} strokeWidth={1.8} />
+        <div style={{ position: 'relative' }}>
+          <Icon size={22} color={color} strokeWidth={1.8} />
+          {badgeCount && badgeCount > 0 ? (
+            <span
+              style={{
+                position: 'absolute',
+                top: -5,
+                right: -8,
+                minWidth: 16,
+                height: 16,
+                borderRadius: 999,
+                background: '#ef4444',
+                color: 'white',
+                fontSize: 10,
+                fontWeight: 800,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0 4px',
+              }}
+            >
+              {badgeCount > 9 ? '9+' : badgeCount}
+            </span>
+          ) : null}
+        </div>
         <span
           style={{
             fontSize: 10,
@@ -145,16 +173,17 @@ export function AppFooterNav() {
           <>
             {navBtn(Search, 'Explorar', '/explore')}
             {navBtn(Heart, 'Favoritos', '/favoritos')}
-            {navBtn(MessageCircle, 'Mensajes', '/mensajes')}
+            {navBtn(MessageCircle, 'Mensajes', '/mensajes', undefined, unreadConversations)}
             {navBtn(User, 'Perfil', '/perfil')}
           </>
         )}
 
         {audience === 'publisher' && (
           <>
+            {navBtn(Search, 'Explorar', '/explore')}
             {navBtn(Plus, 'Publicar', '/publicar', startCreatePublish)}
             {navBtn(Building2, 'Mis Props.', '/mis-propiedades')}
-            {navBtn(MessageCircle, 'Mensajes', '/mensajes')}
+            {navBtn(MessageCircle, 'Mensajes', '/mensajes', undefined, unreadConversations)}
             {navBtn(User, 'Perfil', '/perfil')}
           </>
         )}

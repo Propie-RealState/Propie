@@ -27,9 +27,19 @@ export function useNotificationCount() {
   useEffect(() => {
     refresh();
 
-    const interval = window.setInterval(refresh, 60_000);
+    const interval = window.setInterval(() => {
+      void refresh();
+    }, 60_000);
+
+    const handleChange = () => {
+      void refresh();
+    };
+
+    window.addEventListener("notifications:changed", handleChange);
+
     return () => {
       window.clearInterval(interval);
+      window.removeEventListener("notifications:changed", handleChange);
     };
   }, [refresh]);
 
