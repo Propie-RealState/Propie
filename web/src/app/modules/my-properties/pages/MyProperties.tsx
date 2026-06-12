@@ -9,6 +9,8 @@ import { usePropertyPublish } from "../../publish/context/PropertyPublishContext
 import { useAppTheme, useIsAgent } from "../../../../theme/useAppTheme";
 import { resolveMediaUrl } from "../../../../lib/api-base";
 import { formatPrice } from "../../explore/utils/formatPrice";
+import { PropertyListSkeleton } from "../../../components/skeletons/PageSkeletons";
+import { AppFooterNav } from "../../../components/navigation/AppFooterNav";
 
 const STATUS_OPTIONS: { value: PropertyStatus; label: string }[] = [
   { value: "ACTIVE", label: "Activa" },
@@ -42,21 +44,64 @@ export default function MyProperties() {
   const isAgent = useIsAgent();
 
   if (loading) {
-    return <div>Cargando...</div>;
+    return (
+      <div
+        style={{
+          minHeight: "100dvh",
+          background: "#f5f5f7",
+          fontFamily: "'Inter', sans-serif",
+        }}
+      >
+        <PropertyListSkeleton count={4} />
+      </div>
+    );
   }
 
   if (error) {
-    return <div>{error}</div>;
+    return (
+      <div
+        style={{
+          minHeight: "100dvh",
+          display: "grid",
+          placeItems: "center",
+          padding: 24,
+          textAlign: "center",
+          color: "#6e6e73",
+          fontFamily: "'Inter', sans-serif",
+        }}
+      >
+        <div>
+          <p style={{ margin: "0 0 12px" }}>{error}</p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            style={{
+              background: colors.primary,
+              color: "white",
+              border: "none",
+              borderRadius: 12,
+              padding: "12px 18px",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div
       style={{
         minHeight: "100dvh",
+        height: "100dvh",
         display: "flex",
         flexDirection: "column",
         background: "#f5f5f7",
         fontFamily: "'Inter', sans-serif",
+        overflow: "hidden",
       }}
     >
       {/* Header */}
@@ -112,9 +157,11 @@ export default function MyProperties() {
         style={{
           flex: 1,
           padding: "20px",
+          paddingBottom: 100,
           display: "flex",
           flexDirection: "column",
           gap: 18,
+          overflowY: "auto",
         }}
       >
         {properties.length === 0 ? (
@@ -158,8 +205,8 @@ export default function MyProperties() {
                 }}
               >
                 {isAgent
-                  ? "Todavia no tenes propiedades asignadas"
-                  : "Todavia no publicaste nada"}
+                  ? "Todavía no tenés propiedades asignadas"
+                  : "Publicá tu primera propiedad"}
               </h2>
 
               <p
@@ -171,8 +218,8 @@ export default function MyProperties() {
                 }}
               >
                 {isAgent
-                  ? "Cuando un owner apruebe tu solicitud, la propiedad va a aparecer aca."
-                  : "Aca vas a poder ver y gestionar todas tus propiedades."}
+                  ? "Cuando un propietario apruebe tu solicitud, la propiedad va a aparecer acá."
+                  : "Creá tu aviso, subí fotos y empezá a recibir consultas desde acá."}
               </p>
             </div>
 
@@ -198,7 +245,7 @@ export default function MyProperties() {
                 }}
               >
                 <Plus size={20} color="white" />
-                Publicar propiedad
+                Publicá tu primera propiedad
               </button>
             )}
           </div>
@@ -418,6 +465,8 @@ export default function MyProperties() {
           ))
         )}
       </div>
+
+      <AppFooterNav />
     </div>
   );
 }

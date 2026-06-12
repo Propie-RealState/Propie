@@ -16,6 +16,7 @@ import {
 
 import { useAppTheme } from "../../../../theme/useAppTheme";
 import { emitPushEngagement } from "../../../../lib/push-notifications";
+import { showToast } from "../../../../lib/toast";
 import { AppFooterNav } from "../../../components/navigation/AppFooterNav";
 import { NotificationsBell } from "../../../components/navigation/NotificationsBell";
 import { useNotifications } from "../../notifications/hooks/useNotifications";
@@ -162,7 +163,7 @@ export default function Notifications() {
         typeof error.message === "string"
           ? error.message
           : "No pudimos actualizar la solicitud.";
-      alert(message);
+      showToast(message);
       window.dispatchEvent(new Event("agent-applications:changed"));
     } finally {
       setUpdatingId(null);

@@ -8,6 +8,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { LocationPreferencesManager } from "./app/components/LocationPreferencesManager";
 import { PushNotificationManager } from "./app/components/PushNotificationManager";
 import { queryClient } from "./lib/query-client";
+import { ToastHost } from "./app/components/ToastHost";
 
 import "./styles/index.css";
 
@@ -20,6 +21,7 @@ ReactDOM.createRoot(
         <App />
         <LocationPreferencesManager />
         <PushNotificationManager />
+        <ToastHost />
       </AuthProvider>
     </QueryClientProvider>
   </React.StrictMode>,

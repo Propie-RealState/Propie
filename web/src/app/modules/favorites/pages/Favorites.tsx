@@ -10,6 +10,7 @@ import { getPublishedProperties } from '../../explore/services/explore.service';
 import type { Property } from '../../explore/types/property.types';
 import { getFavoriteIds, toggleFavoriteId } from '../../../../lib/favorites-storage';
 import { useAppTheme } from '../../../../theme/useAppTheme';
+import { FavoritesPageSkeleton } from '../../../components/skeletons/PageSkeletons';
 
 export default function Favorites() {
   const navigate = useNavigate();
@@ -83,7 +84,7 @@ export default function Favorites() {
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
         {loading ? (
-          <p style={{ textAlign: 'center', color: '#6e6e73' }}>Cargando...</p>
+          <FavoritesPageSkeleton />
         ) : favorites.length === 0 ? (
           <div
             style={{

@@ -38,6 +38,7 @@ import {
 import { StarRating } from "../../../components/StarRating";
 import { useAgentReviews } from "../../agents/hooks/useAgentReviews";
 import { resolveMediaUrl } from "../../../../lib/api-base";
+import { showToast } from "../../../../lib/toast";
 
 export default function Profile() {
   const [isSaving, setIsSaving] = useState(false);
@@ -201,7 +202,7 @@ export default function Profile() {
       setIsEditing(false);
     } catch (error) {
       console.error(error);
-      alert("Error actualizando perfil");
+      showToast("Error actualizando perfil");
     } finally {
       setIsSaving(false);
     }

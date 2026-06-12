@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
 import React, { lazy, Suspense } from "react";
 import { Root } from "./Root";
 import { RegisterProvider } from "../context/RegisterContext";
+import { RegisterStepLayout } from "./components/register/RegisterStepLayout";
 
 import Explore from "./modules/explore/pages/Explore.tsx";
 import Login from "./pages/Login";
@@ -131,55 +132,60 @@ export const router =
               index: true,
               Component: RegisterChoice,
             },
-        
-            {
-              path: "owner",
-              Component: RegisterPropie,
-            },
-        
-            {
-              path: "agent",
-              Component: RegisterAgente,
-            },
 
             {
-              path: "client",
-              Component: RegisterClient,
-            },
-        
-            {
-              path: "verification",
-              Component: RegisterVerification,
-            },
-        
-            {
-              path: "personal-data",
-              Component: RegisterPersonalData,
-            },
-        
-            {
-              path: "security",
-              Component: RegisterSecurity,
-            },
-        
-            {
-              path: "profile-photo",
-              Component: RegisterProfilePhoto,
-            },
-        
-            {
-              path: "owner-info",
-              Component: RegisterOwnerInfo,
-            },
-        
-            {
-              path: "agent-info",
-              Component: RegisterAgentInfo,
-            },
+              element: <RegisterStepLayout />,
+              children: [
+                {
+                  path: "owner",
+                  Component: RegisterPropie,
+                },
 
-            {
-              path: "client-info",
-              Component: RegisterClientInfo,
+                {
+                  path: "agent",
+                  Component: RegisterAgente,
+                },
+
+                {
+                  path: "client",
+                  Component: RegisterClient,
+                },
+
+                {
+                  path: "verification",
+                  Component: RegisterVerification,
+                },
+
+                {
+                  path: "personal-data",
+                  Component: RegisterPersonalData,
+                },
+
+                {
+                  path: "security",
+                  Component: RegisterSecurity,
+                },
+
+                {
+                  path: "profile-photo",
+                  Component: RegisterProfilePhoto,
+                },
+
+                {
+                  path: "owner-info",
+                  Component: RegisterOwnerInfo,
+                },
+
+                {
+                  path: "agent-info",
+                  Component: RegisterAgentInfo,
+                },
+
+                {
+                  path: "client-info",
+                  Component: RegisterClientInfo,
+                },
+              ],
             },
           ],
         },

@@ -14,6 +14,7 @@ import {
   listPropertyConversations,
 } from "../services/property-conversations.service";
 import type { PropertyConversation } from "../types/property-conversation.types";
+import { ConversationListSkeleton } from "../../../components/skeletons/PageSkeletons";
 
 export default function ConversationsInbox() {
   const navigate = useNavigate();
@@ -133,9 +134,7 @@ export default function ConversationsInbox() {
           }}
         >
           {loading ? (
-            <div style={{ textAlign: "center", padding: 32, color: "#6e6e73" }}>
-              Cargando conversaciones...
-            </div>
+            <ConversationListSkeleton />
           ) : allConversations.length === 0 ? (
             <div
               style={{

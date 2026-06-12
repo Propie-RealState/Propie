@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { CalendarCheck, X } from "lucide-react";
 
 import { createVisit, rescheduleVisit } from "../services/visits.service";
 import type { Visit } from "../types/visit.types";
@@ -35,6 +35,7 @@ export function ScheduleVisitSheet({
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     if (!open) {
@@ -57,6 +58,7 @@ export function ScheduleVisitSheet({
     }
 
     setError(null);
+    setSuccess(false);
   }, [open, visit]);
 
   if (!open) {
@@ -91,8 +93,8 @@ export function ScheduleVisitSheet({
         });
       }
 
+      setSuccess(true);
       onSuccess();
-      onClose();
     } catch (submitError) {
       console.error("Error scheduling visit", submitError);
       setError("No pudimos guardar la visita. Revisá los datos e intentá de nuevo.");
@@ -142,7 +144,11 @@ export function ScheduleVisitSheet({
               color: "#1a1a1a",
             }}
           >
-            {isReschedule ? "Reprogramar visita" : "Agendar visita"}
+            {success
+              ? "Solicitud enviada"
+              : isReschedule
+                ? "Reprogramar visita"
+                : "Agendar visita"}
           </h2>
           <button
             type="button"
@@ -160,6 +166,77 @@ export function ScheduleVisitSheet({
           </button>
         </div>
 
+        {success ? (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              textAlign: "center",
+              gap: 16,
+              padding: "8px 4px 4px",
+            }}
+          >
+            <div
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 20,
+                background: `${primaryColor}14`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <CalendarCheck size={32} color={primaryColor} />
+            </div>
+            <div>
+              <p
+                style={{
+                  margin: "0 0 8px",
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: "#1a1a1a",
+                  fontFamily: "'Sora', sans-serif",
+                }}
+              >
+                {isReschedule
+                  ? "Visita reprogramada"
+                  : "Solicitud de visita enviada"}
+              </p>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 14,
+                  lineHeight: 1.55,
+                  color: "#6e6e73",
+                }}
+              >
+                {isReschedule
+                  ? "Los participantes verán la nueva fecha en el chat y en sus visitas."
+                  : "El propietario o agente debe confirmar la cita. Te avisamos cuando responda."}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                width: "100%",
+                marginTop: 8,
+                background: primaryColor,
+                color: "white",
+                border: "none",
+                borderRadius: 14,
+                padding: "14px 16px",
+                fontSize: 15,
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Entendido
+            </button>
+          </div>
+        ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <span style={{ fontSize: 13, fontWeight: 600, color: "#6e6e73" }}>
@@ -267,6 +344,7 @@ export function ScheduleVisitSheet({
                 : "Agendar visita"}
           </button>
         </div>
+        )}
       </div>
     </div>
   );

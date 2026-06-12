@@ -5,6 +5,7 @@ import { Eye, EyeOff, Check } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import React from "react";
 import { apiFetch } from "../../lib/api";
+import { showToast } from "../../lib/toast";
 export default function Login() {
   const navigate = useNavigate();
   const auth = useAuth();
@@ -120,7 +121,7 @@ export default function Login() {
 
       console.error(error);
 
-      alert(
+      showToast(
         error?.error?.message ||
         "Error al iniciar sesión"
       );

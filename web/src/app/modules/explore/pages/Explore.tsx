@@ -21,6 +21,7 @@ import {
   getFavoriteIds,
   toggleFavoriteId,
 } from "../../../../lib/favorites-storage";
+import { ExplorePageSkeleton } from "../../../components/skeletons/PageSkeletons";
 
 // ─── Main Page ────────────────────────────────────────────────────
 export default function Explore() {
@@ -160,12 +161,12 @@ export default function Explore() {
     return (
       <div
         style={{
-          padding: 40,
-          textAlign: "center",
-          fontSize: 18,
+          height: "100dvh",
+          background: "#f5f5f7",
+          fontFamily: "'Inter', sans-serif",
         }}
       >
-        Cargando propiedades...
+        <ExplorePageSkeleton />
       </div>
     );
   }
