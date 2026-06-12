@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Bell,
   Briefcase,
+  Calendar,
   Check,
   Clock,
   Heart,
@@ -48,6 +49,12 @@ function NotificationIcon({
       return <Briefcase size={19} color={color} />;
     case "MESSAGE_RECEIVED":
       return <MessageCircle size={19} color={color} />;
+    case "VISIT_CREATED":
+    case "VISIT_CONFIRMED":
+    case "VISIT_CANCELLED":
+    case "VISIT_RESCHEDULED":
+    case "VISIT_REMINDER":
+      return <Calendar size={19} color={color} />;
     default:
       return <Bell size={19} color={color} />;
   }

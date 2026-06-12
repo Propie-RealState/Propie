@@ -38,6 +38,8 @@ import { PropertyPublishProvider } from "./modules/publish/context/PropertyPubli
 import MyProperties from "./modules/my-properties/pages/MyProperties";
 import ConversationsInbox from "./modules/property-conversations/pages/ConversationsInbox";
 import ConversationThread from "./modules/property-conversations/pages/ConversationThread";
+import MyVisits from "./modules/visits/pages/MyVisits";
+import VisitDetails from "./modules/visits/pages/VisitDetails";
 import Notifications from "./modules/agent-applications/pages/Notifications";
 import AgentApplications from "./modules/agent-applications/pages/Messages";
 
@@ -240,6 +242,24 @@ export const router =
           element: (
             <ProtectedRoute>
               <ConversationThread />
+            </ProtectedRoute>
+          ),
+        },
+
+        {
+          path: "visitas",
+          element: (
+            <ProtectedRoute>
+              <MyVisits />
+            </ProtectedRoute>
+          ),
+        },
+
+        {
+          path: "visitas/:visitId",
+          element: (
+            <ProtectedRoute>
+              <VisitDetails />
             </ProtectedRoute>
           ),
         },
