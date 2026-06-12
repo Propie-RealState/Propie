@@ -3,6 +3,7 @@ import {
   FastifyRequest,
 } from "fastify";
 
+import { isAgentDiscoveryAudience } from "@/modules/properties/utils/discovery-audience";
 import { GlobalSearchQuerySchema } from "../schemas/global-search.schema";
 import { globalSearchService } from "../services/global-search.service";
 
@@ -14,10 +15,9 @@ export async function globalSearchController(
     request.query,
   );
 
-  const results = await globalSearchService(
-    query.q,
-    query.limit,
-  );
+  const results = await globalSearchService(query.q, query.limit, {
+    forAgentDiscovery: isAgentDiscoveryAudience(request),
+  });
 
   return reply.send(results);
 }

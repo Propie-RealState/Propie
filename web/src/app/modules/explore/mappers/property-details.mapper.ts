@@ -66,6 +66,9 @@ function normalizeCurrency(
       status: property.status,
 
       allowChat: property.allow_chat ?? true,
+
+      acceptsAgentParticipation:
+        property.accepts_agent_participation ?? true,
   
       createdAt: property.created_at,
   

@@ -5,7 +5,7 @@ import type {
   PropertiesMapResponse,
 } from "../types/map.types";
 import { mapPropertyPinDto } from "../mappers/property-pin.mapper";
-import { API_URL } from "../../../../lib/api-base";
+import { apiFetch } from "../../../../lib/api";
 
 function appendFilters(
   params: URLSearchParams,
@@ -67,23 +67,10 @@ export async function getMapProperties(
     input.filters
   );
 
-  const response =
-    await fetch(
-      `${API_URL}/properties/map?${params.toString()}`,
-      {
-        signal:
-          input.signal,
-      }
-    );
-
-  if (!response.ok) {
-    throw new Error(
-      "No pudimos cargar el mapa"
-    );
-  }
-
-  const data: PropertiesMapResponse =
-    await response.json();
+  const data = await apiFetch<PropertiesMapResponse>(
+    `/properties/map?${params.toString()}`,
+    { signal: input.signal },
+  );
 
   return {
     items: data.items.map((item) =>
@@ -118,20 +105,8 @@ export async function getNearbyProperties(
     input.filters
   );
 
-  const response =
-    await fetch(
-      `${API_URL}/properties/nearby?${params.toString()}`,
-      {
-        signal:
-          input.signal,
-      }
-    );
-
-  if (!response.ok) {
-    throw new Error(
-      "No pudimos cargar propiedades cercanas"
-    );
-  }
-
-  return response.json();
+  return apiFetch<NearbyPropertiesResponse>(
+    `/properties/nearby?${params.toString()}`,
+    { signal: input.signal },
+  );
 }

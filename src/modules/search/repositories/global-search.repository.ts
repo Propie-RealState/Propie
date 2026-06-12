@@ -1,4 +1,8 @@
 import { db } from "@/database/client";
+import {
+  acceptsAgentParticipationSql,
+  propertyCommercializationJoin,
+} from "@/modules/properties/constants/commercialization-mode.constants";
 
 import {
   escapeLikePattern,
@@ -94,6 +98,7 @@ export type UserSearchRow = {
 export async function searchPropertiesRepository(
   query: string,
   limit: number,
+  options: { forAgentDiscovery?: boolean } = {},
 ): Promise<PropertySearchRow[]> {
   const pattern = buildPattern(query);
   const bedroomsDigits = normalizeSearchText(query).replace(
@@ -116,6 +121,13 @@ export async function searchPropertiesRepository(
           "CONCAT(p.bedrooms::text, ' dormitorios')",
         )} LIKE $1`;
   }
+
+  const commercializationJoin = options.forAgentDiscovery
+    ? propertyCommercializationJoin("p", "pc")
+    : "";
+  const agentDiscoveryFilter = options.forAgentDiscovery
+    ? `AND ${acceptsAgentParticipationSql("pc")}`
+    : "";
 
   const result = await db.query(
     `
@@ -140,8 +152,10 @@ export async function searchPropertiesRepository(
       AND pi.is_cover = true
     LEFT JOIN property_amenities pa
       ON pa.property_id = p.id
+    ${commercializationJoin}
     WHERE p.published_at IS NOT NULL
       AND p.status IN ('ACTIVE', 'PAUSED', 'RESERVED')
+      ${agentDiscoveryFilter}
       AND (
         ${buildMatchSql(
           [
@@ -411,7 +425,10 @@ export async function searchOwnersRepository(
     LEFT JOIN (
       SELECT
         owner_id,
-        COUNT(*) FILTER (WHERE status = 'ACTIVE' AND published_at IS NOT NULL)::int AS active_count
+        COUNT(*) FILTER (
+          WHERE published_at IS NOT NULL
+            AND status IN ('ACTIVE', 'PAUSED', 'RESERVED')
+        )::int AS active_count
       FROM properties
       GROUP BY owner_id
     ) opc ON opc.owner_id = u.id

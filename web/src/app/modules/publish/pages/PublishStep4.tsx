@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthHeroHeader } from "../../../components/AuthHeroHeader";
-import { ArrowLeft, Users, Building2, UserCheck, XCircle } from "lucide-react";
+import { ShieldCheck, Users, XCircle } from "lucide-react";
 import React from "react";
 import {
   savePropertyCommercialization,
@@ -9,11 +9,7 @@ import {
 import { useAppTheme } from "../../../../theme/useAppTheme";
 import { usePropertyPublish } from "../context/PropertyPublishContext";
 
-type CommercializationType =
-  | "AGENTS"
-  | "AGENCIES"
-  | "BOTH"
-  | "DIRECT";
+type CommercializationType = "AGENTS" | "DIRECT";
 
 export default function PublishStep4() {
   const theme = useAppTheme();
@@ -33,8 +29,6 @@ export default function PublishStep4() {
       CommercializationType | null
     >(null);
   const [manualApproval, setManualApproval] = useState(false);
-  const [allowChat, setAllowChat] = useState(true);
-  const [sharedCalendar, setSharedCalendar] = useState(false);
 
   const handleContinue =
     async () => {
@@ -57,20 +51,11 @@ export default function PublishStep4() {
           commercializationType,
         });
 
-        await savePropertyCommercialization(
-          {
-            propertyId:
-              data.propertyId,
-
-            commercializationType,
-
-            manualApproval,
-
-            allowChat,
-
-            sharedCalendar,
-          }
-        );
+        await savePropertyCommercialization({
+          propertyId: data.propertyId,
+          commercializationType,
+          manualApproval,
+        });
 
         navigate(
           "/publicar/revision"
@@ -96,39 +81,6 @@ export default function PublishStep4() {
 
       icon:
         <Users
-          size={24}
-          color={theme.primary}
-          strokeWidth={2}
-        />,
-    },
-
-    {
-      id: "AGENCIES" as CommercializationType,
-
-      title:
-        "Aceptar inmobiliarias",
-
-      desc:
-        "Inmobiliarias registradas pueden gestionar tu propiedad",
-
-      icon:
-        <Building2
-          size={24}
-          color={theme.primary}
-          strokeWidth={2}
-        />,
-    },
-
-    {
-      id: "BOTH" as CommercializationType,
-
-      title: "Ambos",
-
-      desc:
-        "Tanto agentes como inmobiliarias pueden participar",
-
-      icon:
-        <UserCheck
           size={24}
           color={theme.primary}
           strokeWidth={2}
@@ -299,185 +251,139 @@ export default function PublishStep4() {
             </div>
           </div>
 
-          {/* Settings toggles */}
-          {commercializationType && commercializationType !== "DIRECT" && (
-            <div>
-              <h3 style={{ margin: "0 0 14px", fontSize: 16, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>
-                Configuración
-              </h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {/* Manual approval */}
+          {commercializationType === "AGENTS" && (
+            <div
+              style={{
+                background: "white",
+                borderRadius: 18,
+                padding: "20px 18px",
+                boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+                border: `1px solid ${manualApproval ? `${theme.primary}22` : "#ececf0"}`,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 14,
+                }}
+              >
                 <div
                   style={{
-                    background: "white",
-                    borderRadius: 16,
-                    padding: "16px 18px",
-                    boxShadow: "0 1px 6px rgba(0,0,0,0.06)",
+                    width: 44,
+                    height: 44,
+                    borderRadius: 12,
+                    background: manualApproval
+                      ? "linear-gradient(135deg, #f0eeff 0%, #e4deff 100%)"
+                      : "#f5f5f7",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "space-between",
+                    justifyContent: "center",
+                    flexShrink: 0,
                   }}
                 >
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>
-                      Aprobación manual
-                    </div>
-                    <div style={{ fontSize: 12, color: "#6e6e73", marginTop: 2 }}>
-                      Revisá y aprobá cada agente manualmente
-                    </div>
-                  </div>
-                  <label style={{ position: "relative", display: "inline-block", width: 48, height: 28, flexShrink: 0, marginLeft: 12 }}>
-                    <input
-                      type="checkbox"
-                      checked={manualApproval}
-                      onChange={(e) => setManualApproval(e.target.checked)}
-                      style={{ opacity: 0, width: 0, height: 0 }}
-                    />
-                    <span
-                      style={{
-                        position: "absolute",
-                        cursor: "pointer",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: manualApproval ? theme.primary : "#e5e5ea",
-                        transition: "0.3s",
-                        borderRadius: 28,
-                      }}
-                    >
-                      <span
-                        style={{
-                          position: "absolute",
-                          content: "",
-                          height: 22,
-                          width: 22,
-                          left: manualApproval ? 23 : 3,
-                          bottom: 3,
-                          background: "white",
-                          transition: "0.3s",
-                          borderRadius: "50%",
-                          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-                        }}
-                      />
-                    </span>
-                  </label>
+                  <ShieldCheck size={22} color={theme.primary} strokeWidth={2} />
                 </div>
 
-                {/* Show chats */}
-                <div
-                  style={{
-                    background: "white",
-                    borderRadius: 16,
-                    padding: "16px 18px",
-                    boxShadow: "0 1px 6px rgba(0,0,0,0.06)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>
-                      Mostrar chats
-                    </div>
-                    <div style={{ fontSize: 12, color: "#6e6e73", marginTop: 2 }}>
-                      Permitir comunicación directa con interesados
-                    </div>
-                  </div>
-                  <label style={{ position: "relative", display: "inline-block", width: 48, height: 28, flexShrink: 0, marginLeft: 12 }}>
-                    <input
-                      type="checkbox"
-                      checked={allowChat}
-                      onChange={(e) => setAllowChat(e.target.checked)}
-                      style={{ opacity: 0, width: 0, height: 0 }}
-                    />
-                    <span
-                      style={{
-                        position: "absolute",
-                        cursor: "pointer",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: allowChat ? theme.primary : "#e5e5ea",
-                        transition: "0.3s",
-                        borderRadius: 28,
-                      }}
-                    >
-                      <span
-                        style={{
-                          position: "absolute",
-                          content: "",
-                          height: 22,
-                          width: 22,
-                          left: allowChat ? 23 : 3,
-                          bottom: 3,
-                          background: "white",
-                          transition: "0.3s",
-                          borderRadius: "50%",
-                          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-                        }}
-                      />
-                    </span>
-                  </label>
-                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h3
+                    style={{
+                      margin: "0 0 6px",
+                      fontSize: 16,
+                      fontWeight: 700,
+                      color: "#1f1f25",
+                      fontFamily: "'Sora', sans-serif",
+                    }}
+                  >
+                    Gestión de agentes
+                  </h3>
+                  <p
+                    style={{
+                      margin: "0 0 14px",
+                      fontSize: 13,
+                      color: "#6e6e73",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    Definí si los agentes pueden sumarse automáticamente o si
+                    preferís revisar cada solicitud antes de aprobarla.
+                  </p>
 
-                {/* Shared calendar */}
-                <div
-                  style={{
-                    background: "white",
-                    borderRadius: 16,
-                    padding: "16px 18px",
-                    boxShadow: "0 1px 6px rgba(0,0,0,0.06)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>
-                      Agenda compartida
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 12,
+                      paddingTop: 12,
+                      borderTop: "1px solid #f0f0f2",
+                    }}
+                  >
+                    <div>
+                      <div
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 600,
+                          color: "#1a1a1a",
+                        }}
+                      >
+                        Aprobación manual
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 12,
+                          color: "#6e6e73",
+                          marginTop: 2,
+                        }}
+                      >
+                        Revisá y aprobá cada agente manualmente
+                      </div>
                     </div>
-                    <div style={{ fontSize: 12, color: "#6e6e73", marginTop: 2 }}>
-                      Los agentes pueden agendar visitas directamente
-                    </div>
-                  </div>
-                  <label style={{ position: "relative", display: "inline-block", width: 48, height: 28, flexShrink: 0, marginLeft: 12 }}>
-                    <input
-                      type="checkbox"
-                      checked={sharedCalendar}
-                      onChange={(e) => setSharedCalendar(e.target.checked)}
-                      style={{ opacity: 0, width: 0, height: 0 }}
-                    />
-                    <span
+                    <label
                       style={{
-                        position: "absolute",
-                        cursor: "pointer",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: sharedCalendar ? theme.primary : "#e5e5ea",
-                        transition: "0.3s",
-                        borderRadius: 28,
+                        position: "relative",
+                        display: "inline-block",
+                        width: 48,
+                        height: 28,
+                        flexShrink: 0,
                       }}
                     >
+                      <input
+                        type="checkbox"
+                        checked={manualApproval}
+                        onChange={(e) => setManualApproval(e.target.checked)}
+                        style={{ opacity: 0, width: 0, height: 0 }}
+                        aria-label="Aprobación manual de agentes"
+                      />
                       <span
                         style={{
                           position: "absolute",
-                          content: "",
-                          height: 22,
-                          width: 22,
-                          left: sharedCalendar ? 23 : 3,
-                          bottom: 3,
-                          background: "white",
+                          cursor: "pointer",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          background: manualApproval ? theme.primary : "#e5e5ea",
                           transition: "0.3s",
-                          borderRadius: "50%",
-                          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                          borderRadius: 28,
                         }}
-                      />
-                    </span>
-                  </label>
+                      >
+                        <span
+                          style={{
+                            position: "absolute",
+                            height: 22,
+                            width: 22,
+                            left: manualApproval ? 23 : 3,
+                            bottom: 3,
+                            background: "white",
+                            transition: "0.3s",
+                            borderRadius: "50%",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                          }}
+                        />
+                      </span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>

@@ -57,6 +57,8 @@ export interface PropertyImageDTO {
 
     allow_chat?: boolean | null;
 
+    accepts_agent_participation?: boolean | null;
+
     publisher_info?: {
       publisher_id: string;
       publisher_type: "OWNER" | "AGENT";

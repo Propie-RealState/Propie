@@ -1,4 +1,4 @@
-import { API_URL } from "../../../../lib/api-base";
+import { apiFetch } from "../../../../lib/api";
 import type { GlobalSearchResponse } from "../types/global-search.types";
 
 const EMPTY_RESULTS: GlobalSearchResponse = {
@@ -25,14 +25,7 @@ export async function fetchGlobalSearch(
     limit: String(limit),
   });
 
-  const response = await fetch(
-    `${API_URL}/search?${params.toString()}`,
-    { signal },
-  );
-
-  if (!response.ok) {
-    throw new Error("No pudimos completar la búsqueda.");
-  }
-
-  return response.json();
+  return apiFetch<GlobalSearchResponse>(`/search?${params.toString()}`, {
+    signal,
+  });
 }

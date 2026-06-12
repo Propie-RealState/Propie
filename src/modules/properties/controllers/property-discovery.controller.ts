@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 
+import { isAgentDiscoveryAudience } from "../utils/discovery-audience";
 import { findPropertyByIdService } from "../services/find-property-by-id.service";
 import { getMapPropertiesService } from "../services/get-map-properties.service";
 import { getMyPropertiesService } from "../services/get-my-properties.service";
@@ -14,7 +15,9 @@ export async function getPropertiesController(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const properties = await getPropertiesService();
+  const properties = await getPropertiesService({
+    forAgentDiscovery: isAgentDiscoveryAudience(request),
+  });
 
   return reply.send(properties);
 }
@@ -25,7 +28,9 @@ export async function getMapPropertiesController(
 ) {
   const query = PropertyMapQuerySchema.parse(request.query);
 
-  const items = await getMapPropertiesService(query);
+  const items = await getMapPropertiesService(query, {
+    forAgentDiscovery: isAgentDiscoveryAudience(request),
+  });
 
   return reply.send({
     items,
@@ -38,7 +43,9 @@ export async function getNearbyPropertiesController(
 ) {
   const query = NearbyPropertiesQuerySchema.parse(request.query);
 
-  const items = await getNearbyPropertiesService(query);
+  const items = await getNearbyPropertiesService(query, {
+    forAgentDiscovery: isAgentDiscoveryAudience(request),
+  });
 
   return reply.send({
     items,

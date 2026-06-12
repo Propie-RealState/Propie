@@ -151,8 +151,6 @@ export async function savePropertyCommercializationController(
     propertyId: request.params.id,
     commercializationType: request.body.commercializationType,
     manualApproval: request.body.manualApproval,
-    allowChat: request.body.allowChat,
-    sharedCalendar: request.body.sharedCalendar,
   });
 
   return reply.send({

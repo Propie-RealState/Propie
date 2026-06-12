@@ -95,9 +95,14 @@ function slugifyLocationId(
  * Global platform search. SQL filters candidates; ranking is applied in-memory
  * so we can swap the repository for PostgreSQL FTS or Algolia/Meilisearch later.
  */
+type GlobalSearchOptions = {
+  forAgentDiscovery?: boolean;
+};
+
 export async function globalSearchService(
   query: string,
   limitPerGroup = 8,
+  options: GlobalSearchOptions = {},
 ): Promise<GlobalSearchResponse> {
   const normalizedQuery =
     normalizeSearchText(query);
@@ -123,10 +128,7 @@ export async function globalSearchService(
     agentRows,
     ownerRows,
   ] = await Promise.all([
-    searchPropertiesRepository(
-      query,
-      candidateLimit,
-    ),
+    searchPropertiesRepository(query, candidateLimit, options),
     searchLocationsRepository(
       query,
       candidateLimit,

@@ -1,12 +1,26 @@
 import { db } from "@/database/client";
 
+import {
+  acceptsAgentParticipationSql,
+  propertyCommercializationJoin,
+} from "../constants/commercialization-mode.constants";
 import { exploreVisibilitySql } from "../constants/property-status.constants";
 import {
   MapViewportQuery,
   NearbyPropertiesQuery,
 } from "../types/property-map.types";
 
-export async function getPropertiesRepository() {
+type DiscoveryQueryOptions = {
+  forAgentDiscovery?: boolean;
+};
+
+export async function getPropertiesRepository(
+  options: DiscoveryQueryOptions = {},
+) {
+  const agentDiscoveryFilter = options.forAgentDiscovery
+    ? `AND ${acceptsAgentParticipationSql("pc")}`
+    : "";
+
   const result = await db.query(`
     SELECT *
     FROM (
@@ -30,7 +44,9 @@ export async function getPropertiesRepository() {
       LEFT JOIN property_images pi
         ON pi.property_id = p.id
         AND pi.is_cover = true
+      ${propertyCommercializationJoin("p", "pc")}
       WHERE ${exploreVisibilitySql("p")}
+        ${agentDiscoveryFilter}
       ORDER BY p.id, p.created_at DESC
     ) published
     ORDER BY created_at DESC
@@ -122,7 +138,12 @@ export async function findPropertyByIdRepository(propertyId: string) {
               GROUP BY target_user_id
             ) ors ON ors.target_user_id = ou.id
             LEFT JOIN (
-              SELECT owner_id, COUNT(*) FILTER (WHERE status = 'ACTIVE' AND published_at IS NOT NULL)::int AS active_count
+              SELECT
+                owner_id,
+                COUNT(*) FILTER (
+                  WHERE published_at IS NOT NULL
+                    AND status IN ('ACTIVE', 'PAUSED', 'RESERVED')
+                )::int AS active_count
               FROM properties
               GROUP BY owner_id
             ) opc ON opc.owner_id = ou.id
@@ -136,6 +157,18 @@ export async function findPropertyByIdRepository(propertyId: string) {
           WHERE pc.property_id = p.id
           LIMIT 1
         ) AS allow_chat,
+
+        (
+          SELECT COALESCE(
+            (
+              SELECT COALESCE(pc.commercialization_mode, 'WITH_AGENTS') = 'WITH_AGENTS'
+              FROM property_commercialization pc
+              WHERE pc.property_id = p.id
+              LIMIT 1
+            ),
+            true
+          )
+        ) AS accepts_agent_participation,
 
         (
           SELECT row_to_json(t) FROM (
@@ -248,11 +281,16 @@ function buildFilterSql(
     "operationType" | "propertyType" | "minPrice" | "maxPrice"
   >,
   values: unknown[],
+  options: DiscoveryQueryOptions = {},
 ) {
   const filters = [
     "p.published_at IS NOT NULL AND p.status IN ('ACTIVE', 'PAUSED', 'RESERVED')",
     "pl.coordinates IS NOT NULL",
   ];
+
+  if (options.forAgentDiscovery) {
+    filters.push(acceptsAgentParticipationSql("pc"));
+  }
 
   if (input.operationType) {
     values.push(input.operationType);
@@ -277,7 +315,10 @@ function buildFilterSql(
   return filters.join("\n          AND ");
 }
 
-export async function getMapPropertiesRepository(input: MapViewportQuery) {
+export async function getMapPropertiesRepository(
+  input: MapViewportQuery,
+  options: DiscoveryQueryOptions = {},
+) {
   const values: unknown[] = [
     input.swlng,
     input.swlat,
@@ -285,7 +326,10 @@ export async function getMapPropertiesRepository(input: MapViewportQuery) {
     input.nelat,
   ];
 
-  const filters = buildFilterSql(input, values);
+  const filters = buildFilterSql(input, values, options);
+  const commercializationJoin = options.forAgentDiscovery
+    ? propertyCommercializationJoin("p", "pc")
+    : "";
 
   if (input.zoom >= CLUSTER_ZOOM_THRESHOLD) {
     const result = await db.query(
@@ -314,6 +358,7 @@ export async function getMapPropertiesRepository(input: MapViewportQuery) {
           FROM properties p
           INNER JOIN property_locations pl
             ON pl.property_id = p.id
+          ${commercializationJoin}
           LEFT JOIN LATERAL (
             SELECT COALESCE(pi.thumb_url, pi.image_url) AS cover_image
             FROM property_images pi
@@ -365,6 +410,7 @@ export async function getMapPropertiesRepository(input: MapViewportQuery) {
           FROM properties p
           INNER JOIN property_locations pl
             ON pl.property_id = p.id
+          ${commercializationJoin}
           CROSS JOIN bounds b
           WHERE ${filters}
             AND pl.coordinates::geometry && b.geom
@@ -462,11 +508,16 @@ function buildNearbyFilterSql(
     "operationType" | "propertyType" | "minPrice" | "maxPrice"
   >,
   values: unknown[],
+  options: DiscoveryQueryOptions = {},
 ) {
   const filters = [
     "p.published_at IS NOT NULL AND p.status IN ('ACTIVE', 'PAUSED', 'RESERVED')",
     "pl.coordinates IS NOT NULL",
   ];
+
+  if (options.forAgentDiscovery) {
+    filters.push(acceptsAgentParticipationSql("pc"));
+  }
 
   if (input.operationType) {
     values.push(input.operationType);
@@ -493,10 +544,14 @@ function buildNearbyFilterSql(
 
 export async function getNearbyPropertiesRepository(
   input: NearbyPropertiesQuery,
+  options: DiscoveryQueryOptions = {},
 ) {
   const values: unknown[] = [input.lng, input.lat, input.radius];
 
-  const filters = buildNearbyFilterSql(input, values);
+  const filters = buildNearbyFilterSql(input, values, options);
+  const commercializationJoin = options.forAgentDiscovery
+    ? propertyCommercializationJoin("p", "pc")
+    : "";
 
   values.push(input.limit);
   const limitParam = values.length;
@@ -527,6 +582,7 @@ export async function getNearbyPropertiesRepository(
         FROM properties p
         INNER JOIN property_locations pl
           ON pl.property_id = p.id
+        ${commercializationJoin}
         CROSS JOIN origin
         WHERE ${filters}
           AND ST_DWithin(

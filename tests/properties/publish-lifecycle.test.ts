@@ -112,8 +112,6 @@ describe("property publish lifecycle", () => {
       payload: {
         commercializationType: "AGENTS",
         manualApproval: true,
-        allowChat: true,
-        sharedCalendar: false,
       },
     });
 

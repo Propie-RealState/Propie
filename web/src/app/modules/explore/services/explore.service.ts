@@ -2,21 +2,10 @@ import type { PropertyDTO } from "../types/property.dto";
 import type { Property } from "../types/property.types";
 
 import { mapPropertyDtoToProperty } from "../mappers/property.mapper";
-import { API_URL } from "../../../../lib/api-base";
+import { apiFetch } from "../../../../lib/api";
 
 export async function getPublishedProperties(): Promise<Property[]> {
-  const response = await fetch(
-    `${API_URL}/properties`
-  );
-
-  if (!response.ok) {
-    throw new Error(
-      "Error obteniendo propiedades"
-    );
-  }
-
-  const data: PropertyDTO[] =
-    await response.json();
+  const data = await apiFetch<PropertyDTO[]>("/properties");
 
   const properties = data.map(mapPropertyDtoToProperty);
   const seen = new Set<string>();
