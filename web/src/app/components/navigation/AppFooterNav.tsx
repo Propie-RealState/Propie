@@ -186,8 +186,8 @@ export function AppFooterNav() {
             {navBtn(Search, 'Explorar', '/explore')}
             {navBtn(Plus, 'Publicar', '/publicar', startCreatePublish)}
             {navBtn(Building2, 'Mis Props.', '/mis-propiedades')}
-            {navBtn(CalendarDays, 'Visitas', '/visitas')}
             {navBtn(MessageCircle, 'Mensajes', '/mensajes', undefined, unreadConversations)}
+            {navBtn(User, 'Perfil', '/perfil')}
           </>
         )}
       </div>

@@ -57,7 +57,12 @@ export async function getUserPublicProfileRepository(
         GROUP BY target_user_id
       ) rs ON rs.target_user_id = u.id
       LEFT JOIN (
-        SELECT owner_id, COUNT(*) FILTER (WHERE status = 'ACTIVE' AND published_at IS NOT NULL)::int AS active_count
+        SELECT
+          owner_id,
+          COUNT(*) FILTER (
+            WHERE published_at IS NOT NULL
+              AND status IN ('ACTIVE', 'PAUSED', 'RESERVED')
+          )::int AS active_count
         FROM properties
         GROUP BY owner_id
       ) opc ON opc.owner_id = u.id

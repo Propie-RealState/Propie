@@ -12,6 +12,7 @@ import {
   revokeOwnerAgentApplication,
   updateOwnerAgentApplicationStatus,
 } from "../services/agent-applications.service";
+import { PropertyAgentParticipationBlockedError } from "@/modules/properties/services/assert-property-accepts-agents.service";
 import {
   createAgentApplicationSchema,
   updateAgentApplicationStatusSchema,
@@ -30,16 +31,27 @@ export async function createAgentApplicationController(
 
   const body = createAgentApplicationSchema.parse(request.body);
 
-  const application = await createAgentApplication({
-    propertyId: body.propertyId,
-    agentId: request.user.id,
-    message: body.message,
-  });
+  try {
+    const application = await createAgentApplication({
+      propertyId: body.propertyId,
+      agentId: request.user.id,
+      message: body.message,
+    });
 
-  return reply.status(201).send({
-    success: true,
-    data: application,
-  });
+    return reply.status(201).send({
+      success: true,
+      data: application,
+    });
+  } catch (error) {
+    if (error instanceof PropertyAgentParticipationBlockedError) {
+      return reply.status(403).send({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    throw error;
+  }
 }
 
 export async function getOwnerAgentApplicationsController(
@@ -132,16 +144,29 @@ export async function updateOwnerAgentApplicationStatusController(
     });
   }
 
-  const application = isRevokeAcceptedAgent
-    ? await revokeOwnerAgentApplication({
-        applicationId: request.params.id,
-        ownerId: request.user.id,
-      })
-    : await updateOwnerAgentApplicationStatus({
-        applicationId: request.params.id,
-        ownerId: request.user.id,
-        status: body.status,
+  let application;
+
+  try {
+    application = isRevokeAcceptedAgent
+      ? await revokeOwnerAgentApplication({
+          applicationId: request.params.id,
+          ownerId: request.user.id,
+        })
+      : await updateOwnerAgentApplicationStatus({
+          applicationId: request.params.id,
+          ownerId: request.user.id,
+          status: body.status,
+        });
+  } catch (error) {
+    if (error instanceof PropertyAgentParticipationBlockedError) {
+      return reply.status(403).send({
+        success: false,
+        message: error.message,
       });
+    }
+
+    throw error;
+  }
 
   if (!application) {
     return reply.status(404).send({

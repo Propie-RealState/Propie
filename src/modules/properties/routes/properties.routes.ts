@@ -54,19 +54,25 @@ export async function propertiesRoutes(app: FastifyInstance) {
 
   app.get(
     "/",
-
+    {
+      preHandler: optionalAuthMiddleware,
+    },
     getPropertiesController as RouteHandlerMethod,
   );
 
   app.get(
     "/map",
-
+    {
+      preHandler: optionalAuthMiddleware,
+    },
     getMapPropertiesController as RouteHandlerMethod,
   );
 
   app.get(
     "/nearby",
-
+    {
+      preHandler: optionalAuthMiddleware,
+    },
     getNearbyPropertiesController as RouteHandlerMethod,
   );
   

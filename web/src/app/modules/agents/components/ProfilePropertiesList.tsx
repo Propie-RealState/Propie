@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import PropertyCard from "../../explore/components/PropertyCard";
+import { PropertyCompactCard } from "../../../components/properties/PropertyCompactCard";
+import "../../../components/properties/property-presentation.css";
 import { mapPropertyDtoToProperty } from "../../explore/mappers/property.mapper";
 import type { Property } from "../../explore/types/property.types";
 import {
@@ -107,9 +108,9 @@ export function ProfilePropertiesList({
         {title}
       </h3>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div className="property-grid">
         {properties.map((property) => (
-          <PropertyCard
+          <PropertyCompactCard
             key={property.id}
             property={property}
             isFav={false}

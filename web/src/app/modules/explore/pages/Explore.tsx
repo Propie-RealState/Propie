@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import PropertyCard from "../components/PropertyCard";
+import { PropertyCompactCard } from "../../../components/properties/PropertyCompactCard";
+import "../../../components/properties/property-presentation.css";
 import GlobalSearchBar from "../components/GlobalSearchBar";
 import React from "react";
 import {
@@ -149,7 +150,6 @@ export default function Explore() {
 
   const listContentStyle: React.CSSProperties = {
     width: "100%",
-    maxWidth: 520,
     margin: "0 auto",
   };
 
@@ -384,9 +384,9 @@ export default function Explore() {
             </p>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div className="property-grid">
             {filtered.map((property) => (
-              <PropertyCard
+              <PropertyCompactCard
                 key={property.id}
                 property={property}
                 isFav={favorites.includes(property.id)}

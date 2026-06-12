@@ -11,6 +11,7 @@ import {
   notifyAgentApplicationStatus,
   notifyOwnerAgentApplicationReceived,
 } from "@/modules/notifications/services/notification-dispatch.service";
+import { assertPropertyAcceptsAgents } from "@/modules/properties/services/assert-property-accepts-agents.service";
 import { db } from "@/database/client";
 
 export async function createAgentApplication(input: {
@@ -18,6 +19,8 @@ export async function createAgentApplication(input: {
   agentId: string;
   message?: string | null;
 }) {
+  await assertPropertyAcceptsAgents(input.propertyId);
+
   const application = await createAgentApplicationRepository({
     propertyId: input.propertyId,
     agentId: input.agentId,
@@ -96,6 +99,14 @@ export async function updateOwnerAgentApplicationStatus(input: {
   ownerId: string;
   status: "ACCEPTED" | "REJECTED";
 }) {
+  if (input.status === "ACCEPTED") {
+    const existing = await findOwnerAgentApplicationByIdRepository(input);
+
+    if (existing) {
+      await assertPropertyAcceptsAgents(existing.property_id);
+    }
+  }
+
   const application = await updateOwnerAgentApplicationStatusRepository(input);
 
   if (application) {

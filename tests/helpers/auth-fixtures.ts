@@ -103,7 +103,10 @@ export async function insertPropertyImage(propertyId: string) {
       )
       VALUES ($1, $2, true)
     `,
-    [propertyId, "https://example.com/test-image.jpg"],
+    [
+      propertyId,
+      "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+    ],
   );
 }
 

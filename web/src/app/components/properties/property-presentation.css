@@ -1,0 +1,59 @@
+.property-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 640px) {
+  .property-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .property-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+}
+
+.property-compact-card {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.property-compact-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.property-compact-card:focus-visible {
+  outline: 2px solid #4417e6;
+  outline-offset: 2px;
+}
+
+.property-management-row {
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.property-management-row:hover {
+  background: #f8f9fb;
+}
+
+.property-management-row:focus-visible {
+  outline: 2px solid #4417e6;
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .property-compact-card,
+  .property-management-row {
+    transition: none;
+  }
+
+  .property-compact-card:hover {
+    transform: none;
+  }
+}

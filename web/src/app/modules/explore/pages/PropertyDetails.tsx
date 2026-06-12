@@ -1394,7 +1394,7 @@ export default function PropertyDetails() {
       )}
 
       {/* CTA sticky - Agent */}
-      {isAgent && !canManageProperty && (
+      {isAgent && !canManageProperty && property?.acceptsAgentParticipation !== false && (
         <div
           style={{
             position: "fixed",
