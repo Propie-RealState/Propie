@@ -8,7 +8,6 @@ import { getAgentPropertyStatsRepository } from "../repositories/agent-property-
 import {
   createUserReviewRepository,
   getUserReviewsRepository,
-  getUserReviewStatsRepository,
 } from "../repositories/user-reviews.repository";
 import {
   canReviewRepository,
