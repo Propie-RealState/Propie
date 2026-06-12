@@ -15,10 +15,10 @@ export async function findPropertyByIdController(
   }>,
   reply: FastifyReply
 ) {
-  const property =
-    await findPropertyByIdService(
-      request.params.id
-    );
+  const property = await findPropertyByIdService({
+    propertyId: request.params.id,
+    viewerUserId: request.user?.id,
+  });
 
   if (!property) {
     return reply

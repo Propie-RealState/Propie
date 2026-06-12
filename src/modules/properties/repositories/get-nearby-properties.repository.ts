@@ -16,7 +16,7 @@ function buildNearbyFilterSql(
   values: unknown[]
 ) {
   const filters = [
-    "p.status = 'PUBLISHED'",
+    "p.published_at IS NOT NULL AND p.status IN ('ACTIVE', 'PAUSED', 'RESERVED')",
     "pl.coordinates IS NOT NULL",
   ];
 

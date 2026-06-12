@@ -19,10 +19,14 @@ import {
   import {
     notifyPropertyPublished,
   } from "@/modules/notifications/services/notification-dispatch.service";
+
+  import { PROPERTY_EVENT_TYPES } from "../constants/property-status.constants";
+  import { insertPropertyEventRepository } from "../repositories/property-events.repository";
+  import type { PublisherType } from "../constants/property-status.constants";
   
   type Input = {
-    ownerId: string;
-  
+    userId: string;
+    publisherType: PublisherType;
     propertyId: string;
   };
   
@@ -42,7 +46,7 @@ import {
     }
   
     await assertCanManageProperty(
-      input.ownerId,
+      input.userId,
       input.propertyId,
     );
   
@@ -90,10 +94,20 @@ import {
       input.propertyId
     );
   
-    const publishedProperty =
-      await publishPropertyRepository(
-        input.propertyId
-      );
+    const publishedProperty = await publishPropertyRepository({
+      propertyId: input.propertyId,
+      publisherId: input.userId,
+      publisherType: input.publisherType,
+    });
+
+    await insertPropertyEventRepository({
+      propertyId: input.propertyId,
+      actorId: input.userId,
+      eventType: PROPERTY_EVENT_TYPES.PUBLISHED,
+      payload: {
+        publisherType: input.publisherType,
+      },
+    });
 
     try {
       await notifyPropertyPublished(input.propertyId);

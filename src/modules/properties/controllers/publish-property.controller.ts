@@ -20,16 +20,14 @@ import {
     const user =
       request.user;
   
-    const property =
-      await publishPropertyService(
-        {
-          ownerId:
-            user.id,
-  
-          propertyId:
-            request.params.id,
-        }
-      );
+    const publisherType =
+      user.role === "AGENT" ? "AGENT" : "OWNER";
+
+    const property = await publishPropertyService({
+      userId: user.id,
+      publisherType,
+      propertyId: request.params.id,
+    });
   
     return reply.send({
       success: true,

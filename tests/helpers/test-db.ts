@@ -26,12 +26,15 @@ export async function seedConversationFixture(): Promise<ConversationFixture> {
         title,
         property_type,
         operation_type,
-        status
+        status,
+        publisher_id,
+        publisher_type,
+        published_at
       )
-      VALUES ($1, $2, $3, $4, $5)
+      VALUES ($1, $2, $3, $4, $5, $1, 'OWNER', now())
       RETURNING id
     `,
-    [ownerId, "Test Property", "HOUSE", "SALE", "PUBLISHED"],
+    [ownerId, "Test Property", "HOUSE", "SALE", "ACTIVE"],
   );
 
   const propertyId = property.rows[0].id;
@@ -145,12 +148,15 @@ export async function seedStartConversationProperty(): Promise<StartConversation
         title,
         property_type,
         operation_type,
-        status
+        status,
+        publisher_id,
+        publisher_type,
+        published_at
       )
-      VALUES ($1, $2, $3, $4, $5)
+      VALUES ($1, $2, $3, $4, $5, $1, 'OWNER', now())
       RETURNING id
     `,
-    [ownerId, "Start Conversation Property", "HOUSE", "SALE", "PUBLISHED"],
+    [ownerId, "Start Conversation Property", "HOUSE", "SALE", "ACTIVE"],
   );
 
   const propertyId = property.rows[0].id;

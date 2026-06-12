@@ -1,5 +1,7 @@
 import { db } from "@/database/client";
 
+import { exploreVisibilitySql } from "../constants/property-status.constants";
+
 export async function getPropertiesRepository() {
   const result = await db.query(`
     SELECT *
@@ -24,7 +26,7 @@ export async function getPropertiesRepository() {
       LEFT JOIN property_images pi
         ON pi.property_id = p.id
         AND pi.is_cover = true
-      WHERE p.status = 'PUBLISHED'
+      WHERE ${exploreVisibilitySql("p")}
       ORDER BY p.id, p.created_at DESC
     ) published
     ORDER BY created_at DESC

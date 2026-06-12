@@ -1,6 +1,9 @@
 import { FastifyInstance, FastifyRequest, RouteHandlerMethod } from "fastify";
 
-import { authMiddleware } from "@/middlewares/auth.middleware";
+import {
+  authMiddleware,
+  optionalAuthMiddleware,
+} from "@/middlewares/auth.middleware";
 import { requireRoles } from "@/middlewares/require-roles.middleware";
 import {
   PROPERTY_MANAGER_ROLES,
@@ -49,6 +52,12 @@ import { getMapPropertiesController } from "../controllers/get-map-properties.co
 
 import { getNearbyPropertiesController } from "../controllers/get-nearby-properties.controller";
 
+import { updatePropertyStatusController } from "../controllers/update-property-status.controller";
+
+import { subscribePropertyStatusController } from "../controllers/subscribe-property-status.controller";
+
+import { UpdatePropertyStatusSchema } from "../schemas/update-property-status.schema";
+
 export async function propertiesRoutes(app: FastifyInstance) {
   app.post(
     "/",
@@ -88,8 +97,37 @@ export async function propertiesRoutes(app: FastifyInstance) {
 
   app.get(
     "/:id",
-
+    {
+      preHandler: optionalAuthMiddleware,
+    },
     findPropertyByIdController as RouteHandlerMethod,
+  );
+
+  app.patch(
+    "/:id/status",
+    {
+      preHandler: authMiddleware,
+    },
+    async (request, reply) => {
+      const body = UpdatePropertyStatusSchema.parse(request.body);
+
+      return updatePropertyStatusController(
+        {
+          ...request,
+          params: { id: (request.params as { id: string }).id },
+          body,
+        },
+        reply,
+      );
+    },
+  );
+
+  app.post(
+    "/:id/status-subscriptions",
+    {
+      preHandler: authMiddleware,
+    },
+    subscribePropertyStatusController as RouteHandlerMethod,
   );
 
   app.patch(

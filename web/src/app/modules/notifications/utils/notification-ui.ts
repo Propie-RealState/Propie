@@ -1,6 +1,8 @@
 export function getNotificationIcon(type: string) {
   switch (type) {
     case 'NEW_PROPERTY_NEARBY':
+    case 'PROPERTY_ACTIVE_AGAIN':
+      return 'Propiedad activa';
     case 'PROPERTY_PUBLISHED':
       return 'map-pin';
     case 'PROPERTY_PRICE_CHANGED':

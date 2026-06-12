@@ -128,3 +128,26 @@ export async function authMiddleware(
       });
   }
 }
+
+export async function optionalAuthMiddleware(
+  request: FastifyRequest,
+) {
+  const authorization = request.headers.authorization;
+
+  if (!authorization) {
+    return;
+  }
+
+  try {
+    const token = authorization.replace("Bearer ", "");
+    const payload = verifyAccessToken(token);
+
+    request.user = {
+      id: payload.sub,
+      email: payload.email,
+      role: payload.role,
+    };
+  } catch {
+    // guest continues
+  }
+}
