@@ -1,4 +1,4 @@
-import { getMyPropertiesRepository } from "../repositories/get-my-properties.repository";
+import { getMyPropertiesRepository } from "../repositories/property-read.repository";
 
 export async function getMyPropertiesService(
   userId: string

@@ -10,52 +10,35 @@ import {
   PUBLISHER_ROLES,
 } from "@/constants/roles";
 
-import { createPropertyController } from "../controllers/create-property.controller";
-
-import { findPropertyByIdController } from "../controllers/find-property-by-id.controller";
-
-import { updatePropertyBasicController } from "../controllers/update-property-basic.controller";
-
-import { updatePropertyLocationController } from "../controllers/update-property-location.controller";
-
-import { UpdatePropertyLocationSchema } from "../schemas/update-property-location.schema";
-
-import { uploadPropertyImagesController } from "../controllers/upload-property-images.controller";
-
-import { savePropertyAmenitiesController } from "../controllers/save-property-amenities.controller";
-
+import {
+  findPropertyByIdController,
+  getMapPropertiesController,
+  getMyPropertiesController,
+  getNearbyPropertiesController,
+  getPropertiesController,
+} from "../controllers/property-discovery.controller";
+import {
+  createPropertyController,
+  publishPropertyController,
+  savePropertyAmenitiesController,
+  savePropertyCommercializationController,
+  updatePropertyBasicController,
+  updatePropertyLocationController,
+  updatePropertyStatusController,
+} from "../controllers/property-lifecycle.controller";
+import {
+  deletePropertyImageController,
+  deletePropertyVideoController,
+  updatePropertyImageCoverController,
+  updatePropertyImagesOrderController,
+  updatePropertyMediaOrderController,
+  uploadPropertyImagesController,
+  uploadPropertyVideosController,
+} from "../controllers/property-media.controller";
+import { subscribePropertyStatusController } from "../controllers/property-subscriptions.controller";
 import { updatePropertyAmenitiesSchema } from "../schemas/update-property-amenities.schema";
-
-import { savePropertyCommercializationController } from "../controllers/save-property-commercialization.controller";
-
 import { updatePropertyCommercializationSchema } from "../schemas/update-property-commercialization.schema";
-
-import { publishPropertyController } from "../controllers/publish-property.controller";
-
-import { getPropertiesController } from "../controllers/get-properties.controller";
-
-import { getMyPropertiesController } from "../controllers/get-my-properties.controller";
-
-import { deletePropertyImageController } from "../controllers/delete-property-image.controller";
-
-import { updatePropertyImageCoverController } from "../controllers/update-property-image-cover.controller";
-
-import { updatePropertyImagesOrderController } from "../controllers/update-property-images-order.controller";
-
-import { uploadPropertyVideosController } from "../controllers/upload-property-videos.controller";
-
-import { updatePropertyMediaOrderController } from "../controllers/update-property-media-order.controller";
-
-import { deletePropertyVideoController } from "../controllers/delete-property-video.controller";
-
-import { getMapPropertiesController } from "../controllers/get-map-properties.controller";
-
-import { getNearbyPropertiesController } from "../controllers/get-nearby-properties.controller";
-
-import { updatePropertyStatusController } from "../controllers/update-property-status.controller";
-
-import { subscribePropertyStatusController } from "../controllers/subscribe-property-status.controller";
-
+import { UpdatePropertyLocationSchema } from "../schemas/update-property-location.schema";
 import { UpdatePropertyStatusSchema } from "../schemas/update-property-status.schema";
 
 export async function propertiesRoutes(app: FastifyInstance) {

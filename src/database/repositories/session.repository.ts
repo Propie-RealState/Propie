@@ -240,6 +240,18 @@ export async function revokeAllUserSessions(
   );
 }
 
+export async function deleteAllUserSessions(
+  userId: string,
+): Promise<void> {
+  await db.query(
+    `
+      DELETE FROM sessions
+      WHERE user_id = $1
+    `,
+    [userId],
+  );
+}
+
 
 
 // ========================================================

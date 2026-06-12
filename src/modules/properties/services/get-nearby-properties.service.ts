@@ -4,7 +4,7 @@ import {
 
 import {
   getNearbyPropertiesRepository,
-} from "../repositories/get-nearby-properties.repository";
+} from "../repositories/property-read.repository";
 
 import {
   NearbyPropertiesQuery,

@@ -11,6 +11,7 @@ import {
 
 import { login } from "../services/auth/auth.service";
 import { createProfile } from "@/modules/profiles/repositories/profiles.repository";
+import { rateLimitRouteConfig } from "@/config/rate-limit";
 
 // ========================================================
 // REGISTER ROUTE
@@ -19,6 +20,7 @@ import { createProfile } from "@/modules/profiles/repositories/profiles.reposito
 export async function registerRoute(app: FastifyInstance) {
   app.post(
     "/auth/register",
+    { config: rateLimitRouteConfig("authRegister") },
 
     async (request, reply) => {
       // =====================================

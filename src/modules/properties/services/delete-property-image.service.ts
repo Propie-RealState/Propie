@@ -1,4 +1,4 @@
-import { deletePropertyImageRepository } from "../repositories/delete-property-image.repository";
+import { deletePropertyImageRepository } from "../repositories/property-media.repository";
 import { assertCanManageProperty } from "../utils/assert-can-manage-property";
 import { deleteFromStorage } from "@/lib/supabase";
 

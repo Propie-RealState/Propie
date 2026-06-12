@@ -4,7 +4,7 @@ import {
 
 import {
   getMapPropertiesRepository,
-} from "../repositories/get-map-properties.repository";
+} from "../repositories/property-read.repository";
 
 import {
   MapViewportQuery,

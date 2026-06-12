@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+  type InfiniteData,
+} from "@tanstack/react-query";
+import { useCallback, useMemo } from "react";
 
 import {
   getNotifications,
@@ -9,86 +15,144 @@ import {
 import { excludePropertyConversationNotifications } from "../utils/notification-filters";
 import { getNotificationRoute } from "../utils/notification-ui";
 
+const PAGE_SIZE = 20;
+const NOTIFICATIONS_LIST_KEY = ["notifications", "list"] as const;
+
+type NotificationsPage = {
+  visibleItems: NotificationItem[];
+  rawCount: number;
+  meta: {
+    total: number;
+    limit: number;
+    offset: number;
+    hasMore: boolean;
+  };
+};
+
+function patchNotificationsCache(
+  queryClient: ReturnType<typeof useQueryClient>,
+  patch: (item: NotificationItem) => NotificationItem,
+) {
+  queryClient.setQueryData<InfiniteData<NotificationsPage>>(
+    NOTIFICATIONS_LIST_KEY,
+    (current) => {
+      if (!current) {
+        return current;
+      }
+
+      return {
+        ...current,
+        pages: current.pages.map((page) => ({
+          ...page,
+          visibleItems: page.visibleItems.map(patch),
+        })),
+      };
+    },
+  );
+}
+
 export function useNotifications() {
-  const [items, setItems] = useState<NotificationItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
-  const [offset, setOffset] = useState(0);
+  const queryClient = useQueryClient();
 
-  const load = useCallback(async (nextOffset = 0, append = false) => {
-    if (append) {
-      setLoadingMore(true);
-    } else {
-      setLoading(true);
-    }
-
-    try {
+  const query = useInfiniteQuery({
+    queryKey: NOTIFICATIONS_LIST_KEY,
+    queryFn: async ({ pageParam }) => {
       const response = await getNotifications({
-        limit: 20,
-        offset: nextOffset,
+        limit: PAGE_SIZE,
+        offset: pageParam,
       });
 
-      const visibleItems = excludePropertyConversationNotifications(
-        response.items,
-      );
+      return {
+        visibleItems: excludePropertyConversationNotifications(
+          response.items,
+        ),
+        rawCount: response.items.length,
+        meta: response.meta ?? {
+          total: 0,
+          limit: PAGE_SIZE,
+          offset: pageParam,
+          hasMore: false,
+        },
+      };
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      if (!lastPage.meta?.hasMore) {
+        return undefined;
+      }
 
-      setItems((current) =>
-        append ? [...current, ...visibleItems] : visibleItems,
-      );
-      setOffset(nextOffset + response.items.length);
-      setHasMore(Boolean(response.meta?.hasMore));
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, []);
+      return allPages.reduce((offset, page) => offset + page.rawCount, 0);
+    },
+  });
 
-  useEffect(() => {
-    load(0, false);
-  }, [load]);
+  const items = useMemo(
+    () => query.data?.pages.flatMap((page) => page.visibleItems) ?? [],
+    [query.data],
+  );
 
-  const markRead = useCallback(async (notificationId: string) => {
-    await markNotificationRead(notificationId);
-    setItems((current) =>
-      current.map((item) =>
+  const invalidateUnreadCount = useCallback(() => {
+    void queryClient.invalidateQueries({
+      queryKey: ["notifications", "unread-count"],
+    });
+    window.dispatchEvent(new Event("notifications:changed"));
+  }, [queryClient]);
+
+  const markReadMutation = useMutation({
+    mutationFn: markNotificationRead,
+    onSuccess: (_, notificationId) => {
+      patchNotificationsCache(queryClient, (item) =>
         item.id === notificationId
           ? { ...item, read: true, readAt: new Date().toISOString() }
           : item,
-      ),
-    );
-    window.dispatchEvent(new Event("notifications:changed"));
-  }, []);
+      );
+      invalidateUnreadCount();
+    },
+  });
 
-  const markAllRead = useCallback(async () => {
-    await markAllNotificationsRead();
-    setItems((current) =>
-      current.map((item) => ({
+  const markAllReadMutation = useMutation({
+    mutationFn: markAllNotificationsRead,
+    onSuccess: () => {
+      patchNotificationsCache(queryClient, (item) => ({
         ...item,
         read: true,
         readAt: item.readAt ?? new Date().toISOString(),
-      })),
-    );
-    window.dispatchEvent(new Event("notifications:changed"));
-  }, []);
+      }));
+      invalidateUnreadCount();
+    },
+  });
+
+  const markRead = useCallback(
+    async (notificationId: string) => {
+      await markReadMutation.mutateAsync(notificationId);
+    },
+    [markReadMutation],
+  );
+
+  const markAllRead = useCallback(async () => {
+    await markAllReadMutation.mutateAsync();
+  }, [markAllReadMutation]);
 
   const loadMore = useCallback(async () => {
-    if (!hasMore || loadingMore) {
+    if (!query.hasNextPage || query.isFetchingNextPage) {
       return;
     }
 
-    await load(offset, true);
-  }, [hasMore, load, loadingMore, offset]);
+    await query.fetchNextPage();
+  }, [query]);
+
+  const reload = useCallback(() => {
+    void query.refetch();
+  }, [query]);
 
   return {
     items,
-    loading,
-    loadingMore,
-    hasMore,
+    loading: query.isLoading,
+    loadingMore: query.isFetchingNextPage,
+    hasMore: Boolean(query.hasNextPage),
     markRead,
     markAllRead,
     loadMore,
-    reload: () => load(0, false),
+    reload,
     getRoute: getNotificationRoute,
   };
 }

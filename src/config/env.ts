@@ -43,6 +43,11 @@ if (isProduction) {
     'JWT_REFRESH_SECRET',
     process.env.DEPLOY_JWT_REFRESH_SECRET
   );
+
+  setDefaultEnv(
+    'CRON_SECRET',
+    process.env.DEPLOY_CRON_SECRET
+  );
 } else {
   setDefaultEnv(
     'DB_HOST',
@@ -79,5 +84,11 @@ if (isProduction) {
     'JWT_REFRESH_SECRET',
     process.env.LOCAL_JWT_REFRESH_SECRET ||
       'local_dev_jwt_refresh_secret'
+  );
+
+  setDefaultEnv(
+    'CRON_SECRET',
+    process.env.LOCAL_CRON_SECRET ||
+      'local_dev_cron_secret'
   );
 }

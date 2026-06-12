@@ -1,50 +1,34 @@
-import { useEffect, useState } from "react";
-import { getAgentReviews, type AgentReview } from "../services/agents.service";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+
+import { getUserReviews, type AgentReview } from "../services/agents.service";
 
 export function useAgentReviews(agentId: string | undefined, initialLimit = 3) {
-  const [reviews, setReviews] = useState<AgentReview[]>([]);
-  const [loading, setLoading] = useState(false);
   const [limit, setLimit] = useState(initialLimit);
-  const [hasMore, setHasMore] = useState(false);
-  const [reloadToken, setReloadToken] = useState(0);
 
-  useEffect(() => {
-    if (!agentId) return;
+  const { data = [], isFetching, refetch } = useQuery({
+    queryKey: ["agents", "reviews", agentId, limit],
+    queryFn: async () => {
+      const fetchLimit = limit + 1;
+      return getUserReviews(agentId!, fetchLimit, 0);
+    },
+    enabled: Boolean(agentId),
+  });
 
-    let cancelled = false;
+  const hasMore = data.length > limit;
 
-    async function load() {
-      setLoading(true);
-      const FETCH_LIMIT = limit + 1;
-      const data = await getAgentReviews(agentId!, FETCH_LIMIT, 0);
-
-      if (cancelled) return;
-
-      if (data.length > limit) {
-        setReviews(data.slice(0, limit));
-        setHasMore(true);
-      } else {
-        setReviews(data);
-        setHasMore(false);
-      }
-
-      setLoading(false);
-    }
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [agentId, limit, reloadToken]);
+  const reviews: AgentReview[] = useMemo(
+    () => (hasMore ? data.slice(0, limit) : data),
+    [data, hasMore, limit],
+  );
 
   function loadMore() {
-    setLimit((prev) => prev + 5);
+    setLimit((previous) => previous + 5);
   }
 
   function refresh() {
-    setReloadToken((prev) => prev + 1);
+    void refetch();
   }
 
-  return { reviews, loading, hasMore, loadMore, refresh };
+  return { reviews, loading: isFetching, hasMore, loadMore, refresh };
 }

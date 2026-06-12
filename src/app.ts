@@ -2,6 +2,8 @@ import Fastify from "fastify";
 
 import cors from "@fastify/cors";
 
+import rateLimit from "@fastify/rate-limit";
+
 import multipart from "@fastify/multipart";
 
 import fastifyStatic from "@fastify/static";
@@ -37,8 +39,6 @@ import { propertyConversationsRoutes } from "./modules/property-conversations/ro
 import { propertyVisitsRoutes } from "./modules/property-visits/routes/property-visits.routes";
 
 import { notificationsRoutes } from "./modules/notifications/routes/notifications.routes";
-
-import { contactsRoutes } from "./modules/contacts/routes/contacts.routes";
 
 import { agentsRoutes } from "./modules/agents/routes/agents.routes";
 
@@ -81,6 +81,10 @@ export async function buildApp() {
       ...localOrigins,
     ]),
   ];
+
+  await app.register(rateLimit, {
+    global: false,
+  });
 
   await app.register(
     cors,
@@ -213,13 +217,6 @@ export async function buildApp() {
     notificationsRoutes,
     {
       prefix: "/notifications",
-    }
-  );
-
-  await app.register(
-    contactsRoutes,
-    {
-      prefix: "/contacts",
     }
   );
 

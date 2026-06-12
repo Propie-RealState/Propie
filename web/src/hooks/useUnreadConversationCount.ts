@@ -1,48 +1,42 @@
-import { useCallback, useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 import { listPropertyConversations } from "../app/modules/property-conversations/services/property-conversations.service";
 import { useAuth } from "../context/AuthContext";
+import { queryClient } from "../lib/query-client";
 
 export function useUnreadConversationCount() {
   const { user } = useAuth();
-  const [count, setCount] = useState(0);
 
-  const refresh = useCallback(async () => {
+  const { data: count = 0 } = useQuery({
+    queryKey: ["conversations", "unread-count", user?.id],
+    queryFn: async () => {
+      const conversations = await listPropertyConversations();
+      return conversations.filter(
+        (conversation) => (conversation.unreadCount ?? 0) > 0,
+      ).length;
+    },
+    enabled: Boolean(user),
+    refetchInterval: 60_000,
+  });
+
+  useEffect(() => {
     if (!user) {
-      setCount(0);
       return;
     }
 
-    try {
-      const conversations = await listPropertyConversations();
-      setCount(
-        conversations.filter(
-          (conversation) => (conversation.unreadCount ?? 0) > 0,
-        ).length,
-      );
-    } catch {
-      setCount(0);
-    }
-  }, [user?.id]);
-
-  useEffect(() => {
-    void refresh();
-
-    const interval = window.setInterval(() => {
-      void refresh();
-    }, 60_000);
-
     const handleChange = () => {
-      void refresh();
+      void queryClient.invalidateQueries({
+        queryKey: ["conversations", "unread-count", user.id],
+      });
     };
 
     window.addEventListener("property-conversations:changed", handleChange);
 
     return () => {
-      window.clearInterval(interval);
       window.removeEventListener("property-conversations:changed", handleChange);
     };
-  }, [refresh]);
+  }, [user?.id]);
 
   if (!user) {
     return 0;
