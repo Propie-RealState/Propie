@@ -14,6 +14,12 @@ export function getNotificationIcon(type: string) {
       return 'briefcase';
     case 'MESSAGE_RECEIVED':
       return 'message-circle';
+    case 'VISIT_CREATED':
+    case 'VISIT_CONFIRMED':
+    case 'VISIT_CANCELLED':
+    case 'VISIT_RESCHEDULED':
+    case 'VISIT_REMINDER':
+      return 'calendar';
     default:
       return 'bell';
   }
@@ -39,6 +45,17 @@ export function getNotificationRoute(notification: {
 
   if (notification.type.startsWith('AGENT_APPLICATION_')) {
     return '/solicitudes-agentes';
+  }
+
+  if (
+    notification.type.startsWith('VISIT_') ||
+    notification.entityType === 'property_visit'
+  ) {
+    if (notification.entityId) {
+      return `/visitas/${notification.entityId}`;
+    }
+
+    return '/visitas';
   }
 
   if (

@@ -53,12 +53,5 @@ ON property_assignments (is_active);
 CREATE INDEX IF NOT EXISTS idx_property_assignments_assigned_at
 ON property_assignments (assigned_at DESC);
 
-
-
--- =============================================================================
--- one active assignment per property
--- =============================================================================
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_property_assignments_unique_active
-ON property_assignments (property_id)
-WHERE is_active = true;
+-- Partial unique index for active assignments: see 031-multiple-agent-assignments.sql
+-- (014 originally enforced one active agent per property; superseded by multi-agent model)

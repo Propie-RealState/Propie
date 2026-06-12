@@ -34,6 +34,7 @@ import { favoritesRoutes } from "./modules/favorites/routes/favorites.routes";
 
 import { chatsRoutes } from "./modules/chats/routes/chats.routes";
 import { propertyConversationsRoutes } from "./modules/property-conversations/routes/property-conversations.routes";
+import { propertyVisitsRoutes } from "./modules/property-visits/routes/property-visits.routes";
 
 import { notificationsRoutes } from "./modules/notifications/routes/notifications.routes";
 
@@ -198,6 +199,13 @@ export async function buildApp() {
     propertyConversationsRoutes,
     {
       prefix: "/property-conversations",
+    }
+  );
+
+  await app.register(
+    propertyVisitsRoutes,
+    {
+      prefix: "/property-visits",
     }
   );
 

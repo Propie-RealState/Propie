@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Bell,
   Briefcase,
+  Calendar,
   Heart,
   MapPin,
   MessageCircle,
@@ -44,6 +45,12 @@ function NotificationIcon({
       return <Briefcase size={18} color={color} />;
     case 'MESSAGE_RECEIVED':
       return <MessageCircle size={18} color={color} />;
+    case 'VISIT_CREATED':
+    case 'VISIT_CONFIRMED':
+    case 'VISIT_CANCELLED':
+    case 'VISIT_RESCHEDULED':
+    case 'VISIT_REMINDER':
+      return <Calendar size={18} color={color} />;
     default:
       return <Bell size={18} color={color} />;
   }

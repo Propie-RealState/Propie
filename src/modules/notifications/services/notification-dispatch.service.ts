@@ -309,12 +309,270 @@ export async function notifyPropertyConversationMessage(input: {
       body: `${input.senderName}: ${input.preview}`,
       entityType: "property_conversation",
       entityId: input.conversationId,
-      metadata: {
-        senderName: input.senderName,
-        preview: input.preview,
-        propertyId: input.propertyId,
-      },
     }));
 
   return createNotifications(inputs);
+}
+
+function formatVisitScheduledAt(scheduledAt: string) {
+  return new Date(scheduledAt).toLocaleString("es-AR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "UTC",
+  });
+}
+
+function buildVisitNotificationInputs(input: {
+  type:
+    | typeof NOTIFICATION_TYPES.VISIT_CREATED
+    | typeof NOTIFICATION_TYPES.VISIT_CONFIRMED
+    | typeof NOTIFICATION_TYPES.VISIT_CANCELLED
+    | typeof NOTIFICATION_TYPES.VISIT_RESCHEDULED
+    | typeof NOTIFICATION_TYPES.VISIT_REMINDER;
+  visitId: string;
+  propertyId: string;
+  clientId: string;
+  agentId: string | null;
+  conversationId: string | null;
+  scheduledAt: string;
+  title: string;
+  body: string;
+  recipientUserIds: string[];
+  metadata?: Record<string, unknown>;
+}) {
+  const uniqueRecipientIds = uniqueUserIds(input.recipientUserIds);
+
+  return uniqueRecipientIds.map((userId) => ({
+    userId,
+    type: input.type,
+    title: input.title,
+    body: input.body,
+    entityType: "property_visit",
+    entityId: input.visitId,
+    metadata: {
+      propertyId: input.propertyId,
+      conversationId: input.conversationId,
+      scheduledAt: input.scheduledAt,
+      clientId: input.clientId,
+      agentId: input.agentId,
+      ...input.metadata,
+    },
+  }));
+}
+
+function getVisitRecipientUserIds(input: {
+  clientId: string;
+  agentId: string | null;
+  excludeUserId?: string;
+}) {
+  return [
+    input.clientId,
+    input.agentId,
+  ].filter(
+    (userId): userId is string =>
+      Boolean(userId) && userId !== input.excludeUserId,
+  );
+}
+
+export async function notifyVisitCreated(input: {
+  visitId: string;
+  propertyId: string;
+  clientId: string;
+  agentId: string | null;
+  conversationId: string | null;
+  scheduledAt: string;
+}) {
+  const when = formatVisitScheduledAt(input.scheduledAt);
+  const recipientUserIds = getVisitRecipientUserIds({
+    clientId: input.clientId,
+    agentId: input.agentId,
+  });
+
+  if (recipientUserIds.length === 0) {
+    return [];
+  }
+
+  return createNotifications(
+    buildVisitNotificationInputs({
+      type: NOTIFICATION_TYPES.VISIT_CREATED,
+      visitId: input.visitId,
+      propertyId: input.propertyId,
+      clientId: input.clientId,
+      agentId: input.agentId,
+      conversationId: input.conversationId,
+      scheduledAt: input.scheduledAt,
+      title: "Visita programada",
+      body: `Nueva visita programada para ${when}`,
+      recipientUserIds,
+    }),
+  );
+}
+
+export async function notifyVisitConfirmed(input: {
+  visitId: string;
+  propertyId: string;
+  clientId: string;
+  agentId: string | null;
+  conversationId: string | null;
+  scheduledAt: string;
+  confirmedByRole: "CLIENT" | "OWNER" | "AGENT";
+  excludeUserId?: string;
+}) {
+  const when = formatVisitScheduledAt(input.scheduledAt);
+  const recipientUserIds = getVisitRecipientUserIds({
+    clientId: input.clientId,
+    agentId: input.agentId,
+    excludeUserId: input.excludeUserId,
+  });
+
+  if (recipientUserIds.length === 0) {
+    return [];
+  }
+
+  return createNotifications(
+    buildVisitNotificationInputs({
+      type: NOTIFICATION_TYPES.VISIT_CONFIRMED,
+      visitId: input.visitId,
+      propertyId: input.propertyId,
+      clientId: input.clientId,
+      agentId: input.agentId,
+      conversationId: input.conversationId,
+      scheduledAt: input.scheduledAt,
+      title: "Visita confirmada",
+      body: `Visita confirmada para ${when}`,
+      recipientUserIds,
+      metadata: {
+        confirmedByRole: input.confirmedByRole,
+      },
+    }),
+  );
+}
+
+export async function notifyVisitCancelled(input: {
+  visitId: string;
+  propertyId: string;
+  clientId: string;
+  agentId: string | null;
+  conversationId: string | null;
+  scheduledAt: string;
+  reason: string | null;
+  cancelledByRole: "CLIENT" | "OWNER" | "AGENT";
+  excludeUserId?: string;
+}) {
+  const when = formatVisitScheduledAt(input.scheduledAt);
+  const recipientUserIds = getVisitRecipientUserIds({
+    clientId: input.clientId,
+    agentId: input.agentId,
+    excludeUserId: input.excludeUserId,
+  });
+
+  if (recipientUserIds.length === 0) {
+    return [];
+  }
+
+  const body = input.reason
+    ? `Visita del ${when} cancelada: ${input.reason}`
+    : `Visita del ${when} cancelada`;
+
+  return createNotifications(
+    buildVisitNotificationInputs({
+      type: NOTIFICATION_TYPES.VISIT_CANCELLED,
+      visitId: input.visitId,
+      propertyId: input.propertyId,
+      clientId: input.clientId,
+      agentId: input.agentId,
+      conversationId: input.conversationId,
+      scheduledAt: input.scheduledAt,
+      title: "Visita cancelada",
+      body,
+      recipientUserIds,
+      metadata: {
+        reason: input.reason,
+        cancelledByRole: input.cancelledByRole,
+      },
+    }),
+  );
+}
+
+export async function notifyVisitRescheduled(input: {
+  visitId: string;
+  propertyId: string;
+  clientId: string;
+  agentId: string | null;
+  conversationId: string | null;
+  scheduledAt: string;
+  previousScheduledAt: string;
+  excludeUserId?: string;
+}) {
+  const when = formatVisitScheduledAt(input.scheduledAt);
+  const recipientUserIds = getVisitRecipientUserIds({
+    clientId: input.clientId,
+    agentId: input.agentId,
+    excludeUserId: input.excludeUserId,
+  });
+
+  if (recipientUserIds.length === 0) {
+    return [];
+  }
+
+  return createNotifications(
+    buildVisitNotificationInputs({
+      type: NOTIFICATION_TYPES.VISIT_RESCHEDULED,
+      visitId: input.visitId,
+      propertyId: input.propertyId,
+      clientId: input.clientId,
+      agentId: input.agentId,
+      conversationId: input.conversationId,
+      scheduledAt: input.scheduledAt,
+      title: "Visita reprogramada",
+      body: `Visita reprogramada para ${when}`,
+      recipientUserIds,
+      metadata: {
+        previousScheduledAt: input.previousScheduledAt,
+      },
+    }),
+  );
+}
+
+export async function notifyVisitReminder(input: {
+  visitId: string;
+  propertyId: string;
+  clientId: string;
+  agentId: string | null;
+  conversationId: string | null;
+  scheduledAt: string;
+  offsetMinutes: number;
+}) {
+  const when = formatVisitScheduledAt(input.scheduledAt);
+  const recipientUserIds = getVisitRecipientUserIds({
+    clientId: input.clientId,
+    agentId: input.agentId,
+  });
+
+  if (recipientUserIds.length === 0) {
+    return [];
+  }
+
+  const reminderLabel =
+    input.offsetMinutes >= 60
+      ? `${Math.round(input.offsetMinutes / 60)} h`
+      : `${input.offsetMinutes} min`;
+
+  return createNotifications(
+    buildVisitNotificationInputs({
+      type: NOTIFICATION_TYPES.VISIT_REMINDER,
+      visitId: input.visitId,
+      propertyId: input.propertyId,
+      clientId: input.clientId,
+      agentId: input.agentId,
+      conversationId: input.conversationId,
+      scheduledAt: input.scheduledAt,
+      title: "Recordatorio de visita",
+      body: `Visita en ${reminderLabel} (${when})`,
+      recipientUserIds,
+      metadata: {
+        offsetMinutes: input.offsetMinutes,
+      },
+    }),
+  );
 }

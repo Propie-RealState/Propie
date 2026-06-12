@@ -205,6 +205,11 @@ export async function cleanupStartConversationProperty(
   fixture: StartConversationPropertyFixture,
 ) {
   await db.query(
+    `DELETE FROM property_visits WHERE property_id = $1`,
+    [fixture.propertyId],
+  );
+
+  await db.query(
     `DELETE FROM property_conversations WHERE property_id = $1`,
     [fixture.propertyId],
   );
@@ -231,6 +236,11 @@ export async function cleanupStartConversationProperty(
 }
 
 export async function cleanupFixture(fixture: ConversationFixture) {
+  await db.query(
+    `DELETE FROM property_visits WHERE property_id = $1`,
+    [fixture.propertyId],
+  );
+
   await db.query(
     `DELETE FROM property_conversations WHERE property_id = $1`,
     [fixture.propertyId],

@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, CalendarPlus, Send } from "lucide-react";
 
 import { useAppTheme } from "../../../../theme/useAppTheme";
 import { useAuth } from "../../../../context/AuthContext";
+import { isAgentRole, isOwnerRole } from "../../../../lib/roles";
+import { ScheduleVisitSheet } from "../../visits/components/ScheduleVisitSheet";
 import { getUserPublicProfile } from "../../agents/services/agents.service";
 import { useConversationPolling } from "../hooks/useConversationPolling";
 import {
@@ -47,6 +49,13 @@ export default function ConversationThread() {
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [showScheduleVisit, setShowScheduleVisit] = useState(false);
+
+  const canScheduleVisit =
+    (isAgentRole(user?.role) || isOwnerRole(user?.role))
+    && conversation?.conversationType === "PROPERTY_CLIENT"
+    && !conversation?.readOnly
+    && Boolean(conversationId);
 
   const loadThread = useCallback(async () => {
     if (!conversationId) {
@@ -314,11 +323,45 @@ export default function ConversationThread() {
         )}
       </div>
 
+      {canScheduleVisit && (
+        <div
+          style={{
+            flexShrink: 0,
+            background: "white",
+            borderTop: "1px solid #e5e5ea",
+            padding: "12px 16px 0",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setShowScheduleVisit(true)}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              background: `${colors.primary}12`,
+              color: colors.primary,
+              border: `1.5px solid ${colors.primary}33`,
+              borderRadius: 12,
+              padding: "10px 14px",
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            <CalendarPlus size={18} />
+            Agendar visita
+          </button>
+        </div>
+      )}
+
       <div
         style={{
           flexShrink: 0,
           background: "white",
-          borderTop: "1px solid #e5e5ea",
+          borderTop: canScheduleVisit ? "none" : "1px solid #e5e5ea",
           padding: "16px",
           display: "flex",
           gap: 12,
@@ -371,6 +414,16 @@ export default function ConversationThread() {
           />
         </button>
       </div>
+
+      {conversationId && (
+        <ScheduleVisitSheet
+          open={showScheduleVisit}
+          conversationId={conversationId}
+          primaryColor={colors.primary}
+          onClose={() => setShowScheduleVisit(false)}
+          onSuccess={() => void loadThread()}
+        />
+      )}
     </div>
   );
 }

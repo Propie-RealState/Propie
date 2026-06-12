@@ -1102,6 +1102,56 @@ export default function Profile() {
               <ChevronRight size={20} color="#9a9aa0" />
             </button>
 
+            <button
+              onClick={() => navigate("/visitas")}
+              style={{
+                width: "100%",
+                background: "none",
+                border: "none",
+                padding: "16px",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                cursor: "pointer",
+                borderRadius: 12,
+                transition: "background 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "#f5f5f7";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "none";
+              }}
+            >
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 10,
+                  background: colors.lightBg,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Calendar size={20} color={colors.primary} />
+              </div>
+              <span
+                style={{
+                  flex: 1,
+                  textAlign: "left",
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: "#1a1a1a",
+                }}
+              >
+                Calendario
+              </span>
+              <ChevronRight size={20} color="#9a9aa0" />
+            </button>
+
             {/* Notifications */}
             <button
               onClick={() => navigate("/notificaciones")}

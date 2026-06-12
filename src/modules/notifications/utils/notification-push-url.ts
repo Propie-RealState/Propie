@@ -21,6 +21,17 @@ export function buildNotificationDeepLink(input: {
     return "/solicitudes-agentes";
   }
 
+  if (
+    input.type.startsWith("VISIT_") ||
+    input.entityType === "property_visit"
+  ) {
+    if (input.entityId) {
+      return `/visitas/${input.entityId}`;
+    }
+
+    return "/visitas";
+  }
+
   if (input.entityType === "property" && input.entityId) {
     return `/propiedad/${input.entityId}`;
   }
