@@ -1,47 +1,46 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 
-import { useAuth } from '../context/AuthContext';
-import { getUnreadNotificationCount } from '../app/modules/notifications/services/notifications.service';
-import { useOwnerApplicationCount } from '../app/modules/agent-applications/hooks/useOwnerApplicationCount';
-import { canPublishProperties } from '../lib/roles';
+import { useAuth } from "../context/AuthContext";
+import { getUnreadNotificationCount } from "../app/modules/notifications/services/notifications.service";
+import { useOwnerApplicationCount } from "../app/modules/agent-applications/hooks/useOwnerApplicationCount";
+import { canPublishProperties } from "../lib/roles";
+import { queryClient } from "../lib/query-client";
 
 export function useNotificationCount() {
   const { user } = useAuth();
   const { count: ownerPendingCount } = useOwnerApplicationCount();
-  const [unreadCount, setUnreadCount] = useState(0);
 
-  const refresh = useCallback(async () => {
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ["notifications", "unread-count", user?.id],
+    queryFn: async () => {
+      try {
+        return await getUnreadNotificationCount();
+      } catch {
+        return 0;
+      }
+    },
+    enabled: Boolean(user),
+    refetchInterval: 60_000,
+  });
+
+  useEffect(() => {
     if (!user) {
-      setUnreadCount(0);
       return;
     }
 
-    try {
-      const count = await getUnreadNotificationCount();
-      setUnreadCount(count);
-    } catch {
-      setUnreadCount(0);
-    }
-  }, [user?.id]);
-
-  useEffect(() => {
-    refresh();
-
-    const interval = window.setInterval(() => {
-      void refresh();
-    }, 60_000);
-
     const handleChange = () => {
-      void refresh();
+      void queryClient.refetchQueries({
+        queryKey: ["notifications", "unread-count", user.id],
+      });
     };
 
     window.addEventListener("notifications:changed", handleChange);
 
     return () => {
-      window.clearInterval(interval);
       window.removeEventListener("notifications:changed", handleChange);
     };
-  }, [refresh]);
+  }, [user?.id]);
 
   if (!user) {
     return 0;
@@ -56,22 +55,14 @@ export function useNotificationCount() {
 
 export function useRefreshNotificationCount() {
   const { user } = useAuth();
-  const [tick, setTick] = useState(0);
 
-  const refresh = useCallback(() => {
-    setTick((value) => value + 1);
-  }, []);
-
-  useEffect(() => {
+  return () => {
     if (!user) {
       return;
     }
 
-    window.addEventListener('notifications:changed', refresh);
-    return () => {
-      window.removeEventListener('notifications:changed', refresh);
-    };
-  }, [refresh, user?.id, tick]);
-
-  return refresh;
+    void queryClient.refetchQueries({
+      queryKey: ["notifications", "unread-count", user.id],
+    });
+  };
 }

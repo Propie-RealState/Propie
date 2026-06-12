@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+
 import type { OwnedProperty } from "../types/my-properties.types";
 import { getMyProperties } from "../services/my-properties.service";
 
@@ -10,31 +11,21 @@ interface UseMyPropertiesResult {
 }
 
 export function useMyProperties(): UseMyPropertiesResult {
-  const [properties, setProperties] = useState<OwnedProperty[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchProperties = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getMyProperties();
-      setProperties(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProperties();
-  }, []);
+  const { data, isFetching, error, refetch } = useQuery({
+    queryKey: ["properties", "mine"],
+    queryFn: getMyProperties,
+  });
 
   return {
-    properties,
-    loading,
-    error,
-    refetch: fetchProperties,
+    properties: data ?? [],
+    loading: isFetching,
+    error: error
+      ? error instanceof Error
+        ? error.message
+        : "Error desconocido"
+      : null,
+    refetch: () => {
+      void refetch();
+    },
   };
 }
