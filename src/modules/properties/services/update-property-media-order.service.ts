@@ -1,6 +1,6 @@
   import {
     updatePropertyMediaOrderRepository,
-  } from "../repositories/update-property-media-order.repository";
+  } from "../repositories/property-media.repository";
 
   import { assertCanManageProperty } from "../utils/assert-can-manage-property";
   

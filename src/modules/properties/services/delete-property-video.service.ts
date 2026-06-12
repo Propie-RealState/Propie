@@ -1,4 +1,4 @@
-import { deletePropertyVideoRepository } from "../repositories/delete-property-video.repository";
+import { deletePropertyVideoRepository } from "../repositories/property-media.repository";
 import { assertCanManageProperty } from "../utils/assert-can-manage-property";
 import { deleteFromStorage } from "@/lib/supabase";
 

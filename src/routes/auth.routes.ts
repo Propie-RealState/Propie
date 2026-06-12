@@ -14,6 +14,18 @@ import { logoutSession } from "../services/auth/logout";
 
 import { cleanupSessions } from "../services/auth/cleanup";
 
+import {
+  requestPasswordReset,
+  resetPasswordWithToken,
+} from "../services/auth/password-reset.service";
+
+import {
+  ForgotPasswordSchema,
+  ResetPasswordSchema,
+} from "../database/types/auth";
+
+import { rateLimitRouteConfig } from "@/config/rate-limit";
+
 import { getMyProfile } from "../modules/profiles/services/profile.service";
 
 import { buildAuthUserPayload } from "../modules/profiles/utils/map-profile";
@@ -41,7 +53,10 @@ export async function authRoutes(app: FastifyInstance) {
   // LOGIN
   // ======================================================
 
-  app.post("/login", async (request, reply) => {
+  app.post(
+    "/login",
+    { config: rateLimitRouteConfig("authLogin") },
+    async (request, reply) => {
     try {
       const input = LoginSchema.parse(request.body);
 
@@ -65,12 +80,16 @@ export async function authRoutes(app: FastifyInstance) {
         },
       });
     }
-  });
+  },
+  );
   // ======================================================
   // REFRESH
   // ======================================================
 
-  app.post("/refresh", async (request, reply) => {
+  app.post(
+    "/refresh",
+    { config: rateLimitRouteConfig("authRefresh") },
+    async (request, reply) => {
     try {
       const body = request.body as {
         refreshToken: string;
@@ -104,7 +123,83 @@ export async function authRoutes(app: FastifyInstance) {
         },
       });
     }
-  });
+  },
+  );
+
+  // ======================================================
+  // PASSWORD RESET
+  // ======================================================
+
+  app.post(
+    "/forgot-password",
+    { config: rateLimitRouteConfig("authLogin") },
+    async (request, reply) => {
+      try {
+        const input = ForgotPasswordSchema.parse(request.body);
+
+        await requestPasswordReset(input.email);
+
+        return reply.status(200).send({
+          success: true,
+          message:
+            "If an account exists for that email, a password reset link has been sent.",
+        });
+      } catch (error) {
+        console.error(error);
+
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid request",
+          },
+        });
+      }
+    },
+  );
+
+  app.post(
+    "/reset-password",
+    { config: rateLimitRouteConfig("authLogin") },
+    async (request, reply) => {
+      try {
+        const input = ResetPasswordSchema.parse(request.body);
+
+        await resetPasswordWithToken({
+          token: input.token,
+          password: input.password,
+        });
+
+        return reply.status(200).send({
+          success: true,
+          message: "Password updated successfully",
+        });
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          error.message === "INVALID_OR_EXPIRED_TOKEN"
+        ) {
+          return reply.status(400).send({
+            success: false,
+            error: {
+              code: "INVALID_OR_EXPIRED_TOKEN",
+              message: "Invalid or expired reset token",
+            },
+          });
+        }
+
+        console.error(error);
+
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid request",
+          },
+        });
+      }
+    },
+  );
 
   // ======================================================
   // ME

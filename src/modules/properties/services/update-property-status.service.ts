@@ -4,8 +4,8 @@ import {
   type PropertyLifecycleStatus,
 } from "../constants/property-status.constants";
 import { insertPropertyEventRepository } from "../repositories/property-events.repository";
-import { getPropertyByIdRepository } from "../repositories/get-property-by-id.repository";
-import { updatePropertyStatusRepository } from "../repositories/update-property-status.repository";
+import { getPropertyByIdRepository } from "../repositories/property-read.repository";
+import { updatePropertyStatusRepository } from "../repositories/property-write.repository";
 import { assertIsPublisher } from "../utils/assert-is-publisher";
 import { notifyPropertyActiveAgain } from "@/modules/notifications/services/notification-dispatch.service";
 

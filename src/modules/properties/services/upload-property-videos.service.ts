@@ -3,7 +3,7 @@ import path from "node:path";
 
 import type { MultipartFile } from "@fastify/multipart";
 
-import { createPropertyVideoRepository } from "../repositories/create-property-video.repository";
+import { createPropertyVideoRepository } from "../repositories/property-media.repository";
 import { uploadToStorage } from "@/lib/supabase";
 
 const ALLOWED_VIDEO_EXTENSIONS = new Set([

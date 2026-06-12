@@ -24,6 +24,7 @@ import {
   getConversationRoleColor,
   getConversationRoleLabel,
 } from "../utils/conversation-role-ui";
+import { showToast } from "../../../../lib/toast";
 
 function formatAuthUserName(user: {
   profile?: { first_name?: string | null; last_name?: string | null } | null;
@@ -150,7 +151,7 @@ export default function ConversationThread() {
       emitPropertyConversationsChanged();
     } catch (error) {
       console.error("Error sending message", error);
-      alert("No pudimos enviar el mensaje. Intentá nuevamente.");
+      showToast("No pudimos enviar el mensaje. Intentá nuevamente.");
     } finally {
       setSending(false);
     }

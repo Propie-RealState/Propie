@@ -3,6 +3,8 @@ import {
   RouteHandlerMethod,
 } from "fastify";
 
+import { rateLimitRouteConfig } from "@/config/rate-limit";
+
 import { globalSearchController } from "../controllers/global-search.controller";
 
 export async function searchRoutes(
@@ -10,6 +12,7 @@ export async function searchRoutes(
 ) {
   app.get(
     "/",
+    { config: rateLimitRouteConfig("publicSearch") },
     globalSearchController as RouteHandlerMethod,
   );
 }

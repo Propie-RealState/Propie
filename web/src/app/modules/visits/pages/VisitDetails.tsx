@@ -30,6 +30,7 @@ import {
   getVisitActions,
   getVisitEventLabel,
 } from "../utils/visit-ui";
+import { showToast } from "../../../../lib/toast";
 
 export default function VisitDetails() {
   const { visitId } = useParams<{ visitId: string }>();
@@ -105,7 +106,7 @@ export default function VisitDetails() {
       await loadVisit();
     } catch (error) {
       console.error("Visit action failed", error);
-      alert("No pudimos completar la acción. Intentá nuevamente.");
+      showToast("No pudimos completar la acción. Intentá nuevamente.");
     } finally {
       setActing(false);
     }

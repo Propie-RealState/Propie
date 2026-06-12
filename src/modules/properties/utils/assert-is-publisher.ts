@@ -1,4 +1,4 @@
-import { getPropertyByIdRepository } from "../repositories/get-property-by-id.repository";
+import { getPropertyByIdRepository } from "../repositories/property-read.repository";
 
 export async function assertIsPublisher(
   userId: string,

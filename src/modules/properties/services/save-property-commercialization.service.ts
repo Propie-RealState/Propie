@@ -1,6 +1,6 @@
 import {
     getPropertyByIdRepository,
-  } from "../repositories/get-property-by-id.repository";
+  } from "../repositories/property-read.repository";
   
   import {
     savePropertyCommercializationRepository,

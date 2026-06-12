@@ -1,4 +1,4 @@
-import { updatePropertyImagesOrderRepository } from "../repositories/update-property-images-order.repository";
+import { updatePropertyImagesOrderRepository } from "../repositories/property-media.repository";
 import { assertCanManageProperty } from "../utils/assert-can-manage-property";
 
 interface UpdatePropertyImagesOrderServiceRequest {

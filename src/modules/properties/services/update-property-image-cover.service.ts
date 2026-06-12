@@ -1,5 +1,5 @@
 import { updatePropertyImageCoverRepository }
-  from "../repositories/update-property-image-cover.repository";
+  from "../repositories/property-media.repository";
 import { assertCanManageProperty } from "../utils/assert-can-manage-property";
 
 interface UpdatePropertyImageCoverServiceRequest {

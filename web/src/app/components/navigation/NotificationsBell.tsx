@@ -291,6 +291,27 @@ export function NotificationsBell() {
             type="button"
             onClick={() => {
               setOpen(false);
+              navigate('/perfil');
+            }}
+            style={{
+              width: '100%',
+              border: 'none',
+              borderTop: '1px solid #f0f0f0',
+              background: 'white',
+              padding: '12px 16px',
+              fontSize: 13,
+              fontWeight: 600,
+              color: '#1a1a1a',
+              cursor: 'pointer',
+              textAlign: 'left',
+            }}
+          >
+            Mi perfil
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
               navigate('/notificaciones');
             }}
             style={{

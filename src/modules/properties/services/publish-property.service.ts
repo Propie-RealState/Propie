@@ -1,14 +1,14 @@
 import {
     getPropertyByIdRepository,
-  } from "../repositories/get-property-by-id.repository";
+  } from "../repositories/property-read.repository";
   
   import {
     getPropertyImagesRepository,
-  } from "../repositories/get-property-images.repository";
+  } from "../repositories/property-media.repository";
   
   import {
     publishPropertyRepository,
-  } from "../repositories/publish-property.repository";
+  } from "../repositories/property-write.repository";
 
   import {
     geocodePropertyLocationService,

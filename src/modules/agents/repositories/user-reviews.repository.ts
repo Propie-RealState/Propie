@@ -74,22 +74,3 @@ export async function getUserReviewsRepository(input: {
   );
   return result.rows;
 }
-
-export async function getUserReviewStatsRepository(targetUserId: string) {
-  const result = await db.query(
-    `
-    SELECT
-      COUNT(*)::int AS total_reviews,
-      ROUND(AVG(rating)::numeric, 1)::float AS average_rating,
-      COUNT(*) FILTER (WHERE rating = 5)::int AS five_stars,
-      COUNT(*) FILTER (WHERE rating = 4)::int AS four_stars,
-      COUNT(*) FILTER (WHERE rating = 3)::int AS three_stars,
-      COUNT(*) FILTER (WHERE rating = 2)::int AS two_stars,
-      COUNT(*) FILTER (WHERE rating = 1)::int AS one_star
-    FROM user_reviews
-    WHERE target_user_id = $1
-    `,
-    [targetUserId],
-  );
-  return result.rows[0];
-}

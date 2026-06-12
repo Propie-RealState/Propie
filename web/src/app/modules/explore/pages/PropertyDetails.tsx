@@ -53,6 +53,10 @@ import {
   isFavorite,
   toggleFavoriteId,
 } from "../../../../lib/favorites-storage";
+import { showToast } from "../../../../lib/toast";
+import { ExplorePageSkeleton } from "../../../components/skeletons/PageSkeletons";
+
+const STICKY_CTA_PADDING = "16px 20px max(16px, env(safe-area-inset-bottom))";
 type UserType = "guest" | "client" | "owner" | "agente" | null;
 
 // ─── Publicado por card ────────────────────────────────────────────────────────
@@ -434,7 +438,7 @@ export default function PropertyDetails() {
       window.dispatchEvent(new Event("agent-applications:changed"));
     } catch (error) {
       console.error("Error enviando solicitud:", error);
-      alert("No pudimos enviar la solicitud. Intentá nuevamente.");
+      showToast("No pudimos enviar la solicitud. Intentá nuevamente.");
     } finally {
       setIsSendingRequest(false);
     }
@@ -466,7 +470,7 @@ export default function PropertyDetails() {
       navigate(`/mensajes/${conversation.id}`);
     } catch (error) {
       console.error("Error opening internal conversation:", error);
-      alert("No pudimos abrir el chat. Intentá nuevamente.");
+      showToast("No pudimos abrir el chat. Intentá nuevamente.");
     } finally {
       setIsOpeningInternalChat(false);
     }
@@ -483,7 +487,7 @@ export default function PropertyDetails() {
       navigate(`/mensajes/${conversation.id}`);
     } catch (error) {
       console.error("Error opening owner conversation:", error);
-      alert("No pudimos abrir el chat. Intentá nuevamente.");
+      showToast("No pudimos abrir el chat. Intentá nuevamente.");
     } finally {
       setIsOpeningInternalChat(false);
     }
@@ -508,7 +512,7 @@ export default function PropertyDetails() {
     }
 
     if (!canContactProperty) {
-      alert("El chat no está disponible para esta propiedad.");
+      showToast("El chat no está disponible para esta propiedad.");
       return;
     }
 
@@ -518,7 +522,7 @@ export default function PropertyDetails() {
       navigate(`/mensajes/${conversation.id}`);
     } catch (error) {
       console.error("Error starting property conversation:", error);
-      alert(
+      showToast(
         "No pudimos iniciar la conversación. Verificá que la propiedad esté publicada.",
       );
     } finally {
@@ -557,7 +561,17 @@ export default function PropertyDetails() {
   };
 
   if (loading) {
-    return <div>Cargando...</div>;
+    return (
+      <div
+        style={{
+          minHeight: "100dvh",
+          background: "#f5f5f7",
+          fontFamily: "'Inter', sans-serif",
+        }}
+      >
+        <ExplorePageSkeleton />
+      </div>
+    );
   }
 
   if (!property) {
@@ -1258,7 +1272,7 @@ export default function PropertyDetails() {
             right: 0,
             background: "white",
             borderTop: "1px solid #e5e5ea",
-            padding: "16px 20px",
+            padding: STICKY_CTA_PADDING,
             display: "flex",
             gap: 12,
             zIndex: 10,
@@ -1332,7 +1346,7 @@ export default function PropertyDetails() {
             right: 0,
             background: "white",
             borderTop: "1px solid #e5e5ea",
-            padding: "16px 20px",
+            padding: STICKY_CTA_PADDING,
             display: "flex",
             gap: 12,
             zIndex: 10,
@@ -1389,7 +1403,7 @@ export default function PropertyDetails() {
             right: 0,
             background: "white",
             borderTop: "1px solid #e5e5ea",
-            padding: "16px 20px",
+            padding: STICKY_CTA_PADDING,
             display: "flex",
             gap: 12,
             zIndex: 10,

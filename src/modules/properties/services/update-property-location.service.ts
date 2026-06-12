@@ -1,10 +1,10 @@
 import {
     findPropertyByIdRepository,
-  } from "../repositories/find-property-by-id.repository";
+  } from "../repositories/property-read.repository";
   
   import {
     upsertPropertyLocationRepository,
-  } from "../repositories/upsert-property-location.repository";
+  } from "../repositories/property-location.repository";
 
   import {
     geocodeAddressService,

@@ -2,6 +2,7 @@ import type { FastifyInstance, RouteHandlerMethod } from "fastify";
 
 import { USER_ROLES } from "@/constants/roles";
 import { authMiddleware } from "@/middlewares/auth.middleware";
+import { cronSecretMiddleware } from "@/middlewares/cron-secret.middleware";
 import { requireRoles } from "@/middlewares/require-roles.middleware";
 
 import {
@@ -45,7 +46,7 @@ export async function propertyVisitsRoutes(app: FastifyInstance) {
   app.post(
     "/process-reminders",
     {
-      preHandler: [authMiddleware, requireAuthenticated],
+      preHandler: [cronSecretMiddleware],
     },
     processVisitRemindersController as RouteHandlerMethod,
   );

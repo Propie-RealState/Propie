@@ -21,6 +21,8 @@ services:
         generateValue: true
       - key: DEPLOY_JWT_REFRESH_SECRET
         generateValue: true
+      - key: DEPLOY_CRON_SECRET
+        generateValue: true
       - key: SUPABASE_URL
         value: https://cqbjsrwizzibmqeelfny.supabase.co
       - key: SUPABASE_SERVICE_ROLE_KEY

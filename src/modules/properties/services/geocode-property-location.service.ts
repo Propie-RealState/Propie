@@ -4,11 +4,8 @@ import {
 
 import {
   getPropertyLocationRepository,
-} from "../repositories/get-property-location.repository";
-
-import {
   updatePropertyCoordinatesRepository,
-} from "../repositories/update-property-coordinates.repository";
+} from "../repositories/property-location.repository";
 
 export async function geocodePropertyLocationService(
   propertyId: string

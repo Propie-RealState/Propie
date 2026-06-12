@@ -140,16 +140,6 @@ export async function getUserReviews(
   }
 }
 
-// ─── Legacy: agent reviews (backward compat, now reads from user_reviews) ────
-
-export async function getAgentReviews(
-  agentId: string,
-  limit = 10,
-  offset = 0,
-): Promise<AgentReview[]> {
-  return getUserReviews(agentId, limit, offset);
-}
-
 // ─── canReview check ─────────────────────────────────────────────────────────
 
 export async function checkCanReview(

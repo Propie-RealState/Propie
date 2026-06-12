@@ -1,5 +1,5 @@
 import { PROPERTY_STATUSES } from "../constants/property-status.constants";
-import { getPropertyByIdRepository } from "../repositories/get-property-by-id.repository";
+import { getPropertyByIdRepository } from "../repositories/property-read.repository";
 import { upsertPropertyStatusSubscriptionRepository } from "../repositories/property-status-subscriptions.repository";
 
 type Input = {

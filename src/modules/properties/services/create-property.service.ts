@@ -4,7 +4,7 @@ import {
   
   import {
     createPropertyRepository,
-  } from "../repositories/create-property.repository";
+  } from "../repositories/property-write.repository";
   
   export async function createPropertyService(
     input: CreatePropertyServiceInput

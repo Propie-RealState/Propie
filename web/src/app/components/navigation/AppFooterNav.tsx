@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Building2,
+  CalendarDays,
   Heart,
   LogIn,
   MessageCircle,
@@ -58,7 +59,8 @@ export function AppFooterNav() {
           background: 'none',
           border: 'none',
           cursor: 'pointer',
-          padding: '6px 10px',
+          padding: '10px 8px',
+          minHeight: 44,
           borderRadius: 12,
           flex: 1,
           position: 'relative',
@@ -173,6 +175,7 @@ export function AppFooterNav() {
           <>
             {navBtn(Search, 'Explorar', '/explore')}
             {navBtn(Heart, 'Favoritos', '/favoritos')}
+            {navBtn(CalendarDays, 'Visitas', '/visitas')}
             {navBtn(MessageCircle, 'Mensajes', '/mensajes', undefined, unreadConversations)}
             {navBtn(User, 'Perfil', '/perfil')}
           </>
@@ -183,8 +186,8 @@ export function AppFooterNav() {
             {navBtn(Search, 'Explorar', '/explore')}
             {navBtn(Plus, 'Publicar', '/publicar', startCreatePublish)}
             {navBtn(Building2, 'Mis Props.', '/mis-propiedades')}
+            {navBtn(CalendarDays, 'Visitas', '/visitas')}
             {navBtn(MessageCircle, 'Mensajes', '/mensajes', undefined, unreadConversations)}
-            {navBtn(User, 'Perfil', '/perfil')}
           </>
         )}
       </div>

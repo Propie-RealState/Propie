@@ -25,6 +25,7 @@ import {
   type OwnerAgentApplication,
   updateOwnerAgentApplicationStatus,
 } from "../services/agent-applications.service";
+import { showToast } from "../../../../lib/toast";
 
 function getAgentName(application: OwnerAgentApplication) {
   return (
@@ -91,7 +92,7 @@ export default function Messages() {
       window.dispatchEvent(new Event("agent-applications:changed"));
     } catch (error) {
       console.error("Error updating application", error);
-      alert("No pudimos actualizar la solicitud.");
+      showToast("No pudimos actualizar la solicitud.");
     } finally {
       setUpdatingId(null);
     }
