@@ -49,8 +49,3 @@ export function PropieLogo({ size = 46, variant = "onHero" }: PropieLogoProps) {
     </div>
   );
 }
-
-/** Same mark on light backgrounds (no pill). */
-export function PropieLogoDark({ size = 46 }: { size?: number }) {
-  return <PropieLogo size={size} variant="inline" />;
-}
