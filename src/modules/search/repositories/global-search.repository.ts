@@ -140,7 +140,8 @@ export async function searchPropertiesRepository(
       AND pi.is_cover = true
     LEFT JOIN property_amenities pa
       ON pa.property_id = p.id
-    WHERE p.status = 'PUBLISHED'
+    WHERE p.published_at IS NOT NULL
+      AND p.status IN ('ACTIVE', 'PAUSED', 'RESERVED')
       AND (
         ${buildMatchSql(
           [
@@ -222,7 +223,8 @@ export async function searchLocationsRepository(
       FROM property_locations pl
       INNER JOIN properties p
         ON p.id = pl.property_id
-        AND p.status = 'PUBLISHED'
+        AND p.published_at IS NOT NULL
+        AND p.status IN ('ACTIVE', 'PAUSED', 'RESERVED')
       WHERE pl.neighborhood IS NOT NULL
         AND ${buildMatchSql(["pl.neighborhood"], 1)}
 
@@ -237,7 +239,8 @@ export async function searchLocationsRepository(
       FROM property_locations pl
       INNER JOIN properties p
         ON p.id = pl.property_id
-        AND p.status = 'PUBLISHED'
+        AND p.published_at IS NOT NULL
+        AND p.status IN ('ACTIVE', 'PAUSED', 'RESERVED')
       WHERE pl.city IS NOT NULL
         AND ${buildMatchSql(["pl.city"], 1)}
 
@@ -252,7 +255,8 @@ export async function searchLocationsRepository(
       FROM property_locations pl
       INNER JOIN properties p
         ON p.id = pl.property_id
-        AND p.status = 'PUBLISHED'
+        AND p.published_at IS NOT NULL
+        AND p.status IN ('ACTIVE', 'PAUSED', 'RESERVED')
       WHERE pl.province IS NOT NULL
         AND ${buildMatchSql(["pl.province"], 1)}
 
@@ -267,7 +271,8 @@ export async function searchLocationsRepository(
       FROM property_locations pl
       INNER JOIN properties p
         ON p.id = pl.property_id
-        AND p.status = 'PUBLISHED'
+        AND p.published_at IS NOT NULL
+        AND p.status IN ('ACTIVE', 'PAUSED', 'RESERVED')
       WHERE pl.address IS NOT NULL
         AND ${buildMatchSql(["pl.address"], 1)}
 
@@ -282,7 +287,8 @@ export async function searchLocationsRepository(
       FROM property_locations pl
       INNER JOIN properties p
         ON p.id = pl.property_id
-        AND p.status = 'PUBLISHED'
+        AND p.published_at IS NOT NULL
+        AND p.status IN ('ACTIVE', 'PAUSED', 'RESERVED')
       WHERE ${buildMatchSql(
         [
           "CONCAT_WS(' ', pl.address, pl.neighborhood, pl.city, pl.province, pl.country)",
@@ -405,7 +411,7 @@ export async function searchOwnersRepository(
     LEFT JOIN (
       SELECT
         owner_id,
-        COUNT(*) FILTER (WHERE status = 'PUBLISHED')::int AS active_count
+        COUNT(*) FILTER (WHERE status = 'ACTIVE' AND published_at IS NOT NULL)::int AS active_count
       FROM properties
       GROUP BY owner_id
     ) opc ON opc.owner_id = u.id

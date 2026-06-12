@@ -5,23 +5,9 @@ import type {
 import {
   mapPropertyDetails,
 } from "../mappers/property-details.mapper";
-import { API_URL } from "../../../../lib/api-base";
+import { apiFetch } from "../../../../lib/api";
 
-export async function getPropertyById(
-  id: string
-) {
-  const response = await fetch(
-    `${API_URL}/properties/${id}`
-  );
-
-  if (!response.ok) {
-    throw new Error(
-      "Error obteniendo propiedad"
-    );
-  }
-
-  const data: PropertyDetailsDTO =
-    await response.json();
-
+export async function getPropertyById(id: string) {
+  const data = await apiFetch<PropertyDetailsDTO>(`/properties/${id}`);
   return mapPropertyDetails(data);
 }

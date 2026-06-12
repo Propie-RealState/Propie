@@ -38,10 +38,10 @@ export type OperationType =
 // ========================================================
 
 export const PropertyStatusSchema = z.enum([
-  'DRAFT',
-  'PUBLISHED',
+  'ACTIVE',
   'PAUSED',
-  'ARCHIVED',
+  'RESERVED',
+  'FINALIZED',
 ]);
 
 export type PropertyStatus =
@@ -117,6 +117,12 @@ export const PropertySchema = z.object({
   id: z.string().uuid(),
 
   ownerId: z.string().uuid(),
+
+  publisherId: z.string().uuid().nullable(),
+
+  publisherType: z.enum(['OWNER', 'AGENT']).nullable(),
+
+  publishedAt: z.string().datetime().nullable(),
 
   title: z
     .string()

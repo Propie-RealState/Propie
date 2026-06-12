@@ -24,7 +24,8 @@ export async function getAgentCommercializedPropertiesRepository(
       LEFT JOIN property_images pi
         ON pi.property_id = p.id
         AND pi.is_cover = true
-      WHERE p.status = 'PUBLISHED'
+      WHERE p.published_at IS NOT NULL
+        AND p.status IN ('ACTIVE', 'PAUSED', 'RESERVED')
         AND (
           p.owner_id = $1
           OR EXISTS (

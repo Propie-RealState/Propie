@@ -22,6 +22,8 @@ import type { VisitActorRole } from "../types/visit.types";
 import { VISIT_REMINDER_OFFSETS_MINUTES } from "../types/visit.types";
 import { mapVisitRow } from "../utils/map-visit";
 import { postVisitSystemMessageService } from "./post-visit-system-message.service";
+import { getPropertyByIdRepository } from "@/modules/properties/repositories/get-property-by-id.repository";
+import { PROPERTY_STATUSES } from "@/modules/properties/constants/property-status.constants";
 
 async function getUserRole(userId: string) {
   const result = await db.query<{ role: string }>(
@@ -97,6 +99,15 @@ export async function createVisitService(input: {
 
   if (context.conversationType !== "PROPERTY_CLIENT") {
     throw new Error("FORBIDDEN");
+  }
+
+  const property = await getPropertyByIdRepository(context.propertyId);
+
+  if (
+    !property?.published_at ||
+    property.status !== PROPERTY_STATUSES.ACTIVE
+  ) {
+    throw new Error("PROPERTY_NOT_AVAILABLE");
   }
 
   const schedulerRole = role as "AGENT" | "OWNER";

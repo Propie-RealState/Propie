@@ -57,6 +57,12 @@ export interface PropertyImageDTO {
 
     allow_chat?: boolean | null;
 
+    publisher_info?: {
+      publisher_id: string;
+      publisher_type: "OWNER" | "AGENT";
+      publisher_name: string | null;
+    } | null;
+
     agents?: PropertyAgentDTO[] | null;
 
     owner_info?: PropertyOwnerInfoDTO | null;

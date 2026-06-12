@@ -11,6 +11,7 @@ export type ListingType =
   | "TEMPORARY";
 
 export type PropertyStatus =
-  | "DRAFT"
-  | "PUBLISHED"
-  | "ARCHIVED";
+  | "ACTIVE"
+  | "PAUSED"
+  | "RESERVED"
+  | "FINALIZED";

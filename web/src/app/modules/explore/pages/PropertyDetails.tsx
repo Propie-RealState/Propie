@@ -48,6 +48,7 @@ import {
   startInternalPropertyConversation,
   startPropertyConversation,
 } from "../../property-conversations/services/property-conversations.service";
+import { subscribePropertyActiveAgain } from "../../my-properties/services/property-status.service";
 import {
   isFavorite,
   toggleFavoriteId,
@@ -286,9 +287,16 @@ export default function PropertyDetails() {
   useEffect(() => {
     async function loadProperty() {
       if (!id) return;
-      const data = await getPropertyById(id);
-      setProperty(data);
-      setLoading(false);
+      setLoading(true);
+      try {
+        const data = await getPropertyById(id);
+        setProperty(data);
+      } catch (error) {
+        console.error("Error loading property:", error);
+        setProperty(null);
+      } finally {
+        setLoading(false);
+      }
     }
     loadProperty();
   }, [id]);
@@ -322,8 +330,14 @@ export default function PropertyDetails() {
   const isAgent = userType === "agente";
   const canManageProperty =
     isOwner || agentApplicationStatus === "ACCEPTED";
+  const isPublisher =
+    Boolean(user?.id && property?.publisherId && user.id === property.publisherId);
   const canContactProperty =
-    property?.status === "PUBLISHED" && property?.allowChat !== false;
+    property?.status === "ACTIVE" && property?.allowChat !== false;
+  const isPaused = property?.status === "PAUSED";
+  const isReserved = property?.status === "RESERVED";
+  const [isSubscribingStatus, setIsSubscribingStatus] = useState(false);
+  const [statusSubscribed, setStatusSubscribed] = useState(false);
   const requestSent =
     agentApplicationStatus === "PENDING" ||
     agentApplicationStatus === "REJECTED";
@@ -813,6 +827,83 @@ export default function PropertyDetails() {
               <span>{locationParts.join(", ")}</span>
             </div>
           </div>
+
+          {isPaused && (
+            <div
+              style={{
+                background: "#fff7ed",
+                border: "1px solid #fed7aa",
+                borderRadius: 16,
+                padding: 16,
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+              }}
+            >
+              <p style={{ margin: 0, color: "#9a3412", fontWeight: 600 }}>
+                Esta propiedad está pausada por el momento.
+              </p>
+              {isLoggedIn && !isPublisher && (
+                <button
+                  type="button"
+                  disabled={isSubscribingStatus || statusSubscribed}
+                  onClick={async () => {
+                    if (!property?.id) return;
+                    setIsSubscribingStatus(true);
+                    try {
+                      await subscribePropertyActiveAgain(property.id);
+                      setStatusSubscribed(true);
+                    } catch (error) {
+                      console.error("Status subscription failed", error);
+                    } finally {
+                      setIsSubscribingStatus(false);
+                    }
+                  }}
+                  style={{
+                    alignSelf: "flex-start",
+                    background: colors.primary,
+                    color: "white",
+                    border: "none",
+                    borderRadius: 12,
+                    padding: "10px 14px",
+                    fontWeight: 700,
+                    cursor:
+                      isSubscribingStatus || statusSubscribed
+                        ? "not-allowed"
+                        : "pointer",
+                  }}
+                >
+                  {isSubscribingStatus
+                    ? "Guardando..."
+                    : statusSubscribed
+                      ? "Te avisaremos"
+                      : "Avisame cuando vuelva a estar activa"}
+                </button>
+              )}
+            </div>
+          )}
+
+          {isReserved && (
+            <div
+              style={{
+                alignSelf: "flex-start",
+                background: "#eff6ff",
+                color: "#1d4ed8",
+                padding: "6px 12px",
+                borderRadius: 999,
+                fontSize: 12,
+                fontWeight: 800,
+              }}
+            >
+              Reservada
+            </div>
+          )}
+
+          {!isPublisher && property.publisherName && (
+            <p style={{ margin: 0, color: "#6e6e73", fontSize: 14 }}>
+              Publicada por {property.publisherName}
+            </p>
+          )}
 
           {/* Title & Description */}
           <div>

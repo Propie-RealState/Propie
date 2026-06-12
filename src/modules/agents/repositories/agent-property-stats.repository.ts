@@ -34,7 +34,7 @@ export async function getAgentPropertyStatsRepository(
       )
       SELECT
         COUNT(*)::int AS total_worked_properties,
-        COUNT(*) FILTER (WHERE status = 'PUBLISHED')::int AS active_properties,
+        COUNT(*) FILTER (WHERE status = 'ACTIVE' AND published_at IS NOT NULL)::int AS active_properties,
         COUNT(*) FILTER (WHERE status IN ('PAUSED', 'ARCHIVED'))::int AS completed_properties
       FROM agent_properties
     `,

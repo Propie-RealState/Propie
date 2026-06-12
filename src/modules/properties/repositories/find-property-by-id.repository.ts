@@ -69,7 +69,7 @@ export async function findPropertyByIdRepository(propertyId: string) {
               GROUP BY target_user_id
             ) ors ON ors.target_user_id = ou.id
             LEFT JOIN (
-              SELECT owner_id, COUNT(*) FILTER (WHERE status = 'PUBLISHED')::int AS active_count
+              SELECT owner_id, COUNT(*) FILTER (WHERE status = 'ACTIVE' AND published_at IS NOT NULL)::int AS active_count
               FROM properties
               GROUP BY owner_id
             ) opc ON opc.owner_id = ou.id
@@ -83,6 +83,18 @@ export async function findPropertyByIdRepository(propertyId: string) {
           WHERE pc.property_id = p.id
           LIMIT 1
         ) AS allow_chat,
+
+        (
+          SELECT row_to_json(t) FROM (
+            SELECT
+              pu.id AS publisher_id,
+              p.publisher_type,
+              TRIM(CONCAT(ppr.first_name, ' ', COALESCE(ppr.last_name, ''))) AS publisher_name
+            FROM users pu
+            LEFT JOIN profiles ppr ON ppr.user_id = pu.id
+            WHERE pu.id = p.publisher_id
+          ) t
+        ) AS publisher_info,
 
         (
           SELECT COALESCE(

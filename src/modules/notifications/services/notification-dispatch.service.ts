@@ -13,6 +13,10 @@ import {
   findUsersNearPropertyRepository,
 } from "../repositories/notifications.repository";
 import {
+  findPendingStatusSubscriptionUserIdsRepository,
+  markStatusSubscriptionsNotifiedRepository,
+} from "@/modules/properties/repositories/property-status-subscriptions.repository";
+import {
   DEFAULT_PROPERTY_CURRENCY,
   formatPropertyPriceLabel,
   type PropertyCurrency,
@@ -95,6 +99,43 @@ export async function notifyNewPropertyNearby(propertyId: string) {
 
 export async function notifyPropertyPublished(propertyId: string) {
   await notifyNewPropertyNearby(propertyId);
+}
+
+export async function notifyPropertyActiveAgain(propertyId: string) {
+  const property = await getPropertySummary(propertyId);
+
+  if (!property) {
+    return [];
+  }
+
+  const userIds = uniqueUserIds(
+    await findPendingStatusSubscriptionUserIdsRepository(propertyId),
+  );
+
+  if (userIds.length === 0) {
+    return [];
+  }
+
+  const title = "Propiedad activa nuevamente";
+  const body = `${property.title || "Una propiedad"} volvió a estar disponible`;
+
+  const inputs: CreateNotificationInput[] = userIds.map((userId) => ({
+    userId,
+    type: NOTIFICATION_TYPES.PROPERTY_ACTIVE_AGAIN,
+    title,
+    body,
+    entityType: "property",
+    entityId: propertyId,
+    metadata: {
+      propertyId,
+      propertyTitle: property.title,
+    },
+  }));
+
+  const notifications = await createNotifications(inputs);
+  await markStatusSubscriptionsNotifiedRepository(propertyId);
+
+  return notifications;
 }
 
 export async function notifyFavoriteUsersOfPropertyChange(input: {

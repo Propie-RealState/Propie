@@ -28,7 +28,7 @@ export async function createPropertyRepository(
       input.ownerId,
       input.propertyType,
       input.listingType,
-      "DRAFT",
+      "ACTIVE",
     ]
   );
 

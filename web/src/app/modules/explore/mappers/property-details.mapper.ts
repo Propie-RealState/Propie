@@ -36,6 +36,10 @@ function normalizeCurrency(
       id: property.id,
   
       ownerId: property.owner_id,
+
+      publisherId: property.publisher_info?.publisher_id ?? null,
+      publisherType: property.publisher_info?.publisher_type ?? null,
+      publisherName: property.publisher_info?.publisher_name ?? null,
   
       title:
         property.title ||

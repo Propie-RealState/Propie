@@ -66,7 +66,7 @@ export async function agentsRoutes(app: FastifyInstance) {
         GROUP BY target_user_id
       ) rs ON rs.target_user_id = u.id
       LEFT JOIN (
-        SELECT owner_id, COUNT(*) FILTER (WHERE status = 'PUBLISHED')::int AS active_count
+        SELECT owner_id, COUNT(*) FILTER (WHERE status = 'ACTIVE' AND published_at IS NOT NULL)::int AS active_count
         FROM properties
         GROUP BY owner_id
       ) opc ON opc.owner_id = u.id

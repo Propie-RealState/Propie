@@ -65,7 +65,8 @@ export async function getPropertyChatGate(
       LEFT JOIN property_commercialization pc
         ON pc.property_id = p.id
       WHERE p.id = $1
-        AND p.status = 'PUBLISHED'
+        AND p.published_at IS NOT NULL
+        AND p.status = 'ACTIVE'
       LIMIT 1
     `,
     [propertyId],
