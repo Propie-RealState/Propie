@@ -1,6 +1,7 @@
 import React from "react";
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -146,7 +147,7 @@ export function RegisterProvider({ children }: Props) {
       readStoredRegisterData
     );
 
-  function updateData(values: Partial<RegisterData>) {
+  const updateData = useCallback((values: Partial<RegisterData>) => {
     setData((prev) => {
       const next = {
         ...prev,
@@ -157,9 +158,9 @@ export function RegisterProvider({ children }: Props) {
 
       return next;
     });
-  }
+  }, []);
 
-  function reset() {
+  const reset = useCallback(() => {
     setData(initialData);
 
     if (typeof window !== "undefined") {
@@ -167,7 +168,7 @@ export function RegisterProvider({ children }: Props) {
         REGISTER_STORAGE_KEY
       );
     }
-  }
+  }, []);
 
   useEffect(() => {
     persistRegisterData(data);
@@ -179,7 +180,7 @@ export function RegisterProvider({ children }: Props) {
       updateData,
       reset,
     }),
-    [data]
+    [data, updateData, reset],
   );
 
   return (

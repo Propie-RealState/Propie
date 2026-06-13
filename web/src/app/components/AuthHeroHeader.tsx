@@ -3,64 +3,75 @@ import { useNavigate } from "react-router-dom";
 import React from "react";
 
 import { PropieLogo } from "./PropieLogo";
+import { RegisterProgress } from "./register/RegisterProgress";
 
 type Props = {
   logoSize?: number;
   onBack?: () => void;
+  showRegisterProgress?: boolean;
 };
 
-export function AuthHeroHeader({ logoSize = 56, onBack }: Props) {
+export function AuthHeroHeader({
+  logoSize = 56,
+  onBack,
+  showRegisterProgress = true,
+}: Props) {
   const navigate = useNavigate();
 
   return (
-    <div
-      style={{
-        width: "100%",
-        maxWidth: 420,
-        display: "grid",
-        gridTemplateColumns: "44px 1fr 44px",
-        alignItems: "center",
-        gap: 8,
-        paddingTop: "max(12px, env(safe-area-inset-top))",
-        paddingLeft: 20,
-        paddingRight: 20,
-      }}
-    >
-      <button
-        type="button"
-        onClick={onBack ?? (() => navigate(-1))}
-        aria-label="Volver"
-        style={{
-          width: 44,
-          height: 44,
-          borderRadius: "50%",
-          border: "1px solid rgba(255,255,255,0.28)",
-          background: "rgba(255,255,255,0.18)",
-          backdropFilter: "blur(10px)",
-          WebkitBackdropFilter: "blur(10px)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          padding: 0,
-          flexShrink: 0,
-        }}
-      >
-        <ArrowLeft size={20} color="white" strokeWidth={2.25} />
-      </button>
-
+    <div style={{ width: "100%" }}>
       <div
         style={{
-          display: "flex",
-          justifyContent: "center",
+          width: "100%",
+          maxWidth: 420,
+          display: "grid",
+          gridTemplateColumns: "44px 1fr 44px",
           alignItems: "center",
-          minWidth: 0,
+          gap: 8,
+          paddingTop: "max(12px, env(safe-area-inset-top))",
+          paddingLeft: 20,
+          paddingRight: 20,
+          margin: "0 auto",
         }}
       >
-        <PropieLogo size={logoSize} />
+        <button
+          type="button"
+          onClick={onBack ?? (() => navigate(-1))}
+          aria-label="Volver"
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: "50%",
+            border: "1px solid rgba(255,255,255,0.28)",
+            background: "rgba(255,255,255,0.18)",
+            backdropFilter: "blur(10px)",
+            WebkitBackdropFilter: "blur(10px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            padding: 0,
+            flexShrink: 0,
+          }}
+        >
+          <ArrowLeft size={20} color="white" strokeWidth={2.25} />
+        </button>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minWidth: 0,
+          }}
+        >
+          <PropieLogo size={logoSize} />
+        </div>
+
+        <div aria-hidden style={{ width: 44 }} />
       </div>
 
-      <div aria-hidden style={{ width: 44 }} />
+      {showRegisterProgress ? <RegisterProgress /> : null}
     </div>
   );
 }
