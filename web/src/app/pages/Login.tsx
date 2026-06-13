@@ -168,7 +168,7 @@ export default function Login() {
         <div style={{ position: "absolute", width: 300, height: 300, background: "radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%)", top: -80, right: -60, pointerEvents: "none" }} />
         <div style={{ position: "absolute", width: 180, height: 180, background: "radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)", bottom: 40, left: -40, pointerEvents: "none" }} />
 
-        <AuthHeroHeader onBack={() => navigate("/explore")} logoSize={58} />
+        <AuthHeroHeader onBack={() => navigate("/explore")} logoSize={58} showRegisterProgress={false} />
 
         {/* Heading */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "32px 28px 12px" }}>

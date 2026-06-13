@@ -11,6 +11,7 @@ import { buildRegisterPayload } from "../../lib/buildRegisterPayload";
 import { useAuth } from "../../context/AuthContext";
 import { getPendingAvatarFile, clearPendingAvatarFile } from "../../lib/pending-avatar";
 import { uploadAvatar } from "../modules/profile/services/upload-avatar.service";
+import { CharCounter, FieldError, validateBio, buildRegistrationContext, ensureRegistrationReady, handleRegisterValidationFailure } from "../../features/register/validation";
 
 export default function RegisterOwnerInfo() {
   const navigate = useNavigate();
@@ -29,6 +30,17 @@ export default function RegisterOwnerInfo() {
     setIsSubmitting(true);
 
     try {
+      const registrationContext = buildRegistrationContext(data, {
+        profilePhoto: getPendingAvatarFile(),
+      });
+      const readiness = ensureRegistrationReady(data, registrationContext);
+      if (!readiness.valid) {
+        navigate(readiness.route, {
+          state: { registerFieldErrors: readiness.errors, fromFinalSubmit: true },
+        });
+        return;
+      }
+
       updateData({
         mainGoal: "EXPLORE",
       });
@@ -39,9 +51,8 @@ export default function RegisterOwnerInfo() {
           mainGoal: "EXPLORE",
         },
         "OWNER",
-        "EXPLORE"
+        "EXPLORE",
       );
-      console.log(JSON.stringify(payload, null, 2));
       const response = await apiFetch("/auth/register", {
         method: "POST",
         body: JSON.stringify(payload),
@@ -80,7 +91,9 @@ export default function RegisterOwnerInfo() {
 
       setShowSuccess(true);
     } catch (error) {
-      console.error(error);
+      if (!handleRegisterValidationFailure(error, data, navigate)) {
+        console.error(error);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -93,6 +106,7 @@ export default function RegisterOwnerInfo() {
 
   const charCount = data.bio.length;
   const maxChars = 300;
+  const bioError = validateBio(data.bio).error;
 
   return (
     <div
@@ -205,19 +219,11 @@ export default function RegisterOwnerInfo() {
                   (e.target as HTMLTextAreaElement).style.boxShadow = "none";
                 }}
               />
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 12,
-                  right: 16,
-                  fontSize: 12,
-                  color: charCount > maxChars * 0.9 ? "#C52E3E" : "#9a9aa0",
-                  fontWeight: 500,
-                }}
-              >
-                {charCount}/{maxChars}
+              <div style={{ position: "absolute", bottom: 12, right: 16 }}>
+                <CharCounter current={charCount} max={maxChars} />
               </div>
             </div>
+            <FieldError message={bioError} />
             <p style={{ margin: "8px 0 0", fontSize: 12, color: "#9a9aa0", lineHeight: 1.5 }}>
               Esta información ayuda a generar confianza con potenciales inquilinos o compradores
             </p>

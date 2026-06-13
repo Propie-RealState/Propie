@@ -11,6 +11,17 @@ import { RegisterSuccessOverlay } from "../components/register/RegisterSuccessOv
 import { REGISTER_COMPLETION } from "../components/register/registerCompletionTheme";
 import { getPendingAvatarFile, clearPendingAvatarFile } from "../../lib/pending-avatar";
 import { uploadAvatar } from "../modules/profile/services/upload-avatar.service";
+import {
+  FieldError,
+  CharCounter,
+  validateAgentCertification,
+  validateAgentEducation,
+  validateAgentExperience,
+  validateBio,
+  buildRegistrationContext,
+  ensureRegistrationReady,
+  handleRegisterValidationFailure,
+} from "../../features/register/validation";
 
 type EducationEntry = {
   id: string;
@@ -53,6 +64,7 @@ export default function RegisterAgentInfo() {
   const [newEducation, setNewEducation] = useState({ institution: "", degree: "", year: "" });
   const [newCertification, setNewCertification] = useState({ name: "", issuer: "", year: "" });
   const [newExperience, setNewExperience] = useState({ title: "", company: "", years: "" });
+  const [formErrors, setFormErrors] = useState<Record<string, string | undefined>>({});
 
   const handleFinalizar = async () => {
     if (isSubmitting) {
@@ -62,6 +74,17 @@ export default function RegisterAgentInfo() {
     setIsSubmitting(true);
 
     try {
+      const registrationContext = buildRegistrationContext(data, {
+        profilePhoto: getPendingAvatarFile(),
+      });
+      const readiness = ensureRegistrationReady(data, registrationContext);
+      if (!readiness.valid) {
+        navigate(readiness.route, {
+          state: { registerFieldErrors: readiness.errors, fromFinalSubmit: true },
+        });
+        return;
+      }
+
       updateData({
         mainGoal: "EXPLORE",
       });
@@ -114,7 +137,9 @@ export default function RegisterAgentInfo() {
 
       setShowSuccess(true);
     } catch (error) {
-      console.error(error);
+      if (!handleRegisterValidationFailure(error, data, navigate)) {
+        console.error(error);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -126,6 +151,12 @@ export default function RegisterAgentInfo() {
   }, [navigate]);
 
   const addEducation = () => {
+    const result = validateAgentEducation(newEducation);
+    if (!result.valid) {
+      setFormErrors((prev) => ({ ...prev, education: result.error }));
+      return;
+    }
+    setFormErrors((prev) => ({ ...prev, education: undefined }));
     if (newEducation.institution && newEducation.degree && newEducation.year) {
       setEducation([...education, { ...newEducation, id: Date.now().toString() }]);
       setNewEducation({ institution: "", degree: "", year: "" });
@@ -134,6 +165,12 @@ export default function RegisterAgentInfo() {
   };
 
   const addCertification = () => {
+    const result = validateAgentCertification(newCertification);
+    if (!result.valid) {
+      setFormErrors((prev) => ({ ...prev, certification: result.error }));
+      return;
+    }
+    setFormErrors((prev) => ({ ...prev, certification: undefined }));
     if (newCertification.name && newCertification.issuer && newCertification.year) {
       setCertifications([...certifications, { ...newCertification, id: Date.now().toString() }]);
       setNewCertification({ name: "", issuer: "", year: "" });
@@ -142,6 +179,13 @@ export default function RegisterAgentInfo() {
   };
 
   const addExperience = () => {
+    const mapped = { position: newExperience.title, company: newExperience.company, years: newExperience.years };
+    const result = validateAgentExperience(mapped);
+    if (!result.valid) {
+      setFormErrors((prev) => ({ ...prev, experience: result.error }));
+      return;
+    }
+    setFormErrors((prev) => ({ ...prev, experience: undefined }));
     if (newExperience.title && newExperience.company && newExperience.years) {
       setExperience([...experience, { ...newExperience, id: Date.now().toString() }]);
       setNewExperience({ title: "", company: "", years: "" });
@@ -163,6 +207,7 @@ export default function RegisterAgentInfo() {
 
   const charCount = data.bio.length;
   const maxChars = 300;
+  const bioError = validateBio(data.bio).error;
 
   return (
     <div
@@ -285,14 +330,12 @@ export default function RegisterAgentInfo() {
                   position: "absolute",
                   bottom: 12,
                   right: 16,
-                  fontSize: 12,
-                  color: charCount > maxChars * 0.9 ? "#C52E3E" : "#9a9aa0",
-                  fontWeight: 500,
                 }}
               >
-                {charCount}/{maxChars}
+                <CharCounter current={charCount} max={maxChars} />
               </div>
             </div>
+            <FieldError message={bioError} />
           </div>
 
           {/* Education */}
@@ -372,6 +415,8 @@ export default function RegisterAgentInfo() {
                   />
                   <button
                     onClick={addEducation}
+                    type="button"
+                    data-testid="agent-education-save"
                     style={{
                       background: "#C52E3E",
                       border: "none",
@@ -386,6 +431,7 @@ export default function RegisterAgentInfo() {
                     Guardar
                   </button>
                 </div>
+                <FieldError message={formErrors.education} />
               </div>
             )}
 
@@ -519,6 +565,8 @@ export default function RegisterAgentInfo() {
                   />
                   <button
                     onClick={addCertification}
+                    type="button"
+                    data-testid="agent-certification-save"
                     style={{
                       background: "#C52E3E",
                       border: "none",
@@ -533,6 +581,7 @@ export default function RegisterAgentInfo() {
                     Guardar
                   </button>
                 </div>
+                <FieldError message={formErrors.certification} />
               </div>
             )}
 
@@ -666,6 +715,8 @@ export default function RegisterAgentInfo() {
                   />
                   <button
                     onClick={addExperience}
+                    type="button"
+                    data-testid="agent-experience-save"
                     style={{
                       background: "#C52E3E",
                       border: "none",
@@ -680,6 +731,7 @@ export default function RegisterAgentInfo() {
                     Guardar
                   </button>
                 </div>
+                <FieldError message={formErrors.experience} />
               </div>
             )}
 

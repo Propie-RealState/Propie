@@ -11,6 +11,7 @@ import { buildRegisterPayload } from '../../lib/buildRegisterPayload';
 import { useAuth } from '../../context/AuthContext';
 import { getPendingAvatarFile, clearPendingAvatarFile } from '../../lib/pending-avatar';
 import { uploadAvatar } from '../modules/profile/services/upload-avatar.service';
+import { CharCounter, FieldError, validateBio, buildRegistrationContext, ensureRegistrationReady, handleRegisterValidationFailure } from '../../features/register/validation';
 
 export default function RegisterClientInfo() {
   const navigate = useNavigate();
@@ -29,6 +30,17 @@ export default function RegisterClientInfo() {
     setIsSubmitting(true);
 
     try {
+      const registrationContext = buildRegistrationContext(data, {
+        profilePhoto: getPendingAvatarFile(),
+      });
+      const readiness = ensureRegistrationReady(data, registrationContext);
+      if (!readiness.valid) {
+        navigate(readiness.route, {
+          state: { registerFieldErrors: readiness.errors, fromFinalSubmit: true },
+        });
+        return;
+      }
+
       updateData({
         mainGoal: 'EXPLORE',
       });
@@ -80,7 +92,9 @@ export default function RegisterClientInfo() {
 
       setShowSuccess(true);
     } catch (error) {
-      console.error(error);
+      if (!handleRegisterValidationFailure(error, data, navigate)) {
+        console.error(error);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -93,6 +107,7 @@ export default function RegisterClientInfo() {
 
   const charCount = data.bio.length;
   const maxChars = 300;
+  const bioError = validateBio(data.bio).error;
 
   return (
     <div
@@ -189,8 +204,9 @@ export default function RegisterClientInfo() {
           }}
         />
         <p style={{ textAlign: 'right', fontSize: 12, color: '#9a9aa0', marginTop: 6 }}>
-          {charCount}/{maxChars}
+          <CharCounter current={charCount} max={maxChars} />
         </p>
+        <FieldError message={bioError} />
 
         <button
           type="button"

@@ -1,10 +1,14 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthHeroHeader } from "../components/AuthHeroHeader";
-import { ArrowLeft, Upload, Camera, User } from "lucide-react";
+import { Upload, Camera, User } from "lucide-react";
 import React from "react";
 import { useRegister } from "../../context/RegisterContext";
 import { setPendingAvatarFile } from "../../lib/pending-avatar";
+import {
+  FieldError,
+  validateProfilePhotoFile,
+} from "../../features/register/validation";
 
 export default function RegisterProfilePhoto() {
   const { data, updateData } = useRegister();
@@ -13,6 +17,8 @@ export default function RegisterProfilePhoto() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const isAgent = data.role === "AGENT";
+
+  const [uploadError, setUploadError] = useState<string | undefined>();
 
   const colors = {
     gradient: isAgent
@@ -25,7 +31,12 @@ export default function RegisterProfilePhoto() {
   };
 
   const handleFileSelect = (file: File) => {
-    // Keep the File for post-registration upload; use a blob URL for preview only.
+    const result = validateProfilePhotoFile(file);
+    if (!result.valid) {
+      setUploadError(result.error);
+      return;
+    }
+    setUploadError(undefined);
     setPendingAvatarFile(file);
     updateData({ ...data, profilePhoto: URL.createObjectURL(file) });
   };
@@ -132,13 +143,14 @@ export default function RegisterProfilePhoto() {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
               onChange={(e) => {
                 if (e.target.files && e.target.files[0]) {
                   handleFileSelect(e.target.files[0]);
                 }
               }}
               style={{ display: "none" }}
+              data-testid="register-field-profilePhoto"
             />
             <button
               type="button"
@@ -177,7 +189,7 @@ export default function RegisterProfilePhoto() {
             <input
               ref={cameraInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
               capture="user"
               onChange={(e) => {
                 if (e.target.files && e.target.files[0]) {
@@ -220,6 +232,8 @@ export default function RegisterProfilePhoto() {
             </button>
           </div>
 
+          <FieldError message={uploadError} />
+
           {/* Info text */}
           <p style={{ textAlign: "center", color: "#9a9aa0", fontSize: 13, lineHeight: 1.6, margin: "8px 0 0" }}>
             Podés agregar o cambiar tu foto en cualquier momento desde tu perfil
@@ -229,6 +243,8 @@ export default function RegisterProfilePhoto() {
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 24 }}>
             <button
               onClick={handleContinue}
+              disabled={Boolean(uploadError)}
+              data-testid="register-continue"
               style={{
                 width: "100%",
                 background: colors.primary,
