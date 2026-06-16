@@ -1,11 +1,12 @@
 import { motion, AnimatePresence } from "motion/react";
 import { Share, ArrowDown, X, Smartphone } from "lucide-react";
+
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import { PROPIE_THEME } from "@/theme/app-theme";
 
 /**
  * Floating install banner for Android (native prompt) and
- * iOS (manual Share ? Add to Home Screen guide).
+ * iOS (manual Share -> Add to Home Screen guide).
  *
  * Shows once per session. Dismissed via X button or by accepting.
  */
@@ -58,7 +59,7 @@ export function InstallBanner() {
                 Instalar Propie
               </p>
               <p style={{ margin: "2px 0 0", fontSize: 12, color: "#666" }}>
-                Acceso rápido desde tu pantalla de inicio
+                {"Acceso r\u00e1pido desde tu pantalla de inicio"}
               </p>
             </div>
 
@@ -102,13 +103,13 @@ export function InstallBanner() {
       <AnimatePresence>
         {state === "ios" && (
           <>
-            {/* Backdrop */}
             <motion.div
               key="ios-backdrop"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={dismiss}
+              aria-hidden="true"
               style={{
                 position: "fixed",
                 inset: 0,
@@ -123,6 +124,9 @@ export function InstallBanner() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 32 }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="install-ios-title"
               style={{
                 position: "fixed",
                 bottom: 0,
@@ -135,9 +139,10 @@ export function InstallBanner() {
                 paddingTop: 20,
                 paddingLeft: 20,
                 paddingRight: 20,
+                maxWidth: 560,
+                margin: "0 auto",
               }}
             >
-              {/* Drag handle */}
               <div
                 style={{
                   width: 36,
@@ -148,7 +153,9 @@ export function InstallBanner() {
                 }}
               />
 
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}
+              >
                 <div
                   style={{
                     width: 48,
@@ -164,7 +171,10 @@ export function InstallBanner() {
                   <Smartphone size={24} color="#fff" />
                 </div>
                 <div>
-                  <p style={{ margin: 0, fontWeight: 700, fontSize: 16, color: "#111" }}>
+                  <p
+                    id="install-ios-title"
+                    style={{ margin: 0, fontWeight: 700, fontSize: 16, color: "#111" }}
+                  >
                     Instalar Propie
                   </p>
                   <p style={{ margin: "2px 0 0", fontSize: 13, color: "#666" }}>
@@ -182,7 +192,7 @@ export function InstallBanner() {
                 }}
               >
                 <p style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 600, color: "#111" }}>
-                  Cómo instalar en iPhone / iPad:
+                  {"C\u00f3mo instalar en iPhone / iPad:"}
                 </p>
 
                 {[
@@ -190,9 +200,12 @@ export function InstallBanner() {
                     icon: <Share size={18} color={PROPIE_THEME.primary} />,
                     text: (
                       <>
-                        Toca el botón{" "}
+                        {"Toca el bot\u00f3n "}
                         <strong>Compartir</strong>{" "}
-                        <Share size={14} style={{ display: "inline", verticalAlign: "middle" }} />{" "}
+                        <Share
+                          size={14}
+                          style={{ display: "inline", verticalAlign: "middle" }}
+                        />{" "}
                         en la barra de Safari
                       </>
                     ),
@@ -201,16 +214,28 @@ export function InstallBanner() {
                     icon: <ArrowDown size={18} color={PROPIE_THEME.primary} />,
                     text: (
                       <>
-                        Desplázate y toca{" "}
+                        {"Despl\u00e1zate y toca "}
                         <strong>"Agregar a pantalla de inicio"</strong>
                       </>
                     ),
                   },
                   {
                     icon: (
-                      <span style={{ fontSize: 18 }}>?</span>
+                      <span
+                        style={{
+                          fontSize: 16,
+                          fontWeight: 700,
+                          color: PROPIE_THEME.primary,
+                        }}
+                      >
+                        3
+                      </span>
                     ),
-                    text: <>Toca <strong>"Agregar"</strong> para confirmar</>,
+                    text: (
+                      <>
+                        Toca <strong>"Agregar"</strong> para confirmar
+                      </>
+                    ),
                   },
                 ].map((step, i) => (
                   <div
@@ -236,7 +261,7 @@ export function InstallBanner() {
                     >
                       {step.icon}
                     </div>
-                    <p style={{ margin: 0, fontSize: 13, color: "#444", lineHeight: 1.5 }}>
+                    <p style={{ margin: 0, fontSize: 13, color: "#444", lineHeight: 1.55 }}>
                       {step.text}
                     </p>
                   </div>
