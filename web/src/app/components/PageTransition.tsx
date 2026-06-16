@@ -20,13 +20,15 @@ export function PageTransition() {
   const exitY  = isPop ?  6 : -4;
 
   return (
-    <div className="relative w-full flex-1" style={{ minHeight: "100dvh" }}>
+    <div
+      className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden"
+      style={{ height: "100%" }}
+    >
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={location.pathname}
-          className="w-full"
+          className="flex h-full min-h-0 w-full flex-col overflow-hidden"
           style={{
-            minHeight: "100dvh",
             willChange: reduceMotion ? "auto" : "opacity, transform",
           }}
           initial={reduceMotion ? false : { opacity: 0, y: enterY }}

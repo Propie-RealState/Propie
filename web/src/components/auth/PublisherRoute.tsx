@@ -11,7 +11,11 @@ export function PublisherRoute({
 }: {
   children: React.ReactNode;
 }) {
-  const { user } = useAuth();
+  const { user, isHydrating } = useAuth();
+
+  if (isHydrating) {
+    return null;
+  }
 
   if (!user) {
     return (

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthHeroHeader } from "../../../components/AuthHeroHeader";
+import { PublishWizardCTA } from "../components/PublishWizardCTA";
+import { PublishWizardLayout } from "../components/PublishWizardLayout";
 import {
   ArrowLeft,
   Camera,
@@ -300,6 +301,7 @@ export default function PublishStep2() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const [showValidation, setShowValidation] = useState(false);
 
   useEffect(() => {
     async function loadProperty() {
@@ -514,139 +516,32 @@ export default function PublishStep2() {
 
   const isFormValid = mediaItems.length > 0;
 
+  const continueHint =
+    showValidation && !isFormValid
+      ? "Agregá al menos una foto o video para continuar."
+      : undefined;
+
+  const handleContinueAttempt = () => {
+    if (!isFormValid) {
+      setShowValidation(true);
+      return;
+    }
+
+    handleContinue();
+  };
+
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f5f5f7",
-        fontFamily: "'Inter', sans-serif",
-      }}
+    <PublishWizardLayout
+      title="Fotos y videos"
+      subtitle="Agregá imágenes y videos de tu propiedad"
+      footer={
+        <PublishWizardCTA
+          label="Continuar"
+          onClick={handleContinueAttempt}
+          hint={continueHint}
+        />
+      }
     >
-      {/* ── HERO ── */}
-      <div
-        style={{
-          position: "relative",
-          background:
-            theme.heroGradient,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          paddingBottom: 0,
-        }}
-      >
-        {/* Decorative blobs */}
-        <div
-          style={{
-            position: "absolute",
-            width: 300,
-            height: 300,
-            background:
-              "radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%)",
-            top: -80,
-            right: -60,
-            pointerEvents: "none",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            width: 180,
-            height: 180,
-            background:
-              "radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)",
-            bottom: 40,
-            left: -40,
-            pointerEvents: "none",
-          }}
-        />
-
-        <AuthHeroHeader />
-
-        {/* Heading */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            textAlign: "center",
-            padding: "32px 28px 12px",
-          }}
-        >
-          <h1
-            style={{
-              color: "white",
-              fontSize: "clamp(26px, 7vw, 34px)",
-              fontWeight: 800,
-              letterSpacing: "-1.2px",
-              lineHeight: 1.15,
-              fontFamily: "'Sora', sans-serif",
-              margin: 0,
-            }}
-          >
-            Fotos y videos
-          </h1>
-          <p
-            style={{
-              color: "rgba(255,255,255,0.72)",
-              fontSize: 14,
-              marginTop: 10,
-              lineHeight: 1.6,
-              maxWidth: 300,
-            }}
-          >
-            Agregá imágenes y videos de tu propiedad
-          </p>
-        </div>
-
-        {/* Wave */}
-        <div
-          style={{
-            width: "100%",
-            height: 44,
-            position: "relative",
-            marginTop: 8,
-          }}
-        >
-          <svg
-            viewBox="0 0 390 44"
-            preserveAspectRatio="none"
-            style={{
-              position: "absolute",
-              bottom: 0,
-              width: "100%",
-              height: 44,
-            }}
-          >
-            <path
-              d="M0,24 C90,48 300,0 390,24 L390,44 L0,44 Z"
-              fill="#f5f5f7"
-            />
-          </svg>
-        </div>
-      </div>
-
-      {/* ── CONTENT ── */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          padding: "24px 24px 40px",
-          overflowY: "auto",
-        }}
-      >
-        <div
-          style={{
-            width: "100%",
-            maxWidth: 420,
-            display: "flex",
-            flexDirection: "column",
-            gap: 24,
-          }}
-        >
           {/* Upload buttons */}
           <div style={{ display: "flex", gap: 10 }}>
             {/* Camera */}
@@ -657,7 +552,7 @@ export default function PublishStep2() {
               capture="environment"
               multiple
               onChange={(e) => handleFileSelect(e.target.files, "image")}
-              style={{ display: "none" }}
+              className="visually-hidden"
             />
             <button
               onClick={() => cameraInputRef.current?.click()}
@@ -701,7 +596,7 @@ export default function PublishStep2() {
               accept="image/*"
               multiple
               onChange={(e) => handleFileSelect(e.target.files, "image")}
-              style={{ display: "none" }}
+              className="visually-hidden"
             />
             <button
               onClick={() => galleryInputRef.current?.click()}
@@ -745,7 +640,7 @@ export default function PublishStep2() {
               accept="video/*"
               multiple
               onChange={(e) => handleFileSelect(e.target.files, "video")}
-              style={{ display: "none" }}
+              className="visually-hidden"
             />
             <button
               onClick={() => videoInputRef.current?.click()}
@@ -880,51 +775,6 @@ export default function PublishStep2() {
             </div>
           )}
 
-          {/* Continue button */}
-          <button
-            onClick={handleContinue}
-            disabled={!isFormValid}
-            style={{
-              width: "100%",
-              background: isFormValid ? theme.primary : "#e5e5ea",
-              border: "none",
-              borderRadius: 16,
-              padding: "16px 18px",
-              cursor: isFormValid ? "pointer" : "not-allowed",
-              fontSize: 16,
-              fontWeight: 700,
-              color: isFormValid ? "white" : "#9a9aa0",
-              transition: "all 0.18s ease",
-              marginTop: 8,
-              boxShadow: isFormValid
-                ? "0 4px 16px rgba(197,46,62,0.24)"
-                : "none",
-            }}
-            onMouseEnter={(e) => {
-              if (isFormValid) {
-                (e.currentTarget as HTMLButtonElement).style.background =
-                  theme.primaryDark;
-                (e.currentTarget as HTMLButtonElement).style.transform =
-                  "translateY(-1px)";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                  "0 6px 20px rgba(197,46,62,0.32)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (isFormValid) {
-                (e.currentTarget as HTMLButtonElement).style.background =
-                  theme.primary;
-                (e.currentTarget as HTMLButtonElement).style.transform =
-                  "translateY(0)";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                  "0 4px 16px rgba(197,46,62,0.24)";
-              }
-            }}
-          >
-            Continuar
-          </button>
-        </div>
-      </div>
-    </div>
+    </PublishWizardLayout>
   );
 }

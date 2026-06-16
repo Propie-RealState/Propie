@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { CalendarCheck, X } from "lucide-react";
 
+import { BottomSheet } from "../../../components/layout/BottomSheet";
 import { createVisit, rescheduleVisit } from "../services/visits.service";
 import type { Visit } from "../types/visit.types";
 import { toIsoDateTime } from "../utils/visit-ui";
@@ -61,10 +62,6 @@ export function ScheduleVisitSheet({
     setSuccess(false);
   }, [open, visit]);
 
-  if (!open) {
-    return null;
-  }
-
   async function handleSubmit() {
     try {
       setSubmitting(true);
@@ -104,139 +101,127 @@ export function ScheduleVisitSheet({
   }
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 1000,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "flex-end",
-        background: "rgba(0,0,0,0.45)",
-      }}
-      onClick={onClose}
+    <BottomSheet
+      open={open}
+      onClose={onClose}
+      ariaLabel={
+        success
+          ? "Solicitud enviada"
+          : isReschedule
+            ? "Reprogramar visita"
+            : "Agendar visita"
+      }
     >
       <div
         style={{
-          background: "white",
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-          padding: "20px 16px 28px",
-          maxHeight: "90dvh",
-          overflowY: "auto",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 20,
         }}
-        onClick={(event) => event.stopPropagation()}
       >
+        <h2
+          style={{
+            margin: 0,
+            fontSize: 18,
+            fontWeight: 700,
+            fontFamily: "'Sora', sans-serif",
+            color: "#1a1a1a",
+          }}
+        >
+          {success
+            ? "Solicitud enviada"
+            : isReschedule
+              ? "Reprogramar visita"
+              : "Agendar visita"}
+        </h2>
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            background: "#f5f5f7",
+            border: "none",
+            borderRadius: 10,
+            padding: 8,
+            cursor: "pointer",
+            display: "flex",
+          }}
+        >
+          <X size={18} />
+        </button>
+      </div>
+
+      {success ? (
         <div
           style={{
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 20,
+            textAlign: "center",
+            gap: 16,
+            padding: "8px 4px 4px",
           }}
         >
-          <h2
+          <div
             style={{
-              margin: 0,
-              fontSize: 18,
-              fontWeight: 700,
-              fontFamily: "'Sora', sans-serif",
-              color: "#1a1a1a",
+              width: 64,
+              height: 64,
+              borderRadius: 20,
+              background: `${primaryColor}14`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            {success
-              ? "Solicitud enviada"
-              : isReschedule
-                ? "Reprogramar visita"
-                : "Agendar visita"}
-          </h2>
+            <CalendarCheck size={32} color={primaryColor} />
+          </div>
+          <div>
+            <p
+              style={{
+                margin: "0 0 8px",
+                fontSize: 16,
+                fontWeight: 700,
+                color: "#1a1a1a",
+                fontFamily: "'Sora', sans-serif",
+              }}
+            >
+              {isReschedule
+                ? "Visita reprogramada"
+                : "Solicitud de visita enviada"}
+            </p>
+            <p
+              style={{
+                margin: 0,
+                fontSize: 14,
+                lineHeight: 1.55,
+                color: "#6e6e73",
+              }}
+            >
+              {isReschedule
+                ? "Los participantes verán la nueva fecha en el chat y en sus visitas."
+                : "El propietario o agente debe confirmar la cita. Te avisamos cuando responda."}
+            </p>
+          </div>
           <button
             type="button"
             onClick={onClose}
             style={{
-              background: "#f5f5f7",
+              width: "100%",
+              marginTop: 8,
+              background: primaryColor,
+              color: "white",
               border: "none",
-              borderRadius: 10,
-              padding: 8,
+              borderRadius: 14,
+              padding: "14px 16px",
+              fontSize: 15,
+              fontWeight: 700,
               cursor: "pointer",
-              display: "flex",
             }}
           >
-            <X size={18} />
+            Entendido
           </button>
         </div>
-
-        {success ? (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              textAlign: "center",
-              gap: 16,
-              padding: "8px 4px 4px",
-            }}
-          >
-            <div
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: 20,
-                background: `${primaryColor}14`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <CalendarCheck size={32} color={primaryColor} />
-            </div>
-            <div>
-              <p
-                style={{
-                  margin: "0 0 8px",
-                  fontSize: 16,
-                  fontWeight: 700,
-                  color: "#1a1a1a",
-                  fontFamily: "'Sora', sans-serif",
-                }}
-              >
-                {isReschedule
-                  ? "Visita reprogramada"
-                  : "Solicitud de visita enviada"}
-              </p>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 14,
-                  lineHeight: 1.55,
-                  color: "#6e6e73",
-                }}
-              >
-                {isReschedule
-                  ? "Los participantes verán la nueva fecha en el chat y en sus visitas."
-                  : "El propietario o agente debe confirmar la cita. Te avisamos cuando responda."}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{
-                width: "100%",
-                marginTop: 8,
-                background: primaryColor,
-                color: "white",
-                border: "none",
-                borderRadius: 14,
-                padding: "14px 16px",
-                fontSize: 15,
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
-            >
-              Entendido
-            </button>
-          </div>
-        ) : (
+      ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <span style={{ fontSize: 13, fontWeight: 600, color: "#6e6e73" }}>
@@ -344,8 +329,7 @@ export function ScheduleVisitSheet({
                 : "Agendar visita"}
           </button>
         </div>
-        )}
-      </div>
-    </div>
+      )}
+    </BottomSheet>
   );
 }

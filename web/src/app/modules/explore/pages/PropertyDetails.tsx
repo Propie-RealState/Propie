@@ -50,13 +50,23 @@ import {
 } from "../../property-conversations/services/property-conversations.service";
 import { subscribePropertyActiveAgain } from "../../my-properties/services/property-status.service";
 import {
+  getPropertyStatusLabel,
+  getPropertyStatusStyle,
+} from "../../my-properties/utils/property-status-display";
+import {
   isFavorite,
   toggleFavoriteId,
 } from "../../../../lib/favorites-storage";
 import { showToast } from "../../../../lib/toast";
 import { ExplorePageSkeleton } from "../../../components/skeletons/PageSkeletons";
+import {
+  modalBackdropStyle,
+  modalPanelStyle,
+  pageShellStyle,
+  pageScrollStyle,
+  stickyCtaPadding,
+} from "../../../components/layout/layout-styles";
 
-const STICKY_CTA_PADDING = "16px 20px max(16px, env(safe-area-inset-bottom))";
 type UserType = "guest" | "client" | "owner" | "agente" | null;
 
 // ─── Publicado por card ────────────────────────────────────────────────────────
@@ -340,6 +350,11 @@ export default function PropertyDetails() {
     property?.status === "ACTIVE" && property?.allowChat !== false;
   const isPaused = property?.status === "PAUSED";
   const isReserved = property?.status === "RESERVED";
+  const publicationStatusStyle = property
+    ? getPropertyStatusStyle(property.status)
+    : null;
+  const PublicationStatusIcon =
+    property?.status === "PAUSED" ? Clock : CheckCircle;
   const [isSubscribingStatus, setIsSubscribingStatus] = useState(false);
   const [statusSubscribed, setStatusSubscribed] = useState(false);
   const requestSent =
@@ -562,13 +577,7 @@ export default function PropertyDetails() {
 
   if (loading) {
     return (
-      <div
-        style={{
-          minHeight: "100dvh",
-          background: "#f5f5f7",
-          fontFamily: "'Inter', sans-serif",
-        }}
-      >
+      <div style={{ ...pageShellStyle, background: "#f5f5f7" }}>
         <ExplorePageSkeleton />
       </div>
     );
@@ -586,15 +595,7 @@ export default function PropertyDetails() {
   ].filter(Boolean);
 
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f5f5f7",
-        fontFamily: "'Inter', sans-serif",
-      }}
-    >
+    <div style={{ ...pageShellStyle, background: "#f5f5f7" }}>
       {/* Header */}
       <div
         style={{
@@ -783,12 +784,11 @@ export default function PropertyDetails() {
       {/* Content */}
       <div
         style={{
-          flex: 1,
+          ...pageScrollStyle,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           padding: "20px 20px 100px",
-          overflowY: "auto",
         }}
       >
         <div
@@ -1036,8 +1036,8 @@ export default function PropertyDetails() {
                     display: "inline-flex",
                     alignItems: "center",
                     gap: 6,
-                    background: "#dcfce7",
-                    color: "#166534",
+                    background: publicationStatusStyle?.bg ?? "#f3f4f6",
+                    color: publicationStatusStyle?.text ?? "#6b7280",
                     padding: "8px 14px",
                     borderRadius: 10,
                     fontSize: 14,
@@ -1045,8 +1045,8 @@ export default function PropertyDetails() {
                     marginBottom: 16,
                   }}
                 >
-                  <CheckCircle size={16} />
-                  Activa
+                  <PublicationStatusIcon size={16} />
+                  {getPropertyStatusLabel(property.status)}
                 </div>
 
                 <div
@@ -1124,29 +1124,11 @@ export default function PropertyDetails() {
       {/* Modal: Solicitud de agente */}
       {showRequestModal && (
         <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 100,
-            padding: "20px",
-          }}
+          style={modalBackdropStyle}
           onClick={() => setShowRequestModal(false)}
         >
           <div
-            style={{
-              background: "white",
-              borderRadius: 20,
-              padding: "24px",
-              maxWidth: 480,
-              width: "100%",
-            }}
+            style={{ ...modalPanelStyle, maxWidth: 480 }}
             onClick={(e) => e.stopPropagation()}
           >
             <div
@@ -1272,7 +1254,9 @@ export default function PropertyDetails() {
             right: 0,
             background: "white",
             borderTop: "1px solid #e5e5ea",
-            padding: STICKY_CTA_PADDING,
+            padding: stickyCtaPadding,
+            paddingLeft: "max(20px, env(safe-area-inset-left))",
+            paddingRight: "max(20px, env(safe-area-inset-right))",
             display: "flex",
             gap: 12,
             zIndex: 10,
@@ -1346,7 +1330,9 @@ export default function PropertyDetails() {
             right: 0,
             background: "white",
             borderTop: "1px solid #e5e5ea",
-            padding: STICKY_CTA_PADDING,
+            padding: stickyCtaPadding,
+            paddingLeft: "max(20px, env(safe-area-inset-left))",
+            paddingRight: "max(20px, env(safe-area-inset-right))",
             display: "flex",
             gap: 12,
             zIndex: 10,
@@ -1403,7 +1389,9 @@ export default function PropertyDetails() {
             right: 0,
             background: "white",
             borderTop: "1px solid #e5e5ea",
-            padding: STICKY_CTA_PADDING,
+            padding: stickyCtaPadding,
+            paddingLeft: "max(20px, env(safe-area-inset-left))",
+            paddingRight: "max(20px, env(safe-area-inset-right))",
             display: "flex",
             gap: 12,
             zIndex: 10,

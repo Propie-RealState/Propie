@@ -11,6 +11,7 @@ import type { Property } from '../../explore/types/property.types';
 import { getFavoriteIds, toggleFavoriteId } from '../../../../lib/favorites-storage';
 import { useAppTheme } from '../../../../theme/useAppTheme';
 import { FavoritesPageSkeleton } from '../../../components/skeletons/PageSkeletons';
+import { pageShellStyle } from '../../../components/layout/layout-styles';
 
 export default function Favorites() {
   const navigate = useNavigate();
@@ -46,16 +47,7 @@ export default function Favorites() {
   );
 
   return (
-    <div
-      style={{
-        height: '100dvh',
-        display: 'flex',
-        flexDirection: 'column',
-        background: '#f5f5f7',
-        fontFamily: "'Inter', sans-serif",
-        overflow: 'hidden',
-      }}
-    >
+    <div style={{ ...pageShellStyle, background: '#f5f5f7' }}>
       <div
         style={{
           flexShrink: 0,

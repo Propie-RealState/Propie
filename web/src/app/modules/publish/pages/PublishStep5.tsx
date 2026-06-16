@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { AuthHeroHeader } from "../../../components/AuthHeroHeader";
-import { ArrowLeft, CheckCircle2, Upload, MapPin, DollarSign, Image as ImageIcon, AlertCircle, Home, Tag, BedDouble, Bath, Maximize2, Users } from "lucide-react";
+import { PublishWizardCTA } from "../components/PublishWizardCTA";
+import { PublishWizardLayout } from "../components/PublishWizardLayout";
+import { CheckCircle2, Upload, MapPin, DollarSign, Image as ImageIcon, Home, Tag, BedDouble, Bath, Maximize2 } from "lucide-react";
 import React from "react";
 import {
   usePropertyPublish,
@@ -29,7 +29,6 @@ const listingTypeLabel: Record<string, string> = {
 
 export default function PublishStep5() {
   const theme = useAppTheme();
-  const navigate = useNavigate();
 
   const {
     data,
@@ -42,6 +41,7 @@ export default function PublishStep5() {
   const [escritura, setEscritura] = useState<File | null>(null);
   const [autorizacion, setAutorizacion] = useState<File | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
 
   const handleCheckboxChange = (key: keyof typeof checklist) => {
     setChecklist((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -83,84 +83,40 @@ export default function PublishStep5() {
 
   const isFormValid = checklist.autorizado && checklist.terminos && checklist.identidad;
 
+  const publishHint =
+    showValidation && !isFormValid
+      ? "Completá todas las verificaciones requeridas para continuar"
+      : undefined;
+
+  const handlePublishAttempt = () => {
+    if (!isFormValid) {
+      setShowValidation(true);
+      return;
+    }
+
+    void handlePublish();
+  };
+
   const previewPrice = data.price
     ? formatPrice(data.price, data.currency ?? "USD")
     : "Sin precio";
 
   const previewAddress = data.address || data.city || "Sin ubicación";
 
-  const canPublish =
-    checklist.autorizado &&
-    checklist.terminos &&
-    checklist.identidad;
-
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f5f5f7",
-        fontFamily: "'Inter', sans-serif",
-      }}
-    >
-      {/* ── HERO ── */}
-      <div
-        style={{
-          position: "relative",
-          background: theme.heroGradient,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          paddingBottom: 0,
-        }}
+    <>
+      <PublishWizardLayout
+        title="Verificación y publicar"
+        subtitle="Últimos pasos antes de publicar tu propiedad"
+        footer={
+          <PublishWizardCTA
+            label="Publicar propiedad"
+            onClick={handlePublishAttempt}
+            hint={publishHint}
+            large
+          />
+        }
       >
-        {/* Decorative blobs */}
-        <div style={{ position: "absolute", width: 300, height: 300, background: "radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%)", top: -80, right: -60, pointerEvents: "none" }} />
-        <div style={{ position: "absolute", width: 180, height: 180, background: "radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)", bottom: 40, left: -40, pointerEvents: "none" }} />
-
-        <AuthHeroHeader />
-
-        {/* Heading */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "32px 28px 12px" }}>
-          <h1
-            style={{
-              color: "white",
-              fontSize: "clamp(26px, 7vw, 34px)",
-              fontWeight: 800,
-              letterSpacing: "-1.2px",
-              lineHeight: 1.15,
-              fontFamily: "'Sora', sans-serif",
-              margin: 0,
-            }}
-          >
-            Verificación y publicar
-          </h1>
-          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 10, lineHeight: 1.6, maxWidth: 300 }}>
-            Últimos pasos antes de publicar tu propiedad
-          </p>
-        </div>
-
-        {/* Wave */}
-        <div style={{ width: "100%", height: 44, position: "relative", marginTop: 8 }}>
-          <svg viewBox="0 0 390 44" preserveAspectRatio="none" style={{ position: "absolute", bottom: 0, width: "100%", height: 44 }}>
-            <path d="M0,24 C90,48 300,0 390,24 L390,44 L0,44 Z" fill="#f5f5f7" />
-          </svg>
-        </div>
-      </div>
-
-      {/* ── CONTENT ── */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          padding: "24px 24px 40px",
-          overflowY: "auto",
-        }}
-      >
-        <div style={{ width: "100%", maxWidth: 420, display: "flex", flexDirection: "column", gap: 28 }}>
           {/* Checklist */}
           <div>
             <h3 style={{ margin: "0 0 14px", fontSize: 16, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>
@@ -185,7 +141,7 @@ export default function PublishStep5() {
                   type="checkbox"
                   checked={checklist.autorizado}
                   onChange={() => handleCheckboxChange("autorizado")}
-                  style={{ display: "none" }}
+                  className="visually-hidden"
                 />
                 <div
                   style={{
@@ -226,7 +182,7 @@ export default function PublishStep5() {
                   type="checkbox"
                   checked={checklist.terminos}
                   onChange={() => handleCheckboxChange("terminos")}
-                  style={{ display: "none" }}
+                  className="visually-hidden"
                 />
                 <div
                   style={{
@@ -308,7 +264,7 @@ export default function PublishStep5() {
                   type="file"
                   accept=".pdf,.jpg,.png"
                   onChange={(e) => handleFileUpload("escritura", e)}
-                  style={{ display: "none" }}
+                  className="visually-hidden"
                 />
                 <div
                   style={{
@@ -352,7 +308,7 @@ export default function PublishStep5() {
                   type="file"
                   accept=".pdf,.jpg,.png"
                   onChange={(e) => handleFileUpload("autorizacion", e)}
-                  style={{ display: "none" }}
+                  className="visually-hidden"
                 />
                 <div
                   style={{
@@ -504,70 +460,12 @@ export default function PublishStep5() {
               )}
             </div>
           </div>
-          {/* Warning */}
-          {!isFormValid && (
-            <div
-              style={{
-                background: "#fff7ed",
-                border: "1.5px solid #fed7aa",
-                borderRadius: 14,
-                padding: "14px 16px",
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 12,
-              }}
-            >
-              <AlertCircle size={18} color="#ea580c" style={{ flexShrink: 0, marginTop: 1 }} />
-              <div style={{ fontSize: 13, color: "#9a3412", lineHeight: 1.5 }}>
-                Completá todas las verificaciones requeridas para continuar
-              </div>
-            </div>
-          )}
-
-          {/* Publish button */}
-          <button
-            onClick={handlePublish}
-
-            disabled={!canPublish}
-
-            style={{
-              width: "100%",
-
-              height: 56,
-
-              border: "none",
-
-              borderRadius: 18,
-
-              fontSize: 18,
-
-              fontWeight: 700,
-
-              cursor:
-                canPublish
-                  ? "pointer"
-                  : "not-allowed",
-
-              background:
-                canPublish
-                  ? theme.primary
-                  : "#d9d9df",
-
-              color: "white",
-
-              transition:
-                "all 0.15s ease",
-            }}
-          >
-            Publicar propiedad
-          </button>
-        </div>
-      </div>
+      </PublishWizardLayout>
 
       <PublishSuccessModal
         isOpen={showSuccess}
         onClose={() => setShowSuccess(false)}
       />
-    </div>
+    </>
   );
 }

@@ -155,12 +155,15 @@ export function AppFooterNav() {
 
   return (
     <div
+      data-testid="app-footer"
       style={{
         flexShrink: 0,
         background: 'white',
         borderTop: '1px solid #efefef',
         boxShadow: '0 -4px 20px rgba(0,0,0,0.07)',
-        paddingBottom: 'max(env(safe-area-inset-bottom), 4px)',
+        paddingBottom: 'max(env(safe-area-inset-bottom), 8px)',
+        paddingLeft: 'max(env(safe-area-inset-left), 0px)',
+        paddingRight: 'max(env(safe-area-inset-right), 0px)',
       }}
     >
       <div className="flex items-center px-3 py-2">

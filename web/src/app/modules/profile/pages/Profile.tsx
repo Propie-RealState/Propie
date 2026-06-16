@@ -29,6 +29,8 @@ import {
 import { updateMyProfile } from "../services/profile.service";
 import { useAppTheme, useIsAgent } from "../../../../theme/useAppTheme";
 import { useOwnerApplicationCount } from "../../agent-applications/hooks/useOwnerApplicationCount";
+import { pageShellStyle, pageScrollStyle } from "../../../components/layout/layout-styles";
+import { AppModal } from "../../../components/layout/AppModal";
 import { AppFooterNav } from "../../../components/navigation/AppFooterNav";
 import { NotificationsBell } from "../../../components/navigation/NotificationsBell";
 import {
@@ -224,26 +226,17 @@ export default function Profile() {
     return null;
   }
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f5f5f7",
-        fontFamily: "'Inter', sans-serif",
-      }}
-    >
+    <div style={pageShellStyle}>
       {/* Header */}
       <div
         style={{
+          flexShrink: 0,
           background: "white",
           borderBottom: "1px solid #e5e5ea",
           padding: "16px 20px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          position: "sticky",
-          top: 0,
           zIndex: 10,
         }}
       >
@@ -283,12 +276,11 @@ export default function Profile() {
       {/* Content */}
       <div
         style={{
-          flex: 1,
+          ...pageScrollStyle,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           padding: "24px 20px 40px",
-          overflowY: "auto",
         }}
       >
         <div
@@ -1431,93 +1423,59 @@ export default function Profile() {
 
       <AppFooterNav />
 
-      {/* Logout Confirmation Modal */}
-      {showLogoutModal && (
-        <div
+      <AppModal
+        open={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        title="¿Cerrar sesión?"
+        titleId="logout-modal-title"
+        maxWidth={400}
+      >
+        <p
           style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 100,
-            padding: "20px",
+            margin: "0 0 24px",
+            fontSize: 14,
+            color: "#6e6e73",
+            lineHeight: 1.6,
           }}
-          onClick={() => setShowLogoutModal(false)}
         >
-          <div
+          ¿Estás seguro que querés cerrar sesión? Vas a tener que volver a
+          ingresar para acceder a tu cuenta.
+        </p>
+        <div style={{ display: "flex", gap: 12 }}>
+          <button
+            onClick={() => setShowLogoutModal(false)}
             style={{
+              flex: 1,
               background: "white",
-              borderRadius: 20,
-              padding: "28px 24px",
-              maxWidth: 400,
-              width: "100%",
+              border: "1.5px solid #e5e5ea",
+              borderRadius: 14,
+              padding: "14px",
+              color: "#1a1a1a",
+              fontSize: 15,
+              fontWeight: 600,
+              cursor: "pointer",
             }}
-            onClick={(e) => e.stopPropagation()}
           >
-            <h3
-              style={{
-                margin: "0 0 12px",
-                fontSize: 20,
-                fontWeight: 700,
-                color: "#1a1a1a",
-                fontFamily: "'Sora', sans-serif",
-              }}
-            >
-              ¿Cerrar sesión?
-            </h3>
-            <p
-              style={{
-                margin: "0 0 24px",
-                fontSize: 14,
-                color: "#6e6e73",
-                lineHeight: 1.6,
-              }}
-            >
-              ¿Estás seguro que querés cerrar sesión? Vas a tener que volver a
-              ingresar para acceder a tu cuenta.
-            </p>
-            <div style={{ display: "flex", gap: 12 }}>
-              <button
-                onClick={() => setShowLogoutModal(false)}
-                style={{
-                  flex: 1,
-                  background: "white",
-                  border: "1.5px solid #e5e5ea",
-                  borderRadius: 14,
-                  padding: "14px",
-                  color: "#1a1a1a",
-                  fontSize: 15,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleLogout}
-                style={{
-                  flex: 1,
-                  background: "#ef4444",
-                  border: "none",
-                  borderRadius: 14,
-                  padding: "14px",
-                  color: "white",
-                  fontSize: 15,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                Cerrar sesión
-              </button>
-            </div>
-          </div>
+            Cancelar
+          </button>
+          <button
+            onClick={handleLogout}
+            style={{
+              flex: 1,
+              background: "#ef4444",
+              border: "none",
+              borderRadius: 14,
+              padding: "14px",
+              color: "white",
+              fontSize: 15,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Cerrar sesión
+          </button>
         </div>
-      )}
+      </AppModal>
     </div>
   );
 }

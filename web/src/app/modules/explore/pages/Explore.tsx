@@ -16,6 +16,7 @@ import type { Property } from "../types/property.types";
 import { getPublishedProperties } from "../services/explore.service";
 import { useAppTheme } from "../../../../theme/useAppTheme";
 import { useMapStore } from "../../map/stores/useMapStore";
+import { pageShellStyle, pageScrollStyle } from "../../../components/layout/layout-styles";
 import { AppFooterNav } from "../../../components/navigation/AppFooterNav";
 import { NotificationsBell } from "../../../components/navigation/NotificationsBell";
 import {
@@ -159,28 +160,13 @@ export default function Explore() {
 
   if (loading) {
     return (
-      <div
-        style={{
-          height: "100dvh",
-          background: "#f5f5f7",
-          fontFamily: "'Inter', sans-serif",
-        }}
-      >
+      <div style={{ ...pageShellStyle, background: "#f5f5f7" }}>
         <ExplorePageSkeleton />
       </div>
     );
   }
   return (
-    <div
-      style={{
-        height: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f5f5f7",
-        fontFamily: "'Inter', sans-serif",
-        overflow: "hidden",
-      }}
-    >
+    <div style={{ ...pageShellStyle, background: "#f5f5f7" }}>
       {/* ── HEADER ── */}
       <div
         style={{
@@ -335,7 +321,7 @@ export default function Explore() {
 
       {/* ── PROPERTIES LIST ── */}
       <div
-        style={{ flex: 1, overflowY: "auto", padding: "14px 16px 8px" }}
+        style={{ ...pageScrollStyle, padding: "14px 16px 8px" }}
         ref={(el) => {
           if (el) el.style.setProperty("scrollbar-width", "none");
         }}
