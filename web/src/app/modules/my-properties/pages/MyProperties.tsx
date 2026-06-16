@@ -10,6 +10,7 @@ import { usePropertyPublish } from "../../publish/context/PropertyPublishContext
 import { useAppTheme, useIsAgent } from "../../../../theme/useAppTheme";
 import { PropertyListSkeleton } from "../../../components/skeletons/PageSkeletons";
 import { AppFooterNav } from "../../../components/navigation/AppFooterNav";
+import { pageShellStyle } from "../../../components/layout/layout-styles";
 
 export default function MyProperties() {
   const navigate = useNavigate();
@@ -72,17 +73,7 @@ export default function MyProperties() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        height: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f5f5f7",
-        fontFamily: "'Inter', sans-serif",
-        overflow: "hidden",
-      }}
-    >
+      <div style={{ ...pageShellStyle, background: "#f5f5f7" }}>
       {/* Header */}
       <div
         style={{

@@ -12,7 +12,7 @@ export const LOADER_MS = 2000;
 export default function SplashScreen() {
   return (
     <motion.div
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden bg-[#FAFAFA]"
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden bg-[#FAFAFA] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
       initial={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.02 }}
       transition={{ duration: EXIT_MS / 1000, ease: [0.4, 0, 0.2, 1] }}

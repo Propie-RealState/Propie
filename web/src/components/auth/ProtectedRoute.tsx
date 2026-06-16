@@ -12,8 +12,12 @@ export function ProtectedRoute({
   children: React.ReactNode;
 }) {
 
-  const { user } =
+  const { user, isHydrating } =
     useAuth();
+
+  if (isHydrating) {
+    return null;
+  }
 
   // ====================================================
   // NOT AUTHENTICATED

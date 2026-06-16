@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthHeroHeader } from "../../../components/AuthHeroHeader";
+import { PublishWizardCTA } from "../components/PublishWizardCTA";
+import { PublishWizardLayout } from "../components/PublishWizardLayout";
 import { ShieldCheck, Users, XCircle } from "lucide-react";
 import React from "react";
 import {
@@ -29,6 +30,23 @@ export default function PublishStep4() {
       CommercializationType | null
     >(null);
   const [manualApproval, setManualApproval] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
+
+  const isFormValid = Boolean(commercializationType);
+
+  const continueHint =
+    showValidation && !isFormValid
+      ? "Elegí una opción de comercialización."
+      : undefined;
+
+  const handleContinueAttempt = () => {
+    if (!isFormValid) {
+      setShowValidation(true);
+      return;
+    }
+
+    void handleContinue();
+  };
 
   const handleContinue =
     async () => {
@@ -106,72 +124,17 @@ export default function PublishStep4() {
   ];
 
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f5f5f7",
-        fontFamily: "'Inter', sans-serif",
-      }}
+    <PublishWizardLayout
+      title="Comercialización"
+      subtitle="Elegí cómo querés gestionar tu propiedad"
+      footer={
+        <PublishWizardCTA
+          label="Continuar"
+          onClick={handleContinueAttempt}
+          hint={continueHint}
+        />
+      }
     >
-      {/* ── HERO ── */}
-      <div
-        style={{
-          position: "relative",
-          background: theme.heroGradient,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          paddingBottom: 0,
-        }}
-      >
-        {/* Decorative blobs */}
-        <div style={{ position: "absolute", width: 300, height: 300, background: "radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%)", top: -80, right: -60, pointerEvents: "none" }} />
-        <div style={{ position: "absolute", width: 180, height: 180, background: "radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)", bottom: 40, left: -40, pointerEvents: "none" }} />
-
-        <AuthHeroHeader />
-
-        {/* Heading */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "32px 28px 12px" }}>
-          <h1
-            style={{
-              color: "white",
-              fontSize: "clamp(26px, 7vw, 34px)",
-              fontWeight: 800,
-              letterSpacing: "-1.2px",
-              lineHeight: 1.15,
-              fontFamily: "'Sora', sans-serif",
-              margin: 0,
-            }}
-          >
-            Comercialización
-          </h1>
-          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 10, lineHeight: 1.6, maxWidth: 300 }}>
-            Elegí cómo querés gestionar tu propiedad
-          </p>
-        </div>
-
-        {/* Wave */}
-        <div style={{ width: "100%", height: 44, position: "relative", marginTop: 8 }}>
-          <svg viewBox="0 0 390 44" preserveAspectRatio="none" style={{ position: "absolute", bottom: 0, width: "100%", height: 44 }}>
-            <path d="M0,24 C90,48 300,0 390,24 L390,44 L0,44 Z" fill="#f5f5f7" />
-          </svg>
-        </div>
-      </div>
-
-      {/* ── CONTENT ── */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          padding: "24px 24px 40px",
-          overflowY: "auto",
-        }}
-      >
-        <div style={{ width: "100%", maxWidth: 420, display: "flex", flexDirection: "column", gap: 24 }}>
           {/* Commercialization options */}
           <div>
             <h3 style={{ margin: "0 0 14px", fontSize: 16, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>
@@ -404,49 +367,6 @@ export default function PublishStep4() {
             </div>
           )}
 
-          {/* Continue button */}
-          <button
-            onClick={handleContinue}
-
-            disabled={
-              !commercializationType
-            }
-
-            style={{
-              width: "100%",
-
-              height: 56,
-
-              border: "none",
-
-              borderRadius: 18,
-
-              fontSize: 18,
-
-              fontWeight: 700,
-
-              cursor:
-                commercializationType
-                  ? "pointer"
-                  : "not-allowed",
-
-              background:
-                commercializationType
-                  ? theme.primary
-                  : "#d9d9df",
-
-              color: "white",
-
-              transition:
-                "all 0.15s ease",
-
-              marginTop: 24,
-            }}
-          >
-            Continuar
-          </button>
-        </div>
-      </div>
-    </div>
+    </PublishWizardLayout>
   );
 }

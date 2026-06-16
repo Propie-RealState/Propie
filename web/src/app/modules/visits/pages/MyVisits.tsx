@@ -16,6 +16,7 @@ import type {
   VisitListSegment,
 } from "../types/visit.types";
 import { formatUserName, getWeekRange } from "../utils/visit-ui";
+import { pageShellStyle } from "../../../components/layout/layout-styles";
 
 type SegmentOption = {
   id: VisitListSegment;
@@ -141,16 +142,7 @@ export default function MyVisits() {
   }, [segment]);
 
   return (
-    <div
-      style={{
-        height: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f5f5f7",
-        fontFamily: "'Inter', sans-serif",
-        overflow: "hidden",
-      }}
-    >
+    <div style={{ ...pageShellStyle, background: "#f5f5f7" }}>
       <div
         style={{
           flexShrink: 0,

@@ -93,23 +93,15 @@ type AuthContextType = {
 
   user: User | null;
 
-
-
   accessToken: string | null;
-
-
 
   refreshToken: string | null;
 
-
+  isHydrating: boolean;
 
   login: (accessToken: string, refreshToken: string, user: User) => void;
 
-
-
   logout: () => void;
-
-
 
   refreshUser: () => Promise<void>;
 
@@ -132,6 +124,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
+
+  const [isHydrating, setIsHydrating] = useState(true);
 
 
 
@@ -166,9 +160,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
       if (!storedAccessToken || !storedRefreshToken) {
-
+        setIsHydrating(false);
         return;
-
       }
 
 
@@ -212,14 +205,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         setUser(null);
 
+      } finally {
+        setIsHydrating(false);
       }
-
     }
 
-
-
     hydrateAuth();
-
   }, [refreshUser]);
 
 
@@ -288,6 +279,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         accessToken,
 
         refreshToken,
+
+        isHydrating,
 
         login,
 

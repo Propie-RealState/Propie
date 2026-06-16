@@ -15,6 +15,7 @@ import {
 } from "../services/property-conversations.service";
 import type { PropertyConversation } from "../types/property-conversation.types";
 import { ConversationListSkeleton } from "../../../components/skeletons/PageSkeletons";
+import { pageShellStyle } from "../../../components/layout/layout-styles";
 
 export default function ConversationsInbox() {
   const navigate = useNavigate();
@@ -61,16 +62,7 @@ export default function ConversationsInbox() {
   }, [conversations, historical]);
 
   return (
-    <div
-      style={{
-        height: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f5f5f7",
-        fontFamily: "'Inter', sans-serif",
-        overflow: "hidden",
-      }}
-    >
+    <div style={{ ...pageShellStyle, background: "#f5f5f7" }}>
       <div
         style={{
           flexShrink: 0,

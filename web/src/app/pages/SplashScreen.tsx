@@ -18,10 +18,17 @@ type Props = {
 
 export default function AppStartup({ children }: Props) {
   const navigate = useNavigate();
-  const [showSplash, setShowSplash] = useState(true);
-  const [splashMounted, setSplashMounted] = useState(true);
+  const skipSplash =
+    typeof sessionStorage !== "undefined" &&
+    sessionStorage.getItem("propie_skip_splash") === "1";
+  const [showSplash, setShowSplash] = useState(!skipSplash);
+  const [splashMounted, setSplashMounted] = useState(!skipSplash);
 
   useEffect(() => {
+    if (skipSplash) {
+      return;
+    }
+
     let cancelled = false;
 
     const timer = window.setTimeout(() => {
@@ -35,7 +42,7 @@ export default function AppStartup({ children }: Props) {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [navigate]);
+  }, [navigate, skipSplash]);
 
   useEffect(() => {
     if (showSplash) {
@@ -65,7 +72,7 @@ export default function AppStartup({ children }: Props) {
       : null;
 
   return (
-    <div className="flex min-h-screen min-h-dvh w-full flex-col">
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
       {children}
       {splashLayer}
     </div>

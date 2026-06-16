@@ -18,6 +18,7 @@ import {
 import { useAppTheme } from "../../../../theme/useAppTheme";
 import { useAuth } from "../../../../context/AuthContext";
 import { isClientRole } from "../../../../lib/roles";
+import { pageShellStyle, pageScrollStyle } from "../../../components/layout/layout-styles";
 import { AppFooterNav } from "../../../components/navigation/AppFooterNav";
 import { NotificationsBell } from "../../../components/navigation/NotificationsBell";
 import {
@@ -99,15 +100,7 @@ export default function Messages() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f5f5f7",
-        fontFamily: "'Inter', sans-serif",
-      }}
-    >
+    <div style={pageShellStyle}>
       <div
         style={{
           background: "white",
@@ -156,11 +149,10 @@ export default function Messages() {
 
       <div
         style={{
-          flex: 1,
+          ...pageScrollStyle,
           display: "flex",
           justifyContent: "center",
           padding: "22px 20px 40px",
-          overflowY: "auto",
         }}
       >
         <div

@@ -18,6 +18,7 @@ import { useAppTheme } from "../../../../theme/useAppTheme";
 import { emitPushEngagement } from "../../../../lib/push-notifications";
 import { showToast } from "../../../../lib/toast";
 import { AppFooterNav } from "../../../components/navigation/AppFooterNav";
+import { pageShellStyle, pageScrollStyle } from "../../../components/layout/layout-styles";
 import { NotificationsBell } from "../../../components/navigation/NotificationsBell";
 import { useNotifications } from "../../notifications/hooks/useNotifications";
 import {
@@ -173,15 +174,7 @@ export default function Notifications() {
   const unreadCount = items.filter((item) => !item.read).length;
 
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f5f5f7",
-        fontFamily: "'Inter', sans-serif",
-      }}
-    >
+    <div style={pageShellStyle}>
       <div
         style={{
           background: "white",
@@ -230,11 +223,10 @@ export default function Notifications() {
 
       <div
         style={{
-          flex: 1,
+          ...pageScrollStyle,
           display: "flex",
           justifyContent: "center",
           padding: "22px 20px 40px",
-          overflowY: "auto",
         }}
       >
         <div

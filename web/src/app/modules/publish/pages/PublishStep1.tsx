@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthHeroHeader } from "../../../components/AuthHeroHeader";
-import { ArrowLeft, MapPin, Search } from "lucide-react";
+import { PublishWizardCTA } from "../components/PublishWizardCTA";
+import { PublishWizardLayout } from "../components/PublishWizardLayout";
 import { usePropertyPublish } from "../context/PropertyPublishContext";
 import React from "react";
 import { updatePropertyBasic } from "../services/updatePropertyBasic";
@@ -26,7 +26,7 @@ export default function PublishStep1() {
   }, []);
 
   const [operationType, setOperationType] = useState<OperationType>(null);
-  const [address, setAddress] = useState(data.address);
+  const [showValidation, setShowValidation] = useState(false);
 
   useEffect(() => {
     if (data.listingType) {
@@ -39,9 +39,6 @@ export default function PublishStep1() {
       setOperationType(reverseListingTypeMap[data.listingType]);
     }
 
-    if (data.address) {
-      setAddress(data.address);
-    }
   }, []);
 
   const locationValue = {
@@ -170,6 +167,20 @@ export default function PublishStep1() {
     data.lat !== null &&
     data.lng !== null;
 
+  const continueHint =
+    showValidation && !isFormValid
+      ? "Seleccioná el tipo de operación, tipo de propiedad y una dirección en el mapa."
+      : undefined;
+
+  const handleContinueAttempt = () => {
+    if (!isFormValid) {
+      setShowValidation(true);
+      return;
+    }
+
+    void handleContinue();
+  };
+
   const operationCards = [
     {
       id: "venta" as OperationType,
@@ -220,138 +231,17 @@ export default function PublishStep1() {
   ];
 
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f5f5f7",
-        fontFamily: "'Inter', sans-serif",
-      }}
+    <PublishWizardLayout
+      title="Publicá tu propiedad"
+      subtitle="Comenzá completando los datos básicos"
+      footer={
+        <PublishWizardCTA
+          label="Continuar"
+          onClick={handleContinueAttempt}
+          hint={continueHint}
+        />
+      }
     >
-      {/* ── HERO ── */}
-      <div
-        style={{
-          position: "relative",
-          background:
-            theme.heroGradient,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          paddingBottom: 0,
-        }}
-      >
-        {/* Decorative blobs */}
-        <div
-          style={{
-            position: "absolute",
-            width: 300,
-            height: 300,
-            background:
-              "radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%)",
-            top: -80,
-            right: -60,
-            pointerEvents: "none",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            width: 180,
-            height: 180,
-            background:
-              "radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)",
-            bottom: 40,
-            left: -40,
-            pointerEvents: "none",
-          }}
-        />
-
-        <AuthHeroHeader />
-
-        {/* Heading */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            textAlign: "center",
-            padding: "32px 28px 12px",
-          }}
-        >
-          <h1
-            style={{
-              color: "white",
-              fontSize: "clamp(26px, 7vw, 34px)",
-              fontWeight: 800,
-              letterSpacing: "-1.2px",
-              lineHeight: 1.15,
-              fontFamily: "'Sora', sans-serif",
-              margin: 0,
-            }}
-          >
-            Publicá tu propiedad
-          </h1>
-          <p
-            style={{
-              color: "rgba(255,255,255,0.72)",
-              fontSize: 14,
-              marginTop: 10,
-              lineHeight: 1.6,
-              maxWidth: 300,
-            }}
-          >
-            Comenzá completando los datos básicos
-          </p>
-        </div>
-
-        {/* Wave */}
-        <div
-          style={{
-            width: "100%",
-            height: 44,
-            position: "relative",
-            marginTop: 8,
-          }}
-        >
-          <svg
-            viewBox="0 0 390 44"
-            preserveAspectRatio="none"
-            style={{
-              position: "absolute",
-              bottom: 0,
-              width: "100%",
-              height: 44,
-            }}
-          >
-            <path
-              d="M0,24 C90,48 300,0 390,24 L390,44 L0,44 Z"
-              fill="#f5f5f7"
-            />
-          </svg>
-        </div>
-      </div>
-
-      {/* ── CONTENT ── */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          padding: "24px 24px 40px",
-          overflowY: "auto",
-        }}
-      >
-        <div
-          style={{
-            width: "100%",
-            maxWidth: 420,
-            display: "flex",
-            flexDirection: "column",
-            gap: 28,
-          }}
-        >
           {/* Tipo de operación */}
           <div>
             <h3
@@ -605,121 +495,7 @@ export default function PublishStep1() {
               value={locationValue}
               onChange={(nextLocation) => updateData(nextLocation)}
             />
-            <div style={{ display: "none" }}>
-              <div
-                style={{
-                  position: "absolute",
-                  left: 16,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  zIndex: 1,
-                }}
-              >
-                <Search size={18} color="#9a9aa0" />
-              </div>
-              <input
-                type="text"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="Buscar dirección..."
-                style={{
-                  width: "100%",
-                  padding: "16px 16px 16px 46px",
-                  borderRadius: 14,
-                  border: "1.5px solid #e5e5ea",
-                  fontSize: 15,
-                  color: "#1a1a1a",
-                  outline: "none",
-                  transition: "all 0.15s ease",
-                  boxSizing: "border-box",
-                  background: "white",
-                }}
-                onFocus={(e) => {
-                  (e.target as HTMLInputElement).style.borderColor = theme.primary;
-                  (e.target as HTMLInputElement).style.boxShadow =
-                    "0 0 0 3px rgba(197,46,62,0.08)";
-                }}
-                onBlur={(e) => {
-                  (e.target as HTMLInputElement).style.borderColor = "#e5e5ea";
-                  (e.target as HTMLInputElement).style.boxShadow = "none";
-                }}
-              />
-            </div>
-
-            {/* Map placeholder */}
-            <div
-              style={{
-                display: "none",
-                marginTop: 12,
-                width: "100%",
-                height: 200,
-                borderRadius: 14,
-                background: "linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%)",
-                alignItems: "center",
-                justifyContent: "center",
-                flexDirection: "column",
-                gap: 8,
-                border: "1.5px solid #e5e5ea",
-              }}
-            >
-              <MapPin size={32} color="#9a9aa0" />
-              <span style={{ fontSize: 13, color: "#9a9aa0", fontWeight: 500 }}>
-                Mapa interactivo
-              </span>
-              <span style={{ fontSize: 11, color: "#b0b0b0" }}>
-                Pin draggable + autocompletado
-              </span>
-            </div>
           </div>
-
-          {/* Continue button */}
-          <button
-            onClick={handleContinue}
-            disabled={!isFormValid}
-            style={{
-              width: "100%",
-              background: isFormValid ? theme.primary : "#e5e5ea",
-              border: "none",
-              borderRadius: 16,
-              padding: "16px 18px",
-              cursor: isFormValid ? "pointer" : "not-allowed",
-              fontSize: 16,
-              fontWeight: 700,
-              color: isFormValid ? "white" : "#9a9aa0",
-              transition: "all 0.18s ease",
-              marginTop: 8,
-              boxShadow: isFormValid
-                ? "0 4px 16px rgba(197,46,62,0.24)"
-                : "none",
-            }}
-            onMouseEnter={(e) => {
-              if (isFormValid) {
-                (e.currentTarget as HTMLButtonElement).style.background =
-                  theme.primaryDark;
-                (e.currentTarget as HTMLButtonElement).style.transform =
-                  "translateY(-1px)";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                  "0 6px 20px rgba(197,46,62,0.32)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (isFormValid) {
-                (e.currentTarget as HTMLButtonElement).style.background =
-                  theme.primary;
-                (e.currentTarget as HTMLButtonElement).style.transform =
-                  "translateY(0)";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                  "0 4px 16px rgba(197,46,62,0.24)";
-              }
-            }}
-          >
-            Continuar
-          </button>
-        </div>
-      </div>
-    </div>
+    </PublishWizardLayout>
   );
 }

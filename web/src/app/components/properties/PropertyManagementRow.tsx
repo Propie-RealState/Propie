@@ -1,30 +1,15 @@
 import { ChevronDown, ChevronRight } from "lucide-react";
 import type { PropertyStatus } from "../../modules/my-properties/types/my-properties.types";
 import type { OwnedProperty } from "../../modules/my-properties/types/my-properties.types";
+import {
+  getPropertyStatusLabel,
+  getPropertyStatusStyle,
+  PROPERTY_STATUS_OPTIONS,
+} from "../../modules/my-properties/utils/property-status-display";
 import { formatPrice } from "../../modules/explore/utils/formatPrice";
 import { resolveMediaUrl } from "../../../lib/api-base";
 import type { AppTheme } from "../../../theme/app-theme";
 import "./property-presentation.css";
-
-const STATUS_OPTIONS: { value: PropertyStatus; label: string }[] = [
-  { value: "ACTIVE", label: "Activa" },
-  { value: "PAUSED", label: "Pausada" },
-  { value: "RESERVED", label: "Reservada" },
-  { value: "FINALIZED", label: "Finalizada" },
-];
-
-function getStatusStyle(status: PropertyStatus) {
-  switch (status) {
-    case "ACTIVE":
-      return { bg: "#ecfdf3", text: "#027a48", ring: "#a7f3d0" };
-    case "PAUSED":
-      return { bg: "#fff7ed", text: "#b54708", ring: "#fed7aa" };
-    case "RESERVED":
-      return { bg: "#eff6ff", text: "#1d4ed8", ring: "#bfdbfe" };
-    case "FINALIZED":
-      return { bg: "#f3f4f6", text: "#6b7280", ring: "#e5e7eb" };
-  }
-}
 
 function formatPublishedLabel(publishedAt: string | null) {
   if (!publishedAt) {
@@ -74,7 +59,7 @@ export function PropertyManagementRow({
   onNavigate,
   colors,
 }: PropertyManagementRowProps) {
-  const statusStyle = getStatusStyle(property.status);
+  const statusStyle = getPropertyStatusStyle(property.status);
   const publishedLabel = formatPublishedLabel(property.published_at);
   const location = [property.city, property.province].filter(Boolean).join(", ");
   const canEditStatus =
@@ -261,7 +246,7 @@ export function PropertyManagementRow({
                 outline: "none",
               }}
             >
-              {STATUS_OPTIONS.map((option) => (
+              {PROPERTY_STATUS_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -292,8 +277,7 @@ export function PropertyManagementRow({
               border: `1px solid ${statusStyle.ring}`,
             }}
           >
-            {STATUS_OPTIONS.find((o) => o.value === property.status)?.label ??
-              property.status}
+            {getPropertyStatusLabel(property.status)}
           </span>
         )}
 
