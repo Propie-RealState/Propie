@@ -24,7 +24,6 @@ export type ClientProfile = {
   experience?: unknown;
   certifications?: unknown;
   education?: unknown;
-  agent_profile_banner_dismissed?: boolean;
   // Agent reputation stats (only present for AGENT role)
   average_rating?: number;
   total_reviews?: number;
