@@ -206,7 +206,8 @@ export function RegisterSuccessOverlay({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: 24,
+        padding:
+          "max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left))",
         background:
           "rgba(15, 12, 28, 0.52)",
         backdropFilter:

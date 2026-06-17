@@ -20,15 +20,8 @@ export default function RegisterAgente() {
   }, [data.role, updateData]);
 
   const handleValidSubmit = () => {
-    updateData({ role: "AGENT" });
+    updateData({ role: "AGENT", mainGoal: "EXPLORE" });
     syncUserTypeFromRole("AGENT");
-    navigate("/registro/verification");
-  };
-
-  const handleSocialLogin = (provider: string) => {
-    updateData({ role: "AGENT" });
-    syncUserTypeFromRole("AGENT");
-    console.log(`Login con ${provider}`);
     navigate("/registro/verification");
   };
 
@@ -52,9 +45,6 @@ export default function RegisterAgente() {
           paddingBottom: 0,
         }}
       >
-        <div style={{ position: "absolute", width: 300, height: 300, background: "radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%)", top: -80, right: -60, pointerEvents: "none" }} />
-        <div style={{ position: "absolute", width: 180, height: 180, background: "radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)", bottom: 40, left: -40, pointerEvents: "none" }} />
-
         <AuthHeroHeader />
 
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "32px 28px 12px" }}>
@@ -71,8 +61,8 @@ export default function RegisterAgente() {
           >
             Creá tu cuenta de agente
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 10, lineHeight: 1.6, maxWidth: 280 }}>
-            Empezá a conectar propietarios con compradores
+          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 10, lineHeight: 1.6, maxWidth: 300 }}>
+            Explorá oportunidades, completá tu perfil y solicitá propiedades para comercializar.
           </p>
         </div>
 
@@ -93,27 +83,13 @@ export default function RegisterAgente() {
         }}
       >
         <div style={{ width: "100%", maxWidth: 420 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <button onClick={() => handleSocialLogin("Google")} type="button" style={{ width: "100%", background: "white", border: "1.5px solid #e5e5ea", borderRadius: 16, padding: "14px 18px", cursor: "pointer", fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>
-              Continuar con Google
-            </button>
-            <button onClick={() => handleSocialLogin("Apple")} type="button" style={{ width: "100%", background: "#000", border: "1.5px solid #000", borderRadius: 16, padding: "14px 18px", cursor: "pointer", fontSize: 15, fontWeight: 600, color: "white" }}>
-              Continuar con Apple
-            </button>
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "28px 0" }}>
-            <div style={{ flex: 1, height: 1, background: "#e5e5ea" }} />
-            <span style={{ fontSize: 13, color: "#9a9aa0", fontWeight: 500 }}>o</span>
-            <div style={{ flex: 1, height: 1, background: "#e5e5ea" }} />
-          </div>
-
           <AccountCreationForm
             data={data}
             updateData={updateData}
             theme={{ primary: theme.primary, focusShadow: "0 0 0 3px rgba(197,46,62,0.08)" }}
             onValidSubmit={handleValidSubmit}
             registrationKind="agent"
+            minimal
           />
         </div>
       </div>

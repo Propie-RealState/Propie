@@ -9,6 +9,8 @@ import {
   syncLocalFavoritesToServer,
 } from "../lib/favorites-storage";
 import { AUTH_SESSION_READY_EVENT } from "../lib/location-preferences";
+import { clearLegacyBannerDismissStorage, clearAgentBannerSnoozeForSession, hadLegacyPermanentBannerDismiss } from "../lib/agent-profile-completion";
+import { dismissAgentProfileBanner } from "../app/modules/profile/services/profile.service";
 
 
 
@@ -72,7 +74,10 @@ type User = {
 
     cuit_cuil?: string | null;
 
-
+    experience?: unknown;
+    certifications?: unknown;
+    education?: unknown;
+    agent_profile_banner_dismissed?: boolean;
 
     created_at?: string | null;
 
@@ -130,20 +135,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
   const refreshUser = useCallback(async () => {
-
     const response = await apiFetch("/auth/me");
 
-
-
     if (response?.data) {
-
       setUser(response.data);
-
       syncUserTypeFromRole(response.data.role);
+      migrateLegacyPermanentBannerDismiss(response.data);
+    }
+  }, []);
 
+  function migrateLegacyPermanentBannerDismiss(sessionUser: User) {
+    if (sessionUser.role !== "AGENT") {
+      clearLegacyBannerDismissStorage();
+      return;
     }
 
-  }, []);
+    if (sessionUser.profile?.agent_profile_banner_dismissed) {
+      clearLegacyBannerDismissStorage();
+      return;
+    }
+
+    if (!hadLegacyPermanentBannerDismiss()) {
+      return;
+    }
+
+    clearLegacyBannerDismissStorage();
+    void dismissAgentProfileBanner()
+      .then(() => refreshUser())
+      .catch(() => undefined);
+  }
+
+  function beginAgentSession(user: User) {
+    clearAgentBannerSnoozeForSession(user.id);
+  }
 
 
 
@@ -213,8 +237,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     hydrateAuth();
   }, [refreshUser]);
 
-
-
   function login(accessToken: string, refreshToken: string, user: User) {
 
     localStorage.setItem("accessToken", accessToken);
@@ -235,6 +257,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setUser(user);
 
+    if (user.role === "AGENT") {
+      beginAgentSession(user);
+      migrateLegacyPermanentBannerDismiss(user);
+    } else {
+      clearLegacyBannerDismissStorage();
+    }
     syncUserTypeFromRole(user.role);
 
     void syncLocalFavoritesToServer();
@@ -245,6 +273,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
   function logout() {
+    if (user?.role === "AGENT") {
+      clearAgentBannerSnoozeForSession(user.id);
+    }
 
     localStorage.removeItem("accessToken");
 
@@ -263,6 +294,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
     setUser(null);
+
+    sessionStorage.removeItem("userType");
 
   }
 

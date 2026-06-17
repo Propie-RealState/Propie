@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../../context/AuthContext";
@@ -41,6 +41,15 @@ import { StarRating } from "../../../components/StarRating";
 import { useAgentReviews } from "../../agents/hooks/useAgentReviews";
 import { resolveMediaUrl } from "../../../../lib/api-base";
 import { showToast } from "../../../../lib/toast";
+import { AgentProfileCompletionCard } from "../../../components/profile/AgentProfileCompletionCard";
+import { AgentProfessionalSections } from "../../../components/profile/AgentProfessionalSections";
+import {
+  getAgentCompletionSummary,
+  getAgentProfessionalProfile,
+  type AgentCertificationEntry,
+  type AgentEducationEntry,
+  type AgentExperienceEntry,
+} from "../../../../lib/agent-profile-completion";
 
 export default function Profile() {
   const [isSaving, setIsSaving] = useState(false);
@@ -68,6 +77,9 @@ export default function Profile() {
   const [address, setAddress] = useState("");
 
   const [cuitCuil, setCuitCuil] = useState("");
+  const [experience, setExperience] = useState<AgentExperienceEntry[]>([]);
+  const [certifications, setCertifications] = useState<AgentCertificationEntry[]>([]);
+  const [education, setEducation] = useState<AgentEducationEntry[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -87,6 +99,11 @@ export default function Profile() {
     setAddress(user.profile?.address || "");
   
     setCuitCuil(user.profile?.cuit_cuil || "");
+
+    const professional = getAgentProfessionalProfile(user.profile);
+    setExperience(professional.experience);
+    setCertifications(professional.certifications);
+    setEducation(professional.education);
   }, [user]);
 
   const displayLocation =
@@ -141,6 +158,10 @@ export default function Profile() {
 
   const colors = useAppTheme();
   const isAgent = useIsAgent();
+  const agentCompletionSummary = useMemo(
+    () => getAgentCompletionSummary(user?.profile),
+    [user?.profile],
+  );
   const isClient = isClientRole(user?.role);
   const showPublisherStats = canPublishProperties(user?.role);
   const { count: pendingApplicationCount } = useOwnerApplicationCount();
@@ -177,6 +198,10 @@ export default function Profile() {
     setNationality(user.profile?.nationality || "");
     setAddress(user.profile?.address || "");
     setCuitCuil(user.profile?.cuit_cuil || "");
+    const professional = getAgentProfessionalProfile(user.profile);
+    setExperience(professional.experience);
+    setCertifications(professional.certifications);
+    setEducation(professional.education);
   }
 
   function handleStartEditing() {
@@ -197,6 +222,13 @@ export default function Profile() {
         phone: phone.trim(),
         location: location.trim(),
         bio: bio.trim(),
+        ...(isAgent
+          ? {
+              experience,
+              certifications,
+              education,
+            }
+          : {}),
       });
 
       await refreshUser();
@@ -740,6 +772,22 @@ export default function Profile() {
               </div>
             )}
           </div>
+          )}
+
+          {/* Agent professional profile */}
+          {isAgent && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <AgentProfileCompletionCard summary={agentCompletionSummary} />
+              <AgentProfessionalSections
+                experience={experience}
+                certifications={certifications}
+                education={education}
+                isEditing={isEditing}
+                onExperienceChange={setExperience}
+                onCertificationsChange={setCertifications}
+                onEducationChange={setEducation}
+              />
+            </div>
           )}
 
           {/* Agent Reviews Section */}

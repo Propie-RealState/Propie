@@ -4,6 +4,8 @@ import { CheckCircle2, Sparkles, ArrowRight, Eye } from "lucide-react";
 import { PropertyType } from "../types/property-publish.types";
 import { usePropertyPublish } from "../context/PropertyPublishContext";
 import { useAppTheme } from "../../../../theme/useAppTheme";
+import { useAuth } from "../../../../context/AuthContext";
+import { markActivationEvent } from "../../../../lib/onboarding/activation";
 
 interface PublishSuccessModalProps {
   isOpen: boolean;
@@ -16,6 +18,7 @@ export default function PublishSuccessModal({
 }: PublishSuccessModalProps) {
   const navigate = useNavigate();
   const theme = useAppTheme();
+  const { user } = useAuth();
   const { data, reset } = usePropertyPublish();
   const [visible, setVisible] = useState(false);
 
@@ -46,9 +49,12 @@ export default function PublishSuccessModal({
       : propertyConfig.HOUSE;
 
   const handleExplore = () => {
+    if (user?.id) {
+      markActivationEvent(user.id, "first_publish");
+    }
     reset();
     onClose();
-    navigate("/explore");
+    navigate("/mis-propiedades");
   };
 
   const handleViewPublication = () => {

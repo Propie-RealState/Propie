@@ -24,6 +24,27 @@ export const IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"
 
 export const currentYear = () => new Date().getFullYear();
 
+function formatDateInput(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+/** Latest selectable birth date to be at least 18 years old. */
+export function getMaxBirthDateForRegistration(): string {
+  const date = new Date();
+  date.setFullYear(date.getFullYear() - 18);
+  return formatDateInput(date);
+}
+
+/** Reasonable lower bound for birth date picker. */
+export function getMinBirthDateForRegistration(): string {
+  const date = new Date();
+  date.setFullYear(date.getFullYear() - 120);
+  return formatDateInput(date);
+}
+
 export function validResult(): ValidationResult {
   return { valid: true };
 }
@@ -80,6 +101,33 @@ export function validatePassword(value: string): ValidationResult {
   return validResult();
 }
 
+export function validateConfirmPassword(
+  password: string,
+  confirmPassword: string,
+): ValidationResult {
+  if (!confirmPassword) return invalidResult(validationMessages.required);
+  if (password !== confirmPassword) {
+    return invalidResult("Las contraseñas no coinciden");
+  }
+  return validResult();
+}
+
+export function validateAge(value: string): ValidationResult {
+  const trimmed = value.trim();
+  if (!trimmed) return invalidResult(validationMessages.required);
+  if (!DIGITS_ONLY.test(trimmed)) return invalidResult("Ingresá una edad válida");
+  const age = Number.parseInt(trimmed, 10);
+  if (age < 18) return invalidResult("Debés ser mayor de 18 años");
+  if (age > 120) return invalidResult("Ingresá una edad válida");
+  return validResult();
+}
+
+export function birthDateFromAge(age: string): string {
+  const years = Number.parseInt(age, 10);
+  if (!Number.isFinite(years)) return "";
+  return `${currentYear() - years}-01-01`;
+}
+
 export function validateAcceptTerms(value: boolean): ValidationResult {
   return value ? validResult() : invalidResult(validationMessages.acceptTerms);
 }
@@ -117,17 +165,22 @@ export function validateDni(value: string): ValidationResult {
 
 export function validateBirthDate(value: string): ValidationResult {
   if (!value) return invalidResult(validationMessages.required);
-  const date = new Date(value);
+  const date = new Date(`${value}T00:00:00`);
   if (Number.isNaN(date.getTime())) {
     return invalidResult(validationMessages.birthDate.invalid);
   }
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (date > today) {
+    return invalidResult(validationMessages.birthDate.invalid);
+  }
   let age = today.getFullYear() - date.getFullYear();
   const monthDiff = today.getMonth() - date.getMonth();
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.getDate())) {
     age -= 1;
   }
   if (age < 18) return invalidResult(validationMessages.birthDate.underage);
+  if (age > 120) return invalidResult(validationMessages.birthDate.invalid);
   return validResult();
 }
 

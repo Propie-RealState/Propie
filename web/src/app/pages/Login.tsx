@@ -1,11 +1,11 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthHeroHeader } from "../components/AuthHeroHeader";
 import { Eye, EyeOff, Check } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import React from "react";
 import { apiFetch } from "../../lib/api";
 import { showToast } from "../../lib/toast";
+import { navigateAfterAuth } from "../../lib/onboarding/post-registration-navigation";
 export default function Login() {
   const navigate = useNavigate();
   const auth = useAuth();
@@ -18,113 +18,43 @@ export default function Login() {
     keepLoggedIn: false,
   });
 
-  const handleSocialLogin = (provider: string) => {
-    // Mock social login - default to propie
-    sessionStorage.setItem("userType", "propie");
-    auth.login(
-      "mock-access-token",
-      "mock-refresh-token",
-      {
-        id: "1",
-        email: formData.email,
-        role: "OWNER",
-      }
-    );
-
-    navigate("/explore");
-  };
-
-
-  const handleSubmit = async (
-    e: React.FormEvent
-  ) => {
-
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ====================================================
-    // MOCK 2FA STEP
-    // ====================================================
-
-    /*   if (!show2FA) {
-  
-        setShow2FA(true);
-  
-        return;
-      }
-   */
     try {
+      const response = await apiFetch("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
 
-
-      // ==================================================
-      // LOGIN REQUEST
-      // ==================================================
-
-      const response =
-        await apiFetch(
-          "/auth/login",
-          {
-            method: "POST",
-
-            body: JSON.stringify({
-              email: formData.email,
-
-              password: formData.password,
-            }),
-          }
-        );
-
-      console.log("LOGIN RESPONSE");
-      console.log(response);
-
-      // ==================================================
-      // SAVE USER TYPE
-      // ==================================================
-
-      if (
-        response.data.user.role ===
-        "AGENT"
-      ) {
-
-        sessionStorage.setItem(
-          "userType",
-          "agente"
-        );
-
+      if (response.data.user.role === "AGENT") {
+        sessionStorage.setItem("userType", "agente");
+      } else if (response.data.user.role === "OWNER") {
+        sessionStorage.setItem("userType", "propie");
       } else {
-
-        sessionStorage.setItem(
-          "userType",
-          "propie"
-        );
+        sessionStorage.removeItem("userType");
       }
-
-      // ==================================================
-      // SAVE AUTH
-      // ==================================================
 
       auth.login(
         response.data.accessToken,
-
         response.data.refreshToken,
-
-        response.data.user
+        response.data.user,
       );
 
-      // ==================================================
-      // REDIRECT
-      // ==================================================
-
-      navigate("/explore");
-
-
-    } catch (error: any) {
-
+      navigateAfterAuth(response.data.user.role, navigate, { replace: true });
+    } catch (error: unknown) {
       console.error(error);
-
-      showToast(
-        error?.error?.message ||
-        "Error al iniciar sesión"
-      );
+      const message =
+        typeof error === "object" &&
+        error !== null &&
+        "error" in error &&
+        typeof (error as { error?: { message?: string } }).error?.message === "string"
+          ? (error as { error: { message: string } }).error.message
+          : "Error al iniciar sesión";
+      showToast(message);
     }
   };
 
@@ -144,17 +74,10 @@ export default function Login() {
     : isEmailValid && isPasswordValid;
 
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f5f5f7",
-        fontFamily: "'Inter', sans-serif",
-      }}
-    >
+    <div className="app-auth-shell">
       {/* ── HERO ── */}
       <div
+        className="app-auth-shell__hero"
         style={{
           position: "relative",
           background: "linear-gradient(160deg, #5A32F0 0%, #4417E6 55%, #3510B8 100%)",
@@ -200,8 +123,8 @@ export default function Login() {
 
       {/* ── FORM ── */}
       <div
+        className="app-auth-shell__body"
         style={{
-          flex: 1,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -210,100 +133,11 @@ export default function Login() {
       >
         <div style={{ width: "100%", maxWidth: 420 }}>
           {!show2FA ? (
-            <>
-              {/* Social buttons */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                <button
-                  onClick={() => handleSocialLogin("Google")}
-                  style={{
-                    width: "100%",
-                    background: "white",
-                    border: "1.5px solid #e5e5ea",
-                    borderRadius: 16,
-                    padding: "14px 18px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 10,
-                    fontSize: 15,
-                    fontWeight: 600,
-                    color: "#1a1a1a",
-                    transition: "all 0.15s ease",
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.borderColor = "#4417E6";
-                    (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 12px rgba(68,23,230,0.1)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.borderColor = "#e5e5ea";
-                    (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)";
-                  }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 20 20">
-                    <path
-                      d="M19.6 10.23c0-.82-.1-1.42-.25-2.05H10v3.72h5.5c-.15.96-.74 2.31-2.04 3.22v2.45h3.16c1.89-1.73 2.98-4.3 2.98-7.34z"
-                      fill="#4285F4"
-                    />
-                    <path
-                      d="M13.46 15.13c-.83.59-1.96 1-3.46 1-2.64 0-4.88-1.74-5.68-4.15H1.07v2.52C2.72 17.75 6.09 20 10 20c2.7 0 4.96-.89 6.62-2.42l-3.16-2.45z"
-                      fill="#34A853"
-                    />
-                    <path
-                      d="M3.99 10c0-.69.12-1.35.32-1.97V5.51H1.07A9.973 9.973 0 000 10c0 1.61.39 3.14 1.07 4.49l3.24-2.52c-.2-.62-.32-1.28-.32-1.97z"
-                      fill="#FBBC05"
-                    />
-                    <path
-                      d="M10 3.88c1.88 0 3.13.81 3.85 1.48l2.84-2.76C14.96.99 12.7 0 10 0 6.09 0 2.72 2.25 1.07 5.51l3.24 2.52C5.12 5.62 7.36 3.88 10 3.88z"
-                      fill="#EA4335"
-                    />
-                  </svg>
-                  Continuar con Google
-                </button>
-
-                <button
-                  onClick={() => handleSocialLogin("Apple")}
-                  style={{
-                    width: "100%",
-                    background: "#000000",
-                    border: "1.5px solid #000000",
-                    borderRadius: 16,
-                    padding: "14px 18px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 10,
-                    fontSize: 15,
-                    fontWeight: 600,
-                    color: "white",
-                    transition: "all 0.15s ease",
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.background = "#1a1a1a";
-                    (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 12px rgba(0,0,0,0.2)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.background = "#000000";
-                    (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 1px 4px rgba(0,0,0,0.1)";
-                  }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M17.05 14.32c-.39.88-.58 1.27-1.08 2.05-.7 1.09-1.69 2.45-2.91 2.46-1.09.01-1.37-.71-2.84-.7-1.48.01-1.8.72-2.89.7-1.23-.01-2.13-1.21-2.83-2.3-1.95-3.03-2.16-6.58-.95-8.47.85-1.33 2.18-2.11 3.43-2.11 1.28 0 2.08.71 3.13.71 1.01 0 1.62-.71 3.08-.71 1.1 0 2.27.6 3.1 1.64-2.73 1.5-2.29 5.4.76 6.73zM13.05 3.43c.53-.69.93-1.65.78-2.63-.85.04-1.85.6-2.44 1.32-.52.63-.96 1.6-.79 2.54.93.02 1.89-.53 2.45-1.23z" />
-                  </svg>
-                  Continuar con Apple
-                </button>
-              </div>
-
-              {/* Divider */}
-              <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "28px 0" }}>
-                <div style={{ flex: 1, height: 1, background: "#e5e5ea" }} />
-                <span style={{ fontSize: 13, color: "#9a9aa0", fontWeight: 500 }}>o</span>
-                <div style={{ flex: 1, height: 1, background: "#e5e5ea" }} />
-              </div>
-            </>
+            <div style={{ marginBottom: 8 }}>
+              <p style={{ margin: 0, fontSize: 13, color: "#6e6e73", lineHeight: 1.55, textAlign: "center" }}>
+                Ingresá con tu email y contraseña de Propie.
+              </p>
+            </div>
           ) : (
             <div style={{ marginBottom: 24 }}>
               <p style={{ textAlign: "center", color: "#6e6e73", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
@@ -312,7 +146,6 @@ export default function Login() {
             </div>
           )}
 
-          {/* Form */}
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {!show2FA ? (
               <>

@@ -19,11 +19,14 @@ import { useMapStore } from "../../map/stores/useMapStore";
 import { pageShellStyle, pageScrollStyle } from "../../../components/layout/layout-styles";
 import { AppFooterNav } from "../../../components/navigation/AppFooterNav";
 import { NotificationsBell } from "../../../components/navigation/NotificationsBell";
-import {
-  getFavoriteIds,
-  toggleFavoriteId,
-} from "../../../../lib/favorites-storage";
+import { getFavoriteIds, toggleFavoriteId } from '../../../../lib/favorites-storage';
+import { markActivationEvent } from '../../../../lib/onboarding/activation';
 import { ExplorePageSkeleton } from "../../../components/skeletons/PageSkeletons";
+import { AgentProfileCompletionBanner } from '../../../components/profile/AgentProfileCompletionBanner';
+import {
+  getAgentCompletionSummary,
+  shouldShowAgentBanner,
+} from '../../../../lib/agent-profile-completion';
 
 // ─── Main Page ────────────────────────────────────────────────────
 export default function Explore() {
@@ -46,6 +49,21 @@ export default function Explore() {
   }, []);
 
   const { user } = useAuth();
+  const [, setBannerRevision] = useState(0);
+  const [optimisticBannerHide, setOptimisticBannerHide] = useState(false);
+
+  useEffect(() => {
+    setOptimisticBannerHide(false);
+    setBannerRevision((revision) => revision + 1);
+  }, [user?.id]);
+
+  const agentCompletionSummary = useMemo(
+    () => getAgentCompletionSummary(user?.profile),
+    [user?.profile],
+  );
+  const agentBannerVisible =
+    !optimisticBannerHide &&
+    shouldShowAgentBanner(user, agentCompletionSummary);
   const [query, setQuery] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
   const {
@@ -91,7 +109,12 @@ export default function Explore() {
       return;
     }
 
-    toggleFavoriteId(id);
+    const wasFavorite = favorites.includes(id);
+    void toggleFavoriteId(id).then(() => {
+      if (!wasFavorite && user.id) {
+        markActivationEvent(user.id, "first_favorite");
+      }
+    });
   };
 
   const searchPropertyIds = useMemo(
@@ -318,6 +341,15 @@ export default function Explore() {
           </div>
         </div>
       </div>
+
+      {agentBannerVisible && user && (
+        <AgentProfileCompletionBanner
+          userId={user.id}
+          summary={agentCompletionSummary}
+          onSnooze={() => setBannerRevision((revision) => revision + 1)}
+          onPermanentDismiss={() => setOptimisticBannerHide(true)}
+        />
+      )}
 
       {/* ── PROPERTIES LIST ── */}
       <div

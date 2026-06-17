@@ -13,33 +13,33 @@ const OWNER_THEME = {
   focusShadow: "0 0 0 3px rgba(68,23,230,0.08)",
 };
 
+const COPY = {
+  owner: {
+    title: "Creá tu cuenta de propietario",
+    subtitle: "En minutos publicás tu propiedad y empezás a recibir consultas.",
+  },
+  client: {
+    title: "Creá tu cuenta",
+    subtitle: "Guardá favoritos, chateá con publicadores y agendá visitas.",
+  },
+} as const;
+
 export default function RegisterPropie({
   registrationKind = "owner",
 }: RegisterPropieProps = {}) {
   const { data, updateData } = useRegister();
   const navigate = useNavigate();
   const isClientRegistration = registrationKind === "client";
+  const copy = isClientRegistration ? COPY.client : COPY.owner;
 
   const handleValidSubmit = () => {
     if (isClientRegistration) {
       updateData({ role: "CLIENT", mainGoal: "EXPLORE" });
       sessionStorage.removeItem("userType");
     } else {
-      updateData({ role: "OWNER" });
+      updateData({ role: "OWNER", mainGoal: "PUBLISH" });
       sessionStorage.setItem("userType", "propie");
     }
-    navigate("/registro/verification");
-  };
-
-  const handleSocialLogin = (provider: string) => {
-    if (isClientRegistration) {
-      updateData({ role: "CLIENT", mainGoal: "EXPLORE" });
-      sessionStorage.removeItem("userType");
-    } else {
-      updateData({ role: "OWNER" });
-      sessionStorage.setItem("userType", "propie");
-    }
-    console.log(`Login con ${provider}`, provider);
     navigate("/registro/verification");
   };
 
@@ -63,9 +63,6 @@ export default function RegisterPropie({
           paddingBottom: 0,
         }}
       >
-        <div style={{ position: "absolute", width: 300, height: 300, background: "radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%)", top: -80, right: -60, pointerEvents: "none" }} />
-        <div style={{ position: "absolute", width: 180, height: 180, background: "radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)", bottom: 40, left: -40, pointerEvents: "none" }} />
-
         <AuthHeroHeader />
 
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "32px 28px 12px" }}>
@@ -80,10 +77,10 @@ export default function RegisterPropie({
               margin: 0,
             }}
           >
-            Crear cuenta
+            {copy.title}
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 10, lineHeight: 1.6, maxWidth: 280 }}>
-            Empezá a publicar tus propiedades hoy mismo
+          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 10, lineHeight: 1.6, maxWidth: 300 }}>
+            {copy.subtitle}
           </p>
         </div>
 
@@ -104,63 +101,13 @@ export default function RegisterPropie({
         }}
       >
         <div style={{ width: "100%", maxWidth: 420 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <button
-              onClick={() => handleSocialLogin("Google")}
-              type="button"
-              style={{
-                width: "100%",
-                background: "white",
-                border: "1.5px solid #e5e5ea",
-                borderRadius: 16,
-                padding: "14px 18px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 10,
-                fontSize: 15,
-                fontWeight: 600,
-                color: "#1a1a1a",
-              }}
-            >
-              Continuar con Google
-            </button>
-            <button
-              onClick={() => handleSocialLogin("Apple")}
-              type="button"
-              style={{
-                width: "100%",
-                background: "#000000",
-                border: "1.5px solid #000000",
-                borderRadius: 16,
-                padding: "14px 18px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 10,
-                fontSize: 15,
-                fontWeight: 600,
-                color: "white",
-              }}
-            >
-              Continuar con Apple
-            </button>
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "28px 0" }}>
-            <div style={{ flex: 1, height: 1, background: "#e5e5ea" }} />
-            <span style={{ fontSize: 13, color: "#9a9aa0", fontWeight: 500 }}>o</span>
-            <div style={{ flex: 1, height: 1, background: "#e5e5ea" }} />
-          </div>
-
           <AccountCreationForm
             data={data}
             updateData={updateData}
             theme={OWNER_THEME}
             onValidSubmit={handleValidSubmit}
             registrationKind={registrationKind}
+            minimal
           />
         </div>
       </div>

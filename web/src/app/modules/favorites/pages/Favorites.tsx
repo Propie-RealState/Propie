@@ -3,19 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import React from 'react';
 import { Heart } from 'lucide-react';
 
+import { pageShellStyle } from '../../../components/layout/layout-styles';
 import { AppFooterNav } from '../../../components/navigation/AppFooterNav';
 import { NotificationsBell } from '../../../components/navigation/NotificationsBell';
+import { ActivationChecklist } from '../../../components/onboarding/ActivationChecklist';
+import { ConversionEmptyState } from '../../../components/onboarding/ConversionEmptyState';
 import PropertyCard from '../../explore/components/PropertyCard';
 import { getPublishedProperties } from '../../explore/services/explore.service';
 import type { Property } from '../../explore/types/property.types';
 import { getFavoriteIds, toggleFavoriteId } from '../../../../lib/favorites-storage';
-import { useAppTheme } from '../../../../theme/useAppTheme';
+import { getClientActivationSteps } from '../../../../lib/onboarding/activation';
+import { useAuth } from '../../../../context/AuthContext';
 import { FavoritesPageSkeleton } from '../../../components/skeletons/PageSkeletons';
-import { pageShellStyle } from '../../../components/layout/layout-styles';
 
 export default function Favorites() {
   const navigate = useNavigate();
-  const theme = useAppTheme();
+  const { user } = useAuth();
   const [properties, setProperties] = useState<Property[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<string[]>(getFavoriteIds());
   const [loading, setLoading] = useState(true);
@@ -46,6 +49,10 @@ export default function Favorites() {
     [properties, favoriteIds],
   );
 
+  const activationSteps = user?.id
+    ? getClientActivationSteps(user.id, favorites.length > 0)
+    : [];
+
   return (
     <div style={{ ...pageShellStyle, background: '#f5f5f7' }}>
       <div
@@ -75,62 +82,27 @@ export default function Favorites() {
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+        {user?.id && activationSteps.length > 0 ? (
+          <div style={{ marginBottom: 16 }}>
+            <ActivationChecklist
+              title="Tu primer paso en Propie"
+              subtitle="Completá estos pasos para encontrar tu próximo hogar."
+              steps={activationSteps}
+            />
+          </div>
+        ) : null}
+
         {loading ? (
           <FavoritesPageSkeleton />
         ) : favorites.length === 0 ? (
-          <div
-            style={{
-              marginTop: 48,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 12,
-              textAlign: 'center',
-            }}
-          >
-            <div
-              style={{
-                width: 72,
-                height: 72,
-                borderRadius: 20,
-                background: theme.lightBgSolid,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Heart size={32} color={theme.primary} />
-            </div>
-            <h2
-              style={{
-                margin: 0,
-                fontSize: 18,
-                fontWeight: 700,
-                color: '#1a1a1a',
-              }}
-            >
-              Todavía no guardaste propiedades
-            </h2>
-            <p style={{ margin: 0, fontSize: 14, color: '#6e6e73', maxWidth: 280 }}>
-              Explorá el listado y tocá el corazón para ver tus favoritos acá.
-            </p>
-            <button
-              type="button"
-              onClick={() => navigate('/explore')}
-              style={{
-                marginTop: 8,
-                background: theme.primary,
-                color: 'white',
-                border: 'none',
-                borderRadius: 14,
-                padding: '12px 20px',
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              Explorar propiedades
-            </button>
-          </div>
+          <ConversionEmptyState
+            icon={Heart}
+            title="Todavía no guardaste ninguna propiedad"
+            description="Explorá el listado y tocá el corazón en las que te interesen."
+            benefit="Tus favoritos quedan guardados para comparar y contactar cuando quieras."
+            ctaLabel="Explorar propiedades"
+            onCta={() => navigate('/explore')}
+          />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {favorites.map((property) => (

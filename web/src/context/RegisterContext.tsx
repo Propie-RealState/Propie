@@ -19,6 +19,7 @@ export type RegisterData = {
 
   email: string;
   password: string;
+  confirmPassword: string;
 
   acceptTerms: boolean;
   acceptPrivacy: boolean;
@@ -28,6 +29,7 @@ export type RegisterData = {
 
   dni: string;
   birthDate: string;
+  age: string;
   nationality: string;
   cuitCuil: string;
   address: string;
@@ -68,6 +70,7 @@ const initialData: RegisterData = {
 
   email: "",
   password: "",
+  confirmPassword: "",
 
   acceptTerms: false,
   acceptPrivacy: false,
@@ -77,6 +80,7 @@ const initialData: RegisterData = {
 
   dni: "",
   birthDate: "",
+  age: "",
   nationality: "",
   cuitCuil: "",
   address: "",

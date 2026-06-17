@@ -4,3 +4,4 @@ export * from "./schemas";
 export { useFormValidation } from "./useFormValidation";
 export * from "./components";
 export * from "./registerSubmit";
+export * from "./minimalRegister";

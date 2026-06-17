@@ -22,6 +22,8 @@ type AccountCreationFormProps = {
   theme: ThemeColors;
   onValidSubmit: () => void;
   registrationKind?: "owner" | "client" | "agent";
+  /** Streamlined onboarding: email + password only */
+  minimal?: boolean;
 };
 
 export function AccountCreationForm({
@@ -29,11 +31,12 @@ export function AccountCreationForm({
   updateData,
   theme,
   onValidSubmit,
+  minimal = true,
 }: AccountCreationFormProps) {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const { validation, passwordStrength, normalizeEmail } =
-    useAccountCreationValidation(data);
+    useAccountCreationValidation(data, { minimal });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +60,7 @@ export function AccountCreationForm({
         <ValidationSummary errors={validation.errorList} />
       )}
 
+      {!minimal ? (
       <div style={{ display: "flex", gap: 12 }}>
         <div style={{ flex: 1 }}>
           <label htmlFor="firstName" style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>
@@ -132,6 +136,7 @@ export function AccountCreationForm({
           <FieldError id="lastName-error" message={validation.getError("lastName")} />
         </div>
       </div>
+      ) : null}
 
       <div>
         <label htmlFor="email" style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>
@@ -280,7 +285,7 @@ export function AccountCreationForm({
           marginTop: 8,
         }}
       >
-        Continuar
+        Continuar con email
       </button>
 
       <p style={{ marginTop: 24, textAlign: "center", color: "#9a9aa0", fontSize: 12, lineHeight: 1.6 }}>

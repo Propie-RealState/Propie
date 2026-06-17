@@ -16,6 +16,7 @@ import {
 import type { PropertyConversation } from "../types/property-conversation.types";
 import { ConversationListSkeleton } from "../../../components/skeletons/PageSkeletons";
 import { pageShellStyle } from "../../../components/layout/layout-styles";
+import { ConversionEmptyState } from "../../../components/onboarding/ConversionEmptyState";
 
 export default function ConversationsInbox() {
   const navigate = useNavigate();
@@ -128,26 +129,18 @@ export default function ConversationsInbox() {
           {loading ? (
             <ConversationListSkeleton />
           ) : allConversations.length === 0 ? (
-            <div
-              style={{
-                background: "white",
-                borderRadius: 20,
-                border: "1.5px solid #e5e5ea",
-                padding: 28,
-                textAlign: "center",
-                color: "#6e6e73",
-              }}
-            >
-              <MessageCircle
-                size={32}
-                color={colors.primary}
-                style={{ marginBottom: 12 }}
-              />
-              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.55 }}>
-                Tus conversaciones sobre propiedades aparecerán acá cuando
-                contactes o recibas consultas.
-              </p>
-            </div>
+            <ConversionEmptyState
+              icon={MessageCircle}
+              title="Todavía no tenés conversaciones"
+              description={
+                isAgent
+                  ? "Cuando contacten tus propiedades o envíes solicitudes, los chats aparecen acá."
+                  : "Contactá una propiedad que te interese y coordiná visitas por acá."
+              }
+              benefit="Responder rápido aumenta las chances de concretar una visita."
+              ctaLabel="Explorar propiedades"
+              onCta={() => navigate("/explore")}
+            />
           ) : (
             allConversations.map((conversation) => (
               <ConversationListItem

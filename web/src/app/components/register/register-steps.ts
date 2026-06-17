@@ -1,26 +1,10 @@
-const STEP_ORDER = [
-  "role",
-  "verification",
-  "personal-data",
-  "security",
-  "profile-photo",
-  "role-info",
-] as const;
-
 const PATH_TO_STEP: Record<string, number> = {
-  owner: 1,
-  agent: 1,
-  client: 1,
-  verification: 2,
-  "personal-data": 3,
-  security: 4,
-  "profile-photo": 5,
-  "owner-info": 6,
-  "agent-info": 6,
-  "client-info": 6,
+  account: 1,
+  profile: 2,
+  verification: 3,
 };
 
-export const REGISTER_STEP_TOTAL = STEP_ORDER.length;
+export const REGISTER_STEP_TOTAL = 3;
 
 export function getRegisterStep(
   pathname: string,

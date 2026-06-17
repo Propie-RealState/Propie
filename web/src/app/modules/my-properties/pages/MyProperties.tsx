@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Building2, Plus } from "lucide-react";
+import { ArrowLeft, Building2 } from "lucide-react";
 import { PropertyManagementRow } from "../../../components/properties/PropertyManagementRow";
 import "../../../components/properties/property-presentation.css";
 import { useMyProperties } from "../hooks/useMyProperties";
@@ -11,6 +11,9 @@ import { useAppTheme, useIsAgent } from "../../../../theme/useAppTheme";
 import { PropertyListSkeleton } from "../../../components/skeletons/PageSkeletons";
 import { AppFooterNav } from "../../../components/navigation/AppFooterNav";
 import { pageShellStyle } from "../../../components/layout/layout-styles";
+import { ConversionEmptyState } from "../../../components/onboarding/ConversionEmptyState";
+import { ActivationChecklist } from "../../../components/onboarding/ActivationChecklist";
+import { getOwnerActivationSteps } from "../../../../lib/onboarding/activation";
 
 export default function MyProperties() {
   const navigate = useNavigate();
@@ -22,6 +25,11 @@ export default function MyProperties() {
   );
   const colors = useAppTheme();
   const isAgent = useIsAgent();
+  const activationSteps = user?.id
+    ? isAgent
+      ? []
+      : getOwnerActivationSteps(user.id, properties.length)
+    : [];
 
   if (loading) {
     return (
@@ -135,89 +143,40 @@ export default function MyProperties() {
         }}
       >
         {properties.length === 0 ? (
-          <div
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "40px 24px",
-              gap: 20,
-            }}
-          >
-            <div
-              style={{
-                width: 88,
-                height: 88,
-                borderRadius: 24,
-                background: colors.lightBg,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Building2 size={40} color={colors.primary} strokeWidth={1.5} />
-            </div>
-
-            <div
-              style={{
-                textAlign: "center",
-                maxWidth: 280,
-              }}
-            >
-              <h2
-                style={{
-                  margin: "0 0 10px",
-                  fontSize: 22,
-                  fontWeight: 700,
-                  color: "#1a1a1a",
-                }}
-              >
-                {isAgent
-                  ? "Todavía no tenés propiedades asignadas"
-                  : "Publicá tu primera propiedad"}
-              </h2>
-
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 14,
-                  color: "#6e6e73",
-                  lineHeight: 1.6,
-                }}
-              >
-                {isAgent
-                  ? "Cuando un propietario apruebe tu solicitud, la propiedad va a aparecer acá."
-                  : "Creá tu aviso, subí fotos y empezá a recibir consultas desde acá."}
-              </p>
-            </div>
-
-            {!isAgent && (
-              <button
-                onClick={() => {
-                  startCreatePublish();
-                  navigate("/publicar");
-                }}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  background: colors.primary,
-                  border: "none",
-                  borderRadius: 16,
-                  padding: "14px 28px",
-                  color: "white",
-                  fontSize: 15,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  boxShadow: colors.buttonShadow,
-                }}
-              >
-                <Plus size={20} color="white" />
-                Publicá tu primera propiedad
-              </button>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {activationSteps.length > 0 && (
+              <ActivationChecklist
+                title="Próximos pasos para publicar"
+                steps={activationSteps}
+              />
             )}
+            <ConversionEmptyState
+              icon={Building2}
+              title={
+                isAgent
+                  ? "Todavía no tenés propiedades asignadas"
+                  : "Publicá tu primera propiedad"
+              }
+              description={
+                isAgent
+                  ? "Cuando un propietario apruebe tu solicitud, la propiedad aparece acá."
+                  : "Creá tu aviso, subí fotos y empezá a recibir consultas."
+              }
+              benefit={
+                isAgent
+                  ? "Un panel claro te ayuda a responder más rápido."
+                  : "Los avisos con buenas fotos reciben más consultas."
+              }
+              ctaLabel={isAgent ? "Explorar propiedades" : "Publicar propiedad"}
+              onCta={() => {
+                if (isAgent) {
+                  navigate("/explore");
+                  return;
+                }
+                startCreatePublish();
+                navigate("/publicar");
+              }}
+            />
           </div>
         ) : (
           properties.map((property) => (

@@ -20,6 +20,11 @@ export type ClientProfile = {
   bio: string | null;
   avatar_url: string | null;
   created_at: string | null;
+  agent_profile_banner_dismissed?: boolean;
+  experience?: unknown;
+  certifications?: unknown;
+  education?: unknown;
+  agent_profile_banner_dismissed?: boolean;
   // Agent reputation stats (only present for AGENT role)
   average_rating?: number;
   total_reviews?: number;
@@ -51,6 +56,10 @@ export function mapProfileRow(
     bio: (row.bio as string) ?? null,
     avatar_url: (row.avatar_url as string) ?? null,
     created_at: row.created_at ? String(row.created_at) : null,
+    experience: row.experience ?? null,
+    certifications: row.certifications ?? null,
+    education: row.education ?? null,
+    agent_profile_banner_dismissed: Boolean(row.agent_profile_banner_dismissed),
   };
 }
 

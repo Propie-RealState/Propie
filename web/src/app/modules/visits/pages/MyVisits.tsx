@@ -17,6 +17,7 @@ import type {
 } from "../types/visit.types";
 import { formatUserName, getWeekRange } from "../utils/visit-ui";
 import { pageShellStyle } from "../../../components/layout/layout-styles";
+import { ConversionEmptyState } from "../../../components/onboarding/ConversionEmptyState";
 
 type SegmentOption = {
   id: VisitListSegment;
@@ -251,40 +252,22 @@ export default function MyVisits() {
             Cargando visitas...
           </div>
         ) : visits.length === 0 ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "48px 24px",
-              background: "white",
-              borderRadius: 20,
-              border: "1.5px solid #e5e5ea",
-            }}
-          >
-            <div
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 16,
-                background: `${colors.primary}14`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto 16px",
-              }}
-            >
-              <CalendarDays size={28} color={colors.primary} />
-            </div>
-            <p
-              style={{
-                margin: 0,
-                fontSize: 15,
-                fontWeight: 600,
-                color: "#1a1a1a",
-              }}
-            >
-              {emptyMessage}
-            </p>
-          </div>
+          <ConversionEmptyState
+            icon={CalendarDays}
+            title={
+              segment === "today"
+                ? "Nada agendado para hoy"
+                : segment === "calendar"
+                  ? "Sin visitas esta semana"
+                  : "Todavía no tenés visitas próximas"
+            }
+            description="Contactá una propiedad, chateá con el publicador y coordiná fecha y hora."
+            benefit="Ver la propiedad en persona te ayuda a decidir con confianza."
+            ctaLabel="Explorar propiedades"
+            onCta={() => navigate("/explore")}
+            secondaryCtaLabel="Ver mensajes"
+            onSecondaryCta={() => navigate("/mensajes")}
+          />
         ) : segment === "calendar" ? (
           <WeeklyCalendarView
             weekReference={weekReference}

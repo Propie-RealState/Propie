@@ -4,31 +4,22 @@ import {
   getPasswordStrength,
   normalizeEmail,
   useFormValidation,
-  validateAccountStep,
-  validateMinimalAccountStep,
+  validateUnifiedAccountStep,
 } from "../validation";
 
-export function useAccountCreationValidation(
-  data: RegisterData,
-  options?: { minimal?: boolean },
-) {
-  const minimal = options?.minimal ?? true;
-
+export function useUnifiedAccountValidation(data: RegisterData) {
   const getValues = useCallback(
     () => ({
-      firstName: data.firstName,
-      lastName: data.lastName,
       email: data.email,
       password: data.password,
-      acceptTerms: data.acceptTerms,
-      acceptPrivacy: data.acceptPrivacy,
+      confirmPassword: data.confirmPassword,
     }),
-    [data],
+    [data.confirmPassword, data.email, data.password],
   );
 
   const validateAll = useCallback(
-    () => (minimal ? validateMinimalAccountStep(data) : validateAccountStep(data)),
-    [data, minimal],
+    () => validateUnifiedAccountStep(data),
+    [data],
   );
 
   const validation = useFormValidation(getValues, validateAll);

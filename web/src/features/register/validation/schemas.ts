@@ -20,6 +20,8 @@ import {
   validateRecoveryEmail,
   validateRecoveryPhone,
   validateVerificationCodeFormat,
+  validateConfirmPassword,
+  validResult,
   validateYear,
   validateExperienceYears,
   type ValidationResult,
@@ -92,6 +94,38 @@ export function validateAccountStep(data: RegisterData): StepValidation {
   ]);
 }
 
+/** Streamlined onboarding: email, password and legal acceptance only. */
+export function validateMinimalAccountStep(data: RegisterData): StepValidation {
+  return collectErrors([
+    ["email", validateEmail(data.email)],
+    ["password", validatePassword(data.password)],
+    ["acceptTerms", validateAcceptTerms(data.acceptTerms)],
+    ["acceptPrivacy", validateAcceptPrivacy(data.acceptPrivacy)],
+  ]);
+}
+
+/** Unified step 1: email, password, confirm password. */
+export function validateUnifiedAccountStep(data: RegisterData): StepValidation {
+  return collectErrors([
+    ["email", validateEmail(data.email)],
+    ["password", validatePassword(data.password)],
+    ["confirmPassword", validateConfirmPassword(data.password, data.confirmPassword)],
+  ]);
+}
+
+/** Unified step 2: basic profile fields. */
+export function validateBasicProfileStep(data: RegisterData): StepValidation {
+  return collectErrors([
+    ["firstName", validateFirstName(data.firstName)],
+    ["lastName", validateLastName(data.lastName)],
+    ["birthDate", validateBirthDate(data.birthDate)],
+    ["nationality", validateNationality(data.nationality)],
+    ["bio", data.bio ? validateBio(data.bio) : validResult()],
+    ["acceptTerms", validateAcceptTerms(data.acceptTerms)],
+    ["acceptPrivacy", validateAcceptPrivacy(data.acceptPrivacy)],
+  ]);
+}
+
 export function validateVerificationStep(code: string): StepValidation {
   return collectErrors([["verificationCode", validateVerificationCodeFormat(code)]]);
 }
@@ -158,10 +192,10 @@ export function validateAgentEducation(
 ): ValidationResult {
   return validatePartialGroup(
     fields,
-    { partial: "Completá todos los campos de estudios", institution: "", degree: "", year: "" },
+    { partial: "Complet? todos los campos de estudios", institution: "", degree: "", year: "" },
     {
-      institution: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingresá la institución" }),
-      degree: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingresá el título" }),
+      institution: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingres? la instituci?n" }),
+      degree: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingres? el t?tulo" }),
       year: validateYear,
     },
   );
@@ -172,10 +206,10 @@ export function validateAgentCertification(
 ): ValidationResult {
   return validatePartialGroup(
     fields,
-    { partial: "Completá todos los campos de certificación", name: "", issuer: "", year: "" },
+    { partial: "Complet? todos los campos de certificaci?n", name: "", issuer: "", year: "" },
     {
-      name: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingresá el nombre de la certificación" }),
-      issuer: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingresá el emisor" }),
+      name: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingres? el nombre de la certificaci?n" }),
+      issuer: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingres? el emisor" }),
       year: validateYear,
     },
   );
@@ -186,10 +220,10 @@ export function validateAgentExperience(
 ): ValidationResult {
   return validatePartialGroup(
     fields,
-    { partial: "Completá todos los campos de experiencia", position: "", company: "", years: "" },
+    { partial: "Complet? todos los campos de experiencia", position: "", company: "", years: "" },
     {
-      position: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingresá el cargo" }),
-      company: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingresá la empresa" }),
+      position: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingres? el cargo" }),
+      company: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingres? la empresa" }),
       years: validateExperienceYears,
     },
   );

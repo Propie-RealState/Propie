@@ -7,10 +7,7 @@ import {
   type ProfilePhotoContext,
   type SecurityContext,
   type StepValidation,
-  validateAccountStep,
-  validatePersonalDataPersistedStep,
-  validateProfilePhotoStep,
-  validateSecurityStep,
+  validateMinimalAccountStep,
 } from "./schemas";
 import { validateVerificationCode } from "./validators";
 
@@ -86,7 +83,7 @@ export function ensureRegistrationReady(
   | { valid: true }
   | { valid: false; route: string; errors: FieldErrors } {
   const checks = [
-    collectStepFailure(getRegisterAccountRoute(data.role), validateAccountStep(data)),
+    collectStepFailure(getRegisterAccountRoute(data.role), validateMinimalAccountStep(data)),
     collectStepFailure("/registro/verification", (() => {
       const result = validateVerificationCode(data.verificationCode);
       return {
@@ -94,18 +91,6 @@ export function ensureRegistrationReady(
         errors: result.valid ? {} : { verificationCode: result.error },
       };
     })()),
-    collectStepFailure(
-      "/registro/personal-data",
-      validatePersonalDataPersistedStep(data),
-    ),
-    collectStepFailure(
-      "/registro/security",
-      validateSecurityStep(data, context.security),
-    ),
-    collectStepFailure(
-      "/registro/profile-photo",
-      validateProfilePhotoStep(context.profilePhoto),
-    ),
   ];
 
   for (const failure of checks) {

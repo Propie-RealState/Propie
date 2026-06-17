@@ -8,16 +8,10 @@ import Explore from "./modules/explore/pages/Explore.tsx";
 import Login from "./pages/Login";
 
 import RegisterChoice from "./pages/RegisterChoice";
-import RegisterPropie from "./pages/RegisterDueño";
-import RegisterAgente from "./pages/RegisterAgente";
+import RegisterAccount from "./pages/RegisterAccount";
+import RegisterBasicProfile from "./pages/RegisterBasicProfile";
 import RegisterVerification from "./pages/RegisterVerification";
-import RegisterPersonalData from "./pages/RegisterPersonalData";
-import RegisterSecurity from "./pages/RegisterSecurity";
-import RegisterProfilePhoto from "./pages/RegisterProfilePhoto";
-import RegisterOwnerInfo from "./pages/RegisterOwnerInfo";
-import RegisterAgentInfo from "./pages/RegisterAgentInfo";
-import RegisterClient from "./pages/RegisterClient";
-import RegisterClientInfo from "./pages/RegisterClientInfo";
+import RegisterLegacyRedirect from "./pages/RegisterLegacyRedirect";
 import { PublisherRoute } from "../components/auth/PublisherRoute";
 import { ProtectedRoute } from "../components/auth/ProtectedRoute";
 import Favorites from "./modules/favorites/pages/Favorites";
@@ -137,18 +131,13 @@ export const router =
               element: <RegisterStepLayout />,
               children: [
                 {
-                  path: "owner",
-                  Component: RegisterPropie,
+                  path: "account",
+                  Component: RegisterAccount,
                 },
 
                 {
-                  path: "agent",
-                  Component: RegisterAgente,
-                },
-
-                {
-                  path: "client",
-                  Component: RegisterClient,
+                  path: "profile",
+                  Component: RegisterBasicProfile,
                 },
 
                 {
@@ -157,33 +146,48 @@ export const router =
                 },
 
                 {
+                  path: "owner",
+                  element: <Navigate to="/registro/account" replace />,
+                },
+
+                {
+                  path: "agent",
+                  element: <Navigate to="/registro/account" replace />,
+                },
+
+                {
+                  path: "client",
+                  element: <Navigate to="/registro/account" replace />,
+                },
+
+                {
                   path: "personal-data",
-                  Component: RegisterPersonalData,
+                  Component: RegisterLegacyRedirect,
                 },
 
                 {
                   path: "security",
-                  Component: RegisterSecurity,
+                  Component: RegisterLegacyRedirect,
                 },
 
                 {
                   path: "profile-photo",
-                  Component: RegisterProfilePhoto,
+                  Component: RegisterLegacyRedirect,
                 },
 
                 {
                   path: "owner-info",
-                  Component: RegisterOwnerInfo,
+                  Component: RegisterLegacyRedirect,
                 },
 
                 {
                   path: "agent-info",
-                  Component: RegisterAgentInfo,
+                  Component: RegisterLegacyRedirect,
                 },
 
                 {
                   path: "client-info",
-                  Component: RegisterClientInfo,
+                  Component: RegisterLegacyRedirect,
                 },
               ],
             },
@@ -296,6 +300,7 @@ export const router =
             </PublisherRoute>
           ),
         },
+
         {
           path: "/mis-propiedades/:id/editar",
           element: (

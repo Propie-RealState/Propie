@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import React from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../../../context/AuthContext";
+import { setLastViewedProperty } from "../../../../lib/onboarding/last-viewed-property";
 import { mapPropertyDetails } from "../mappers/property-details.mapper";
 import { getPropertyById } from "../services/property-details.service";
 import { formatPrice } from "../utils/formatPrice";
@@ -305,6 +306,7 @@ export default function PropertyDetails() {
       try {
         const data = await getPropertyById(id);
         setProperty(data);
+        setLastViewedProperty(id);
       } catch (error) {
         console.error("Error loading property:", error);
         setProperty(null);

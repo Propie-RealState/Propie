@@ -11,15 +11,15 @@ export default function RegisterChoice() {
       role: "OWNER",
     });
   
-    navigate("/registro/owner");
+    navigate("/registro/account");
   }
-  
+
   function handleAgentSelect() {
     updateData({
       role: "AGENT",
     });
-  
-    navigate("/registro/agent");
+
+    navigate("/registro/account");
   }
 
   function handleClientSelect() {
@@ -28,7 +28,7 @@ export default function RegisterChoice() {
       mainGoal: "EXPLORE",
     });
 
-    navigate("/registro/client");
+    navigate("/registro/account");
   }
   return (
     <div
@@ -72,10 +72,10 @@ export default function RegisterChoice() {
               maxWidth: 300,
             }}
           >
-            ¿Cómo vas a usar Propie?
+            ¿Cómo querés usar Propie?
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 10, lineHeight: 1.6, maxWidth: 260 }}>
-            Elegí tu rol para personalizar tu experiencia
+          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 10, lineHeight: 1.6, maxWidth: 280 }}>
+            Elegí tu perfil. Podés completar datos después.
           </p>
         </div>
 
@@ -135,10 +135,10 @@ export default function RegisterChoice() {
           {/* Text */}
           <div style={{ flex: 1 }}>
             <p style={{ margin: "0 0 5px", fontSize: 20, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif", letterSpacing: "-0.5px" }}>
-              Soy dueño
+              Soy propietario
             </p>
             <p style={{ margin: 0, fontSize: 13, color: "#6e6e73", lineHeight: 1.55 }}>
-              Tenés un inmueble y querés publicarlo directamente, sin intermediarios.
+              Publicá tu inmueble, recibí consultas y elegí cómo comercializarlo.
             </p>
           </div>
 
@@ -182,10 +182,10 @@ export default function RegisterChoice() {
           </div>
           <div style={{ flex: 1 }}>
             <p style={{ margin: "0 0 5px", fontSize: 20, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif", letterSpacing: "-0.5px" }}>
-              Quiero explorar
+              Busco propiedad
             </p>
             <p style={{ margin: 0, fontSize: 13, color: "#6e6e73", lineHeight: 1.55 }}>
-              Buscá propiedades, guardá favoritos y contactá publicadores.
+              Explorá avisos, guardá favoritos y coordiná visitas con publicadores.
             </p>
           </div>
           <div style={{ width: 32, height: 32, borderRadius: 10, background: "#fff6f0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -230,10 +230,10 @@ export default function RegisterChoice() {
           {/* Text */}
           <div style={{ flex: 1 }}>
             <p style={{ margin: "0 0 5px", fontSize: 20, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif", letterSpacing: "-0.5px" }}>
-              Agente
+              Soy agente inmobiliario
             </p>
             <p style={{ margin: 0, fontSize: 13, color: "#6e6e73", lineHeight: 1.55 }}>
-              Conectás propietarios con compradores o inquilinos y generás ingresos por cada operación.
+              Solicitá propiedades para comercializar y gestioná consultas desde un solo lugar.
             </p>
           </div>
 

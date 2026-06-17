@@ -19,23 +19,23 @@ export const MainGoalSchema = z.enum(["PUBLISH", "EXPLORE"]);
 export const RegisterSchema = z.object({
   role: RegisterRoleSchema,
 
-  firstName: z.string().min(2).max(100),
+  firstName: z.string().min(2).max(100).optional(),
 
-  lastName: z.string().min(2).max(100),
+  lastName: z.string().min(2).max(100).optional(),
 
   email: z.string().email(),
 
   password: z.string().min(8).max(100),
 
-  dni: z.string().min(7).max(12),
+  dni: z.string().min(7).max(12).optional(),
 
-  birthDate: z.string(),
+  birthDate: z.string().optional(),
 
-  nationality: z.string().min(2).max(100),
+  nationality: z.string().min(2).max(100).optional(),
 
-  cuitCuil: z.string().min(10).max(15),
+  cuitCuil: z.string().min(10).max(15).optional(),
 
-  address: z.string().min(5).max(255),
+  address: z.string().min(5).max(255).optional(),
 
   location: z.string().min(2).max(255).optional(),
 

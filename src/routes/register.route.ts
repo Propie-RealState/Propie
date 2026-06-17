@@ -42,6 +42,19 @@ export async function registerRoute(app: FastifyInstance) {
       // =====================================
 
       const data = parsed.data;
+      const emailLocal = data.email.split("@")[0] ?? "usuario";
+      const nameParts = emailLocal.replace(/[._-]/g, " ").split(/\s+/).filter(Boolean);
+      const firstName =
+        data.firstName ??
+        (nameParts[0]
+          ? nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1)
+          : "Usuario");
+      const lastName =
+        data.lastName ??
+        (nameParts[1]
+          ? nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1)
+          : "Nuevo");
+
       const existingUser = await findUserByEmail(data.email);
 
       if (existingUser) {
@@ -60,9 +73,9 @@ export async function registerRoute(app: FastifyInstance) {
       // =====================================
 
       const user = await createUser({
-        firstName: data.firstName,
+        firstName,
 
-        lastName: data.lastName,
+        lastName,
 
         email: data.email,
 
@@ -74,9 +87,9 @@ export async function registerRoute(app: FastifyInstance) {
       await createProfile({
         userId: user.id,
 
-        firstName: data.firstName,
+        firstName,
 
-        lastName: data.lastName,
+        lastName,
 
         phone: data.phone,
 

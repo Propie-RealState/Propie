@@ -127,25 +127,37 @@ export async function updateProfile(
     phone?: string;
     location?: string;
     bio?: string;
+    first_name?: string;
+    last_name?: string;
+    nationality?: string;
+    birth_date?: string;
+    experience?: unknown;
+    certifications?: unknown;
+    education?: unknown;
+    agent_profile_banner_dismissed?: boolean;
   },
 ) {
   const sets: string[] = [];
   const values: unknown[] = [];
   let paramIndex = 1;
 
-  if (data.phone !== undefined) {
-    sets.push(`phone = $${paramIndex++}`);
-    values.push(data.phone || null);
-  }
+  const assign = (column: string, value: unknown) => {
+    sets.push(`${column} = $${paramIndex++}`);
+    values.push(value);
+  };
 
-  if (data.location !== undefined) {
-    sets.push(`location = $${paramIndex++}`);
-    values.push(data.location || null);
-  }
-
-  if (data.bio !== undefined) {
-    sets.push(`bio = $${paramIndex++}`);
-    values.push(data.bio || null);
+  if (data.phone !== undefined) assign("phone", data.phone || null);
+  if (data.location !== undefined) assign("location", data.location || null);
+  if (data.bio !== undefined) assign("bio", data.bio || null);
+  if (data.first_name !== undefined) assign("first_name", data.first_name || null);
+  if (data.last_name !== undefined) assign("last_name", data.last_name || null);
+  if (data.nationality !== undefined) assign("nationality", data.nationality || null);
+  if (data.birth_date !== undefined) assign("birth_date", data.birth_date || null);
+  if (data.experience !== undefined) assign("experience", data.experience);
+  if (data.certifications !== undefined) assign("certifications", data.certifications);
+  if (data.education !== undefined) assign("education", data.education);
+  if (data.agent_profile_banner_dismissed !== undefined) {
+    assign("agent_profile_banner_dismissed", data.agent_profile_banner_dismissed);
   }
 
   if (sets.length === 0) {

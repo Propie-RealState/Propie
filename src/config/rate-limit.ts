@@ -1,6 +1,7 @@
 import type { FastifyContextConfig } from "fastify";
 
 const isTestEnv = process.env.VITEST === "true";
+const isDevEnv = process.env.NODE_ENV !== "production";
 
 export const RATE_LIMIT_PRESETS = {
   authLogin: {
@@ -26,7 +27,7 @@ export type RateLimitPreset = keyof typeof RATE_LIMIT_PRESETS;
 export function rateLimitRouteConfig(
   preset: RateLimitPreset,
 ): FastifyContextConfig {
-  if (isTestEnv) {
+  if (isTestEnv || isDevEnv) {
     return { rateLimit: false };
   }
 
