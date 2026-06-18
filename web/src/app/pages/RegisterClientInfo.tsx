@@ -166,15 +166,6 @@ export default function RegisterClientInfo() {
           </p>
         </div>
 
-        <div style={{ width: '100%', height: 44, position: 'relative', marginTop: 8 }}>
-          <svg
-            viewBox="0 0 390 44"
-            preserveAspectRatio="none"
-            style={{ position: 'absolute', bottom: 0, width: '100%', height: 44 }}
-          >
-            <path d="M0,24 C90,48 300,0 390,24 L390,44 L0,44 Z" fill="#f5f5f7" />
-          </svg>
-        </div>
       </div>
 
       <div style={{ flex: 1, padding: '8px 24px 32px', maxWidth: 420, margin: '0 auto', width: '100%' }}>
