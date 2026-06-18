@@ -21,7 +21,8 @@ export async function getAgentPropertyStatsRepository(
       WITH agent_properties AS (
         SELECT DISTINCT
           p.id,
-          p.status
+          p.status,
+          p.published_at
         FROM properties p
         WHERE p.owner_id = $1
           OR EXISTS (

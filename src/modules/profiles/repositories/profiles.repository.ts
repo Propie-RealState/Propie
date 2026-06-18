@@ -146,6 +146,11 @@ export async function updateProfile(
     values.push(value);
   };
 
+  const assignJson = (column: string, value: unknown) => {
+    sets.push(`${column} = $${paramIndex++}::jsonb`);
+    values.push(JSON.stringify(value ?? null));
+  };
+
   if (data.phone !== undefined) assign("phone", data.phone || null);
   if (data.location !== undefined) assign("location", data.location || null);
   if (data.bio !== undefined) assign("bio", data.bio || null);
@@ -153,9 +158,9 @@ export async function updateProfile(
   if (data.last_name !== undefined) assign("last_name", data.last_name || null);
   if (data.nationality !== undefined) assign("nationality", data.nationality || null);
   if (data.birth_date !== undefined) assign("birth_date", data.birth_date || null);
-  if (data.experience !== undefined) assign("experience", data.experience);
-  if (data.certifications !== undefined) assign("certifications", data.certifications);
-  if (data.education !== undefined) assign("education", data.education);
+  if (data.experience !== undefined) assignJson("experience", data.experience);
+  if (data.certifications !== undefined) assignJson("certifications", data.certifications);
+  if (data.education !== undefined) assignJson("education", data.education);
   if (data.agent_profile_banner_dismissed !== undefined) {
     assign("agent_profile_banner_dismissed", data.agent_profile_banner_dismissed);
   }

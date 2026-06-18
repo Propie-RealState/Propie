@@ -92,7 +92,9 @@ export async function syncFavoritesRepository(input: {
         user_id,
         property_id
       )
-      VALUES ${placeholders.join(", ")}
+      SELECT $1, p.id
+      FROM (VALUES ${input.propertyIds.map((_, i) => `($${i + 2}::uuid)`).join(", ")}) AS v(id)
+      JOIN properties p ON p.id = v.id
       ON CONFLICT (user_id, property_id) DO NOTHING
       RETURNING property_id
     `,
