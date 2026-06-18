@@ -65,6 +65,24 @@ export function NotificationsBell() {
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const btnRef  = useRef<HTMLButtonElement>(null);
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; right: number } | null>(null);
+
+  // Recalculate fixed position whenever the panel opens or the window resizes
+  useEffect(() => {
+    if (!open) { setDropdownPos(null); return; }
+    function update() {
+      if (!btnRef.current) return;
+      const r = btnRef.current.getBoundingClientRect();
+      setDropdownPos({
+        top:   r.bottom + 8,
+        right: window.innerWidth - r.right,
+      });
+    }
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [open]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -129,6 +147,7 @@ export function NotificationsBell() {
   return (
     <div ref={rootRef} style={{ position: 'relative' }}>
       <button
+        ref={btnRef}
         type="button"
         aria-label="Notificaciones"
         onClick={() => {
@@ -173,12 +192,12 @@ export function NotificationsBell() {
         )}
       </button>
 
-      {open && (
+      {open && dropdownPos && (
         <div
           style={{
-            position: 'absolute',
-            top: 'calc(100% + 8px)',
-            right: 0,
+            position: 'fixed',
+            top: dropdownPos.top,
+            right: dropdownPos.right,
             width: 320,
             background: 'white',
             borderRadius: 16,

@@ -73,12 +73,6 @@ export function PublishWizardLayout({
           <h1 className="publish-wizard-shell__title">{title}</h1>
           <p className="publish-wizard-shell__subtitle">{subtitle}</p>
         </div>
-
-        <div className="publish-wizard-shell__wave" aria-hidden>
-          <svg viewBox="0 0 390 44" preserveAspectRatio="none">
-            <path d="M0,24 C90,48 300,0 390,24 L390,44 L0,44 Z" fill="#f5f5f7" />
-          </svg>
-        </div>
       </div>
 
       <div
