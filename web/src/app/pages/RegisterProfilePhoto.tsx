@@ -97,13 +97,6 @@ export default function RegisterProfilePhoto() {
             Agregá una foto para que otros te reconozcan
           </p>
         </div>
-
-        {/* Wave */}
-        <div style={{ width: "100%", height: 44, position: "relative", marginTop: 8 }}>
-          <svg viewBox="0 0 390 44" preserveAspectRatio="none" style={{ position: "absolute", bottom: 0, width: "100%", height: 44 }}>
-            <path d="M0,24 C90,48 300,0 390,24 L390,44 L0,44 Z" fill="#f5f5f7" />
-          </svg>
-        </div>
       </div>
 
       {/* ── CONTENT ── */}
