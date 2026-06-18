@@ -161,12 +161,12 @@ export function AppFooterNav() {
         background: 'white',
         borderTop: '1px solid #efefef',
         boxShadow: '0 -4px 20px rgba(0,0,0,0.07)',
-        paddingBottom: 'max(env(safe-area-inset-bottom), 8px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         paddingLeft: 'max(env(safe-area-inset-left), 0px)',
         paddingRight: 'max(env(safe-area-inset-right), 0px)',
       }}
     >
-      <div className="flex items-center px-3 py-2">
+      <div className="flex items-center px-3 py-[7px]">
         {audience === 'guest' && (
           <>
             {authBtn('Ingresar', '/ingresar', LogIn, true)}

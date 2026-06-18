@@ -128,8 +128,27 @@ export default function GlobalSearchBar({
   isActive,
 }: GlobalSearchBarProps) {
   const navigate = useNavigate();
-  const rootRef = useRef<HTMLDivElement>(null);
+  const rootRef      = useRef<HTMLDivElement>(null);
+  const inputBoxRef  = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [panelPos, setPanelPos] = useState<{ top: number; left: number; width: number } | null>(null);
+
+  // Recalculate panel position whenever it opens or the viewport resizes
+  useEffect(() => {
+    if (!isOpen) { setPanelPos(null); return; }
+    function update() {
+      if (!inputBoxRef.current) return;
+      const r = inputBoxRef.current.getBoundingClientRect();
+      setPanelPos({ top: r.bottom + 6, left: r.left, width: r.width });
+    }
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [isOpen]);
   const hasResults =
     results.properties.length > 0 ||
     results.locations.length > 0 ||
@@ -192,6 +211,7 @@ export default function GlobalSearchBar({
       style={{ position: "relative" }}
     >
       <div
+        ref={inputBoxRef}
         style={{
           display: "flex",
           alignItems: "center",
@@ -225,6 +245,7 @@ export default function GlobalSearchBar({
             outline: "none",
             fontSize: 14,
             color: "#1a1a1a",
+            caretColor: "#4417E6",
             fontFamily: "'Inter', sans-serif",
           }}
         />
@@ -258,21 +279,21 @@ export default function GlobalSearchBar({
         ) : null}
       </div>
 
-      {showPanel ? (
+      {showPanel && panelPos ? (
         <div
           role="listbox"
           style={{
-            position: "absolute",
-            top: "calc(100% + 8px)",
-            left: 0,
-            right: 0,
+            position: "fixed",
+            top: panelPos.top,
+            left: panelPos.left,
+            width: panelPos.width,
             background: "white",
             borderRadius: 16,
             border: "1px solid #ececec",
             boxShadow: "0 12px 32px rgba(0,0,0,0.12)",
             maxHeight: 360,
             overflowY: "auto",
-            zIndex: 50,
+            zIndex: 300,
           }}
         >
           {error ? (

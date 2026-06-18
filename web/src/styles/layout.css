@@ -202,20 +202,6 @@ body {
   max-width: 300px;
 }
 
-.publish-wizard-shell__wave {
-  width: 100%;
-  height: 44px;
-  position: relative;
-  margin-top: 8px;
-}
-
-.publish-wizard-shell__wave svg {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  height: 44px;
-}
-
 .publish-wizard-shell__body {
   flex: 1;
   min-height: 0;
@@ -276,15 +262,6 @@ body {
   .publish-wizard-shell__subtitle {
     margin-top: 6px;
     font-size: 13px;
-  }
-
-  .publish-wizard-shell__wave {
-    height: 28px;
-    margin-top: 4px;
-  }
-
-  .publish-wizard-shell__wave svg {
-    height: 28px;
   }
 
   .publish-wizard-shell__hero-blob--primary {
