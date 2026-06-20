@@ -12,7 +12,7 @@ type Props = {
 };
 
 export function AuthHeroHeader({
-  logoSize = 56,
+  logoSize = 72,
   onBack,
   showRegisterProgress = true,
 }: Props) {
@@ -24,10 +24,6 @@ export function AuthHeroHeader({
         style={{
           width: "100%",
           maxWidth: 420,
-          display: "grid",
-          gridTemplateColumns: "44px 1fr 44px",
-          alignItems: "center",
-          gap: 8,
           paddingTop: "max(12px, env(safe-area-inset-top))",
           paddingLeft: 20,
           paddingRight: 20,
@@ -56,19 +52,23 @@ export function AuthHeroHeader({
         >
           <ArrowLeft size={20} color="white" strokeWidth={2.25} />
         </button>
+      </div>
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            minWidth: 0,
-          }}
-        >
-          <PropieLogo size={logoSize} />
-        </div>
-
-        <div aria-hidden style={{ width: 44 }} />
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          width: "100%",
+          maxWidth: 420,
+          margin: "0 auto",
+          paddingTop: 6,
+          paddingBottom: 10,
+          paddingLeft: 20,
+          paddingRight: 20,
+        }}
+      >
+        <PropieLogo size={logoSize} />
       </div>
 
       {showRegisterProgress ? <RegisterProgress /> : null}

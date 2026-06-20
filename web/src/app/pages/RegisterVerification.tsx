@@ -109,9 +109,6 @@ export default function RegisterVerification() {
           <h1 style={{ color: "white", fontSize: "clamp(26px, 7vw, 34px)", fontWeight: 800, letterSpacing: "-1.2px", lineHeight: 1.15, fontFamily: "'Sora', sans-serif", margin: 0 }}>
             Verificá tu email
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 10, lineHeight: 1.6, maxWidth: 300 }}>
-            Enviamos un código de verificación a tu correo electrónico
-          </p>
         </div>
       </div>
 

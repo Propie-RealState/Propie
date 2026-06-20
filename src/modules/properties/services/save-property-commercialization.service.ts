@@ -6,7 +6,6 @@ type Input = {
   ownerId: string;
   propertyId: string;
   commercializationType: "AGENTS" | "DIRECT";
-  manualApproval: boolean;
 };
 
 export async function savePropertyCommercializationService(input: Input) {
@@ -21,7 +20,6 @@ export async function savePropertyCommercializationService(input: Input) {
   const commercialization = await savePropertyCommercializationRepository({
     propertyId: input.propertyId,
     commercializationType: input.commercializationType,
-    manualApproval: input.manualApproval,
   });
 
   return commercialization;

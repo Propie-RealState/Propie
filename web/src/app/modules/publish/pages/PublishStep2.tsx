@@ -533,7 +533,6 @@ export default function PublishStep2() {
   return (
     <PublishWizardLayout
       title="Fotos y videos"
-      subtitle="Agregá imágenes y videos de tu propiedad"
       footer={
         <PublishWizardCTA
           label="Continuar"

@@ -7,14 +7,12 @@ import { PublishWizardProgress } from "./PublishWizardProgress";
 
 type PublishWizardLayoutProps = {
   title: string;
-  subtitle: string;
   footer: ReactNode;
   children: ReactNode;
 };
 
 export function PublishWizardLayout({
   title,
-  subtitle,
   footer,
   children,
 }: PublishWizardLayoutProps) {
@@ -71,7 +69,6 @@ export function PublishWizardLayout({
 
         <div className="publish-wizard-shell__hero-heading">
           <h1 className="publish-wizard-shell__title">{title}</h1>
-          <p className="publish-wizard-shell__subtitle">{subtitle}</p>
         </div>
       </div>
 

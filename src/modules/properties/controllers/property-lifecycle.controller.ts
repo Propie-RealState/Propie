@@ -150,7 +150,6 @@ export async function savePropertyCommercializationController(
     ownerId: user.id,
     propertyId: request.params.id,
     commercializationType: request.body.commercializationType,
-    manualApproval: request.body.manualApproval,
   });
 
   return reply.send({

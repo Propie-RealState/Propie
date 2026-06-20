@@ -3,7 +3,6 @@ import { apiFetch } from "../../../../lib/api";
 type Input = {
   propertyId: string;
   commercializationType: "AGENTS" | "DIRECT";
-  manualApproval: boolean;
 };
 
 export async function savePropertyCommercialization(input: Input) {
@@ -11,7 +10,6 @@ export async function savePropertyCommercialization(input: Input) {
     method: "PATCH",
     body: JSON.stringify({
       commercializationType: input.commercializationType,
-      manualApproval: input.manualApproval,
     }),
   });
 }
