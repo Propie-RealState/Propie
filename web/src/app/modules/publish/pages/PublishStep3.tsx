@@ -186,7 +186,6 @@ export default function PublishStep3() {
   return (
     <PublishWizardLayout
       title="Información"
-      subtitle="Agregá los detalles de tu propiedad"
       footer={
         <PublishWizardCTA
           label="Continuar"

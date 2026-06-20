@@ -82,9 +82,6 @@ export default function RegisterPropie({
           >
             Crear cuenta
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 10, lineHeight: 1.6, maxWidth: 280 }}>
-            Empezá a publicar tus propiedades hoy mismo
-          </p>
         </div>
       </div>
 

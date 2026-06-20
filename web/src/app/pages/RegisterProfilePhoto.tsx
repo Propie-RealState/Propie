@@ -93,9 +93,6 @@ export default function RegisterProfilePhoto() {
           >
             Foto de perfil
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 10, lineHeight: 1.6, maxWidth: 300 }}>
-            Agregá una foto para que otros te reconozcan
-          </p>
         </div>
       </div>
 

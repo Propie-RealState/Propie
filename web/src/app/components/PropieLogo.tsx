@@ -1,51 +1,36 @@
-/** App-wide logo (`web/public/logo.png`) — same asset as SplashScreen */
+/** Splash / light backgrounds */
 export const PROPIE_LOGO_SRC = "/logo.png";
+
+/** White wordmark for hero headers (register, publish, login) */
+export const PROPIE_LOGO_HERO_SRC = "/LOGO%20B.png";
 
 export type PropieLogoProps = {
   size?: number;
   /**
-   * `onHero`: light pill behind mark (headers on gradient/dark backgrounds).
-   * `inline`: logo only, for light backgrounds.
+   * `onHero`: white wordmark on gradient/dark backgrounds (no pill).
+   * `inline`: colored mark for light backgrounds.
    */
   variant?: "onHero" | "inline";
 };
 
 export function PropieLogo({ size = 46, variant = "onHero" }: PropieLogoProps) {
-  const img = (
+  const src = variant === "onHero" ? PROPIE_LOGO_HERO_SRC : PROPIE_LOGO_SRC;
+
+  return (
     <img
-      src={PROPIE_LOGO_SRC}
+      src={src}
       alt="Propie"
       width={200}
       height={72}
       decoding="async"
       style={{
-        height: Math.max(24, size * 0.62),
+        height: Math.max(28, size * 0.72),
         width: "auto",
-        maxWidth: Math.min(220, size * 3.5),
+        maxWidth: Math.min(260, size * 4),
         display: "block",
         objectFit: "contain",
         objectPosition: "center",
       }}
     />
-  );
-
-  if (variant === "inline") {
-    return img;
-  }
-
-  return (
-    <div
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: size >= 52 ? "8px 18px" : "6px 12px",
-        borderRadius: 16,
-        background: "rgba(255,255,255,0.96)",
-        boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
-      }}
-    >
-      {img}
-    </div>
   );
 }

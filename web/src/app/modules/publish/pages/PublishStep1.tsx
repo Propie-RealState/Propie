@@ -233,7 +233,6 @@ export default function PublishStep1() {
   return (
     <PublishWizardLayout
       title="Publicá tu propiedad"
-      subtitle="Comenzá completando los datos básicos"
       footer={
         <PublishWizardCTA
           label="Continuar"

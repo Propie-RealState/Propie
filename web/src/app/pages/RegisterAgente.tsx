@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthHeroHeader } from "../components/AuthHeroHeader";
-import React from "react";
 import { useRegister } from "../../context/RegisterContext";
 import { AGENT_THEME, syncUserTypeFromRole } from "../../theme/app-theme";
 import { AccountCreationForm } from "../../features/register/components/AccountCreationForm";
@@ -71,9 +70,6 @@ export default function RegisterAgente() {
           >
             Creá tu cuenta de agente
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 10, lineHeight: 1.6, maxWidth: 280 }}>
-            Empezá a conectar propietarios con compradores
-          </p>
         </div>
       </div>
 

@@ -74,9 +74,6 @@ export default function RegisterChoice() {
           >
             ¿Cómo vas a usar Propie?
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 10, lineHeight: 1.6, maxWidth: 260 }}>
-            Elegí tu rol para personalizar tu experiencia
-          </p>
         </div>
       </div>
 

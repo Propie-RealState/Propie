@@ -38,3 +38,10 @@ export function commercializationModeFromType(
     ? PROPERTY_COMMERCIALIZATION_MODES.WITHOUT_INTERMEDIARIES
     : PROPERTY_COMMERCIALIZATION_MODES.WITH_AGENTS;
 }
+
+/** Agent join requests always require owner approval when agents are accepted. */
+export function manualApprovalFromType(
+  commercializationType: "AGENTS" | "DIRECT",
+): boolean {
+  return commercializationType === "AGENTS";
+}

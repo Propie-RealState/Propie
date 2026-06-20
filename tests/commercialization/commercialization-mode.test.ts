@@ -184,7 +184,6 @@ describe("property commercialization mode", () => {
         headers: { authorization: `Bearer ${owner.accessToken}` },
         payload: {
           commercializationType: "DIRECT",
-          manualApproval: false,
         },
       });
 
@@ -216,7 +215,7 @@ describe("property commercialization mode", () => {
     }
   });
 
-  it("persists commercialization settings without chat/calendar toggles", async () => {
+  it("always requires manual approval when accepting agents", async () => {
     const draft = await db.query<{ id: string }>(
       `
         INSERT INTO properties (
@@ -243,7 +242,6 @@ describe("property commercialization mode", () => {
         headers: { authorization: `Bearer ${owner.accessToken}` },
         payload: {
           commercializationType: "AGENTS",
-          manualApproval: true,
         },
       });
 

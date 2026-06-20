@@ -1,11 +1,13 @@
 import { db } from "@/database/client";
 
-import { commercializationModeFromType } from "../constants/commercialization-mode.constants";
+import {
+  commercializationModeFromType,
+  manualApprovalFromType,
+} from "../constants/commercialization-mode.constants";
 
 type Input = {
   propertyId: string;
   commercializationType: "AGENTS" | "DIRECT";
-  manualApproval: boolean;
 };
 
 export async function savePropertyCommercializationRepository(input: Input) {
@@ -32,7 +34,7 @@ export async function savePropertyCommercializationRepository(input: Input) {
       input.propertyId,
       input.commercializationType,
       commercializationModeFromType(input.commercializationType),
-      input.manualApproval,
+      manualApprovalFromType(input.commercializationType),
     ],
   );
 

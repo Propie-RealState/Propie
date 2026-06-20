@@ -107,7 +107,6 @@ export default function PublishStep5() {
     <>
       <PublishWizardLayout
         title="Verificación y publicar"
-        subtitle="Últimos pasos antes de publicar tu propiedad"
         footer={
           <PublishWizardCTA
             label="Publicar propiedad"

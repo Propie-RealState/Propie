@@ -153,17 +153,6 @@ export default function RegisterClientInfo() {
           >
             Contanos un poco sobre vos
           </h1>
-          <p
-            style={{
-              color: 'rgba(255,255,255,0.75)',
-              fontSize: 14,
-              marginTop: 10,
-              lineHeight: 1.55,
-              maxWidth: 280,
-            }}
-          >
-            Opcional — ayuda a personalizar tu experiencia al explorar
-          </p>
         </div>
 
       </div>

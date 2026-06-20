@@ -259,9 +259,6 @@ export default function RegisterAgentInfo() {
           >
             ¡Ya casi terminamos!
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 10, lineHeight: 1.6, maxWidth: 300 }}>
-            Completá tu perfil profesional
-          </p>
         </div>
       </div>
 

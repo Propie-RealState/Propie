@@ -156,9 +156,6 @@ export default function RegisterOwnerInfo() {
           >
             ¡Ya casi terminamos!
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 10, lineHeight: 1.6, maxWidth: 300 }}>
-            Contanos un poco sobre vos como propietario
-          </p>
         </div>
       </div>
 

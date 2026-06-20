@@ -111,7 +111,6 @@ describe("property publish lifecycle", () => {
       headers: { authorization: `Bearer ${owner.accessToken}` },
       payload: {
         commercializationType: "AGENTS",
-        manualApproval: true,
       },
     });
 
