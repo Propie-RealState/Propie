@@ -36,24 +36,40 @@ const icons = [
 ];
 
 const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
+const white = { r: 255, g: 255, b: 255, alpha: 1 };
+
+function isMobilePlatformIcon(file) {
+  return (
+    file.startsWith("pwa-") ||
+    file.startsWith("apple-touch") ||
+    file.includes("maskable")
+  );
+}
 
 async function renderIcon({ file, size }) {
   const isMaskable = file.includes("maskable");
-  const contentRatio = isMaskable ? 0.72 : 0.88;
+  const isMobile = isMobilePlatformIcon(file);
+  const contentRatio = isMaskable ? 0.58 : isMobile ? 0.64 : 0.72;
   const contentSize = Math.round(size * contentRatio);
+  const background = isMobile ? white : transparent;
 
-  await sharp(src)
+  const logo = await sharp(src)
     .resize(contentSize, contentSize, {
       fit: "contain",
       background: transparent,
     })
-    .extend({
-      top: Math.floor((size - contentSize) / 2),
-      bottom: Math.ceil((size - contentSize) / 2),
-      left: Math.floor((size - contentSize) / 2),
-      right: Math.ceil((size - contentSize) / 2),
-      background: transparent,
-    })
+    .png()
+    .toBuffer();
+
+  await sharp({
+    create: {
+      width: size,
+      height: size,
+      channels: 4,
+      background,
+    },
+  })
+    .composite([{ input: logo, gravity: "center" }])
     .png()
     .toFile(path.join(outDir, file));
 }
