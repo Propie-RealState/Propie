@@ -1,5 +1,5 @@
 /**
- * Regenerate all PWA icons from public/logo.svg
+ * Regenerate all PWA icons from public/ISOLOGO.png
  * Run: pnpm generate-pwa-icons
  */
 import { createRequire } from "module";
@@ -22,7 +22,7 @@ try {
   sharp = require(sharpPath);
 }
 
-const src = path.resolve(__dirname, "../public/logo.svg");
+const src = path.resolve(__dirname, "../public/ISOLOGO.png");
 const outDir = path.resolve(__dirname, "../public");
 
 const icons = [
@@ -35,9 +35,32 @@ const icons = [
   { file: "favicon.ico", size: 32 },
 ];
 
-for (const { file, size } of icons) {
-  await sharp(src).resize(size, size).png().toFile(path.join(outDir, file));
-  console.log("?", file);
+const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
+
+async function renderIcon({ file, size }) {
+  const isMaskable = file.includes("maskable");
+  const contentRatio = isMaskable ? 0.72 : 0.88;
+  const contentSize = Math.round(size * contentRatio);
+
+  await sharp(src)
+    .resize(contentSize, contentSize, {
+      fit: "contain",
+      background: transparent,
+    })
+    .extend({
+      top: Math.floor((size - contentSize) / 2),
+      bottom: Math.ceil((size - contentSize) / 2),
+      left: Math.floor((size - contentSize) / 2),
+      right: Math.ceil((size - contentSize) / 2),
+      background: transparent,
+    })
+    .png()
+    .toFile(path.join(outDir, file));
+}
+
+for (const icon of icons) {
+  await renderIcon(icon);
+  console.log("?", icon.file);
 }
 
 console.log("\nAll PWA icons generated successfully.");
