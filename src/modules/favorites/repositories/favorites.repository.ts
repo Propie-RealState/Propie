@@ -80,23 +80,19 @@ export async function syncFavoritesRepository(input: {
     return [];
   }
 
-  const values: unknown[] = [input.userId];
-  const placeholders = input.propertyIds.map((propertyId, index) => {
-    values.push(propertyId);
-    return `($1, $${index + 2})`;
-  });
-
   const result = await db.query(
     `
       INSERT INTO property_favorites (
         user_id,
         property_id
       )
-      VALUES ${placeholders.join(", ")}
+      SELECT $1, p.id
+      FROM unnest($2::uuid[]) AS requested(id)
+      INNER JOIN properties p ON p.id = requested.id
       ON CONFLICT (user_id, property_id) DO NOTHING
       RETURNING property_id
     `,
-    values,
+    [input.userId, input.propertyIds],
   );
 
   return result.rows.map((row) => row.property_id as string);

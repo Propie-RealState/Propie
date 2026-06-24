@@ -3,14 +3,14 @@
 import { AnimatePresence } from "motion/react";
 import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import SplashScreen, { LOADER_MS } from "../components/SplashScreen";
 
 /** Wait for loader to reach 100% + brief hold */
 const SPLASH_MIN_MS = LOADER_MS + 200;
 const EXIT_UNMOUNT_MS = 850;
-const EXPLORE_PATH = "/explore";
+const EXPLORE_PATH = "/explorar";
 
 type Props = {
   children: ReactNode;
@@ -18,6 +18,7 @@ type Props = {
 
 export default function AppStartup({ children }: Props) {
   const navigate = useNavigate();
+  const location = useLocation();
   const skipSplash =
     typeof sessionStorage !== "undefined" &&
     sessionStorage.getItem("propie_skip_splash") === "1";
@@ -34,7 +35,9 @@ export default function AppStartup({ children }: Props) {
     const timer = window.setTimeout(() => {
       if (!cancelled) {
         setShowSplash(false);
-        navigate(EXPLORE_PATH, { replace: true });
+        if (location.pathname === "/") {
+          navigate(EXPLORE_PATH, { replace: true });
+        }
       }
     }, SPLASH_MIN_MS);
 
@@ -42,7 +45,7 @@ export default function AppStartup({ children }: Props) {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [navigate, skipSplash]);
+  }, [location.pathname, navigate, skipSplash]);
 
   useEffect(() => {
     if (showSplash) {

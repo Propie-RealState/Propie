@@ -242,6 +242,24 @@ export async function listConversationsForUserRepository(
   return result.rows;
 }
 
+export async function listAllConversationsRepository(): Promise<ConversationListRow[]> {
+  const result = await db.query<ConversationListRow>(
+    `
+      SELECT DISTINCT
+        ${CONVERSATION_SELECT_FIELDS},
+        ${CONVERSATION_PRESENTATION_FIELDS},
+        0 AS unread_count
+      FROM property_conversations pc
+      ${CONVERSATION_PRESENTATION_JOINS}
+      ORDER BY pc.last_message_at DESC NULLS LAST, pc.updated_at DESC
+      LIMIT 200
+    `,
+    [],
+  );
+
+  return result.rows;
+}
+
 export async function findConversationByIdRepository(
   conversationId: string,
 ): Promise<PropertyConversationRow | null> {

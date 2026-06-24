@@ -1,14 +1,12 @@
 import { z } from "zod";
 
+import { RegisterableUserRoleSchema } from "@/database/types/roles";
+
 // ========================================================
 // ENUMS
 // ========================================================
 
-export const RegisterRoleSchema = z.enum([
-  "OWNER",
-  "AGENT",
-  "CLIENT",
-]);
+export const RegisterRoleSchema = RegisterableUserRoleSchema;
 
 export const MainGoalSchema = z.enum(["PUBLISH", "EXPLORE"]);
 

@@ -1,5 +1,8 @@
 import { db } from "@/database/client";
 
+import { USER_ROLES } from "@/constants/roles";
+import { hasRole } from "@/utils/authorization";
+
 import { upsertParticipantStates } from "../repositories/participant-states.repository";
 import {
   getActiveAgentIdsForProperty,
@@ -22,7 +25,7 @@ async function assertClientUser(userId: string) {
     [userId],
   );
 
-  if (result.rows[0]?.role !== "CLIENT") {
+  if (!hasRole(result.rows[0]?.role ?? "", USER_ROLES.CLIENT)) {
     throw new Error("FORBIDDEN");
   }
 }

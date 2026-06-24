@@ -27,6 +27,13 @@ function hasAccessToken() {
   return Boolean(localStorage.getItem('accessToken'));
 }
 
+async function fetchServerFavoriteIds(): Promise<string[]> {
+  const response = await apiFetch('/favorites');
+  return Array.isArray(response?.data)
+    ? response.data.filter((id): id is string => typeof id === 'string')
+    : [];
+}
+
 export async function loadFavoritesFromServer(): Promise<string[]> {
   if (!hasAccessToken()) {
     return getFavoriteIds();
@@ -34,13 +41,8 @@ export async function loadFavoritesFromServer(): Promise<string[]> {
 
   try {
     const localIds = getFavoriteIds();
-    const response = await apiFetch('/favorites');
-    const serverIds = Array.isArray(response?.data)
-      ? response.data.filter((id): id is string => typeof id === 'string')
-      : [];
-
+    const serverIds = await fetchServerFavoriteIds();
     const merged = [...new Set([...localIds, ...serverIds])];
-    setFavoriteIds(merged);
 
     if (localIds.some((id) => !serverIds.includes(id))) {
       await apiFetch('/favorites/sync', {
@@ -49,7 +51,9 @@ export async function loadFavoritesFromServer(): Promise<string[]> {
       });
     }
 
-    return merged;
+    const authoritative = await fetchServerFavoriteIds();
+    setFavoriteIds(authoritative);
+    return authoritative;
   } catch {
     return getFavoriteIds();
   }
@@ -71,6 +75,9 @@ export async function syncLocalFavoritesToServer(): Promise<void> {
       method: 'POST',
       body: JSON.stringify({ propertyIds: localIds }),
     });
+
+    const authoritative = await fetchServerFavoriteIds();
+    setFavoriteIds(authoritative);
   } catch {
     // Keep local favorites if sync fails.
   }

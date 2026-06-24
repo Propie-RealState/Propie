@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import React from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../../../context/AuthContext";
+import {
+  isAdminRole,
+  isAgentRole,
+  isExactRole,
+} from "../../../../lib/roles";
 import { mapPropertyDetails } from "../mappers/property-details.mapper";
 import { getPropertyById } from "../services/property-details.service";
 import { formatPrice } from "../utils/formatPrice";
@@ -331,9 +336,10 @@ export default function PropertyDetails() {
 
   const getUserType = (): UserType => {
     if (!isLoggedIn) return "guest";
-    if (user?.role === "AGENT") return "agente";
-    if (user?.role === "OWNER") return "owner";
-    if (user?.role === "CLIENT") return "client";
+    if (isAdminRole(user?.role)) return "owner";
+    if (isExactRole(user?.role, "AGENT")) return "agente";
+    if (isExactRole(user?.role, "OWNER")) return "owner";
+    if (isExactRole(user?.role, "CLIENT")) return "client";
     return "client";
   };
 
@@ -378,7 +384,7 @@ export default function PropertyDetails() {
 
   useEffect(() => {
     async function loadAgentApplicationStatus() {
-      if (!id || !user || user.role !== "AGENT") {
+      if (!id || !user || !isAgentRole(user.role)) {
         setAgentApplicationStatus(null);
         return;
       }

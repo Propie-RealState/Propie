@@ -1,4 +1,6 @@
 import { apiFetch } from "../../../../lib/api";
+import { trackEvent } from "../../../../lib/analytics";
+import { AnalyticsEvents } from "../../../../lib/analytics-events";
 
 import type {
   CancelVisitInput,
@@ -54,6 +56,8 @@ export async function createVisit(input: CreateVisitInput) {
     body: JSON.stringify(input),
   })) as ApiResponse<Visit>;
 
+  trackEvent(AnalyticsEvents.VISIT_CREATED, { conversationId: input.conversationId });
+
   return response.data;
 }
 
@@ -62,6 +66,8 @@ export async function confirmVisit(visitId: string) {
     method: "POST",
     body: JSON.stringify({}),
   })) as ApiResponse<Visit>;
+
+  trackEvent(AnalyticsEvents.VISIT_CONFIRMED, { visitId });
 
   return response.data;
 }
@@ -84,6 +90,8 @@ export async function cancelVisit(visitId: string, input?: CancelVisitInput) {
     body: JSON.stringify(input ?? {}),
   })) as ApiResponse<Visit>;
 
+  trackEvent(AnalyticsEvents.VISIT_CANCELLED, { visitId });
+
   return response.data;
 }
 
@@ -92,6 +100,8 @@ export async function completeVisit(visitId: string) {
     method: "POST",
     body: JSON.stringify({}),
   })) as ApiResponse<Visit>;
+
+  trackEvent(AnalyticsEvents.VISIT_COMPLETED, { visitId });
 
   return response.data;
 }

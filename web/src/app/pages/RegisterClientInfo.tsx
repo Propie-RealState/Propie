@@ -12,6 +12,8 @@ import { useAuth } from '../../context/AuthContext';
 import { getPendingAvatarFile, clearPendingAvatarFile } from '../../lib/pending-avatar';
 import { uploadAvatar } from '../modules/profile/services/upload-avatar.service';
 import { CharCounter, FieldError, validateBio, buildRegistrationContext, ensureRegistrationReady, handleRegisterValidationFailure } from '../../features/register/validation';
+import { trackEvent } from '../../lib/analytics';
+import { AnalyticsEvents } from '../../lib/analytics-events';
 
 export default function RegisterClientInfo() {
   const navigate = useNavigate();
@@ -68,6 +70,8 @@ export default function RegisterClientInfo() {
       ) {
         throw new Error('INVALID_REGISTER_RESPONSE');
       }
+
+      trackEvent(AnalyticsEvents.AUTH_SIGNUP, { role: 'CLIENT' });
 
       auth.login(
         authData.accessToken,

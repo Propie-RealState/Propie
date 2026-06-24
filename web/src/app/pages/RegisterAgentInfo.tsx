@@ -11,6 +11,8 @@ import { RegisterSuccessOverlay } from "../components/register/RegisterSuccessOv
 import { REGISTER_COMPLETION } from "../components/register/registerCompletionTheme";
 import { getPendingAvatarFile, clearPendingAvatarFile } from "../../lib/pending-avatar";
 import { uploadAvatar } from "../modules/profile/services/upload-avatar.service";
+import { trackEvent } from "../../lib/analytics";
+import { AnalyticsEvents } from "../../lib/analytics-events";
 import {
   FieldError,
   CharCounter,
@@ -112,6 +114,8 @@ export default function RegisterAgentInfo() {
       ) {
         throw new Error("INVALID_REGISTER_RESPONSE");
       }
+
+      trackEvent(AnalyticsEvents.AUTH_SIGNUP, { role: "AGENT" });
 
       auth.login(
         authData.accessToken,

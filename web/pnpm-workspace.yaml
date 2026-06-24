@@ -2,5 +2,8 @@ packages:
   - '.'
 allowBuilds:
   '@tailwindcss/oxide': false
+  core-js: set this to true or false
   esbuild: false
   sharp: true
+minimumReleaseAgeExclude:
+  - recharts@3.9.0

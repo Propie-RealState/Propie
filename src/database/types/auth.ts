@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { UserStatusSchema } from './users';
-import { UserRoleSchema } from './roles';
+import { UserRoleSchema, RegisterableUserRoleSchema } from './roles';
 
 // ========================================================
 // PASSWORD
@@ -43,7 +43,7 @@ export const RegisterSchema = z.object({
 
     password: PasswordSchema,
 
-    role: UserRoleSchema,
+    role: RegisterableUserRoleSchema,
 });
 
 export type RegisterInput =

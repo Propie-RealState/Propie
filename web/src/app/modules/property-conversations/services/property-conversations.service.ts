@@ -1,4 +1,6 @@
 import { apiFetch } from "../../../../lib/api";
+import { trackEvent } from "../../../../lib/analytics";
+import { AnalyticsEvents } from "../../../../lib/analytics-events";
 
 import type {
   PropertyConversation,
@@ -32,6 +34,10 @@ export async function startPropertyConversation(propertyId: string) {
     body: JSON.stringify({ propertyId }),
   }) as ApiResponse<PropertyConversation>;
 
+  trackEvent(AnalyticsEvents.CONVERSATION_STARTED, {
+    conversationType: "client_inquiry",
+  });
+
   return response.data;
 }
 
@@ -46,6 +52,10 @@ export async function startInternalPropertyConversation(
       ...(agentId ? { agentId } : {}),
     }),
   }) as ApiResponse<PropertyConversation>;
+
+  trackEvent(AnalyticsEvents.CONVERSATION_STARTED, {
+    conversationType: "internal",
+  });
 
   return response.data;
 }
@@ -95,6 +105,8 @@ export async function sendPropertyConversationMessage(
       body: JSON.stringify({ body }),
     },
   ) as ApiResponse<PropertyConversationMessage>;
+
+  trackEvent(AnalyticsEvents.MESSAGE_SENT);
 
   return response.data;
 }

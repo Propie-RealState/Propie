@@ -2,6 +2,8 @@ import type {
     FastifyReply,
     FastifyRequest,
   } from 'fastify';
+
+import { hasAnyRole } from '@/utils/authorization';
   
   
   
@@ -48,8 +50,9 @@ import type {
       // ====================================================
   
       const hasPermission =
-        allowedRoles.includes(
-          user.role
+        hasAnyRole(
+          user.role,
+          allowedRoles,
         );
   
       if (!hasPermission) {

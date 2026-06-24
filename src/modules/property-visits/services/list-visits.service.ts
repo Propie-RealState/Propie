@@ -1,5 +1,7 @@
 import { db } from "@/database/client";
 
+import { resolveScopedOperationalRole } from "@/utils/authorization";
+
 import { listVisitsRepository } from "../repositories/visits.repository";
 import type { VisitListSegment } from "../types/visit.types";
 import { mapVisitRow } from "../utils/map-visit";
@@ -15,13 +17,7 @@ async function getUserRole(userId: string) {
     [userId],
   );
 
-  const role = result.rows[0]?.role;
-
-  if (role !== "CLIENT" && role !== "OWNER" && role !== "AGENT") {
-    return null;
-  }
-
-  return role;
+  return resolveScopedOperationalRole(result.rows[0]?.role);
 }
 
 export async function listVisitsService(input: {

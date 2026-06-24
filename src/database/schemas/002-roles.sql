@@ -14,5 +14,6 @@ INSERT INTO roles (code)
 VALUES
     ('OWNER'),
     ('AGENT'),
-    ('CLIENT')
+    ('CLIENT'),
+    ('ADMIN')
 ON CONFLICT (code) DO NOTHING;

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 
+import { actsAsOwner } from "../../../../lib/roles";
 import { useAuth } from "../../../../context/AuthContext";
 import { getOwnerAgentApplicationsCount } from "../services/agent-applications.service";
 import { queryClient } from "../../../../lib/query-client";
@@ -11,7 +12,7 @@ export function useOwnerApplicationCount() {
   const { data: count = 0, refetch } = useQuery({
     queryKey: ["agent-applications", "owner-count", user?.id],
     queryFn: async () => {
-      if (!user || user.role === "AGENT") {
+      if (!user || !actsAsOwner(user.role)) {
         return 0;
       }
 
@@ -22,7 +23,7 @@ export function useOwnerApplicationCount() {
         return 0;
       }
     },
-    enabled: Boolean(user && user.role !== "AGENT"),
+    enabled: Boolean(user && actsAsOwner(user.role)),
   });
 
   useEffect(() => {

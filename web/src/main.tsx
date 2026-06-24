@@ -9,8 +9,11 @@ import { LocationPreferencesManager } from "./app/components/LocationPreferences
 import { PushNotificationManager } from "./app/components/PushNotificationManager";
 import { queryClient } from "./lib/query-client";
 import { ToastHost } from "./app/components/ToastHost";
+import { initAnalytics } from "./lib/analytics";
 
 import "./styles/index.css";
+
+initAnalytics();
 
 ReactDOM.createRoot(
   document.getElementById("root")!

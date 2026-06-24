@@ -12,6 +12,8 @@ import { useAuth } from "../../context/AuthContext";
 import { getPendingAvatarFile, clearPendingAvatarFile } from "../../lib/pending-avatar";
 import { uploadAvatar } from "../modules/profile/services/upload-avatar.service";
 import { CharCounter, FieldError, validateBio, buildRegistrationContext, ensureRegistrationReady, handleRegisterValidationFailure } from "../../features/register/validation";
+import { trackEvent } from "../../lib/analytics";
+import { AnalyticsEvents } from "../../lib/analytics-events";
 
 export default function RegisterOwnerInfo() {
   const navigate = useNavigate();
@@ -67,6 +69,8 @@ export default function RegisterOwnerInfo() {
       ) {
         throw new Error("INVALID_REGISTER_RESPONSE");
       }
+
+      trackEvent(AnalyticsEvents.AUTH_SIGNUP, { role: "OWNER" });
 
       auth.login(
         authData.accessToken,

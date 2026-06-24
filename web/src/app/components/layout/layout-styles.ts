@@ -18,6 +18,8 @@ export const pageScrollStyle: CSSProperties = {
   overflowX: "hidden",
   overflowY: "auto",
   WebkitOverflowScrolling: "touch",
+  overscrollBehaviorY: "contain",
+  touchAction: "pan-y",
 };
 
 /** Sticky page header used on detail screens */

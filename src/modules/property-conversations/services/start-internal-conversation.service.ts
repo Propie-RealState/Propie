@@ -1,5 +1,8 @@
 import { db } from "@/database/client";
 
+import { USER_ROLES } from "@/constants/roles";
+import { hasAnyRole, isAdmin } from "@/utils/authorization";
+
 import { upsertParticipantStates } from "../repositories/participant-states.repository";
 import {
   getConversationContext,
@@ -32,7 +35,13 @@ export async function startInternalConversationService(input: {
 }) {
   const role = await getUserRole(input.userId);
 
-  if (role !== "OWNER" && role !== "AGENT") {
+  if (
+    !role
+    || !hasAnyRole(role, [
+      USER_ROLES.OWNER,
+      USER_ROLES.AGENT,
+    ])
+  ) {
     throw new Error("FORBIDDEN");
   }
 
@@ -48,7 +57,7 @@ export async function startInternalConversationService(input: {
 
   let internalAgentId = input.agentId ?? null;
 
-  if (role === "AGENT") {
+  if (role === USER_ROLES.AGENT) {
     internalAgentId = input.userId;
   }
 
@@ -56,7 +65,11 @@ export async function startInternalConversationService(input: {
     throw new Error("AGENT_REQUIRED");
   }
 
-  if (role === "OWNER" && gate.ownerId !== input.userId) {
+  if (
+    !isAdmin(role)
+    && role === USER_ROLES.OWNER
+    && gate.ownerId !== input.userId
+  ) {
     throw new Error("FORBIDDEN");
   }
 

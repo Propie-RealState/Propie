@@ -4,9 +4,11 @@ import {
 import { getParticipantState } from "../repositories/participant-states.repository";
 import { findConversationDetailByIdRepository } from "../repositories/property-conversations.repository";
 import { mapConversationDetailRow } from "../utils/map-conversation";
+import { canAdminRead } from "@/utils/authorization";
 
 export async function getConversationService(input: {
   userId: string;
+  userRole: string;
   conversationId: string;
 }) {
   const conversation = await findConversationDetailByIdRepository(
@@ -15,6 +17,12 @@ export async function getConversationService(input: {
 
   if (!conversation) {
     throw new Error("CONVERSATION_NOT_FOUND");
+  }
+
+  if (canAdminRead(input.userRole)) {
+    return mapConversationDetailRow(conversation, input.userId, {
+      readOnly: true,
+    });
   }
 
   const canAccess = await canAccessConversation({

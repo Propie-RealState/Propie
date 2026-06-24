@@ -1,5 +1,11 @@
 import { db } from "@/database/client";
 
+import { USER_ROLES } from "@/constants/roles";
+import {
+  hasAnyRole,
+  isAdmin,
+} from "@/utils/authorization";
+
 import { canAccessConversation } from "@/modules/property-conversations/repositories/can-access-conversation.repository";
 import { findConversationByIdRepository } from "@/modules/property-conversations/repositories/property-conversations.repository";
 import {
@@ -76,9 +82,15 @@ export async function createVisitService(input: {
   durationMinutes: number;
   notes?: string;
 }) {
-  const role = await getUserRole(input.userId);
+  const rawRole = await getUserRole(input.userId);
 
-  if (role !== "AGENT" && role !== "OWNER") {
+  if (
+    !rawRole
+    || !hasAnyRole(rawRole, [
+      USER_ROLES.OWNER,
+      USER_ROLES.AGENT,
+    ])
+  ) {
     throw new Error("FORBIDDEN");
   }
 
@@ -110,7 +122,9 @@ export async function createVisitService(input: {
     throw new Error("PROPERTY_NOT_AVAILABLE");
   }
 
-  const schedulerRole = role as "AGENT" | "OWNER";
+  const schedulerRole = rawRole === USER_ROLES.AGENT
+    ? "AGENT"
+    : "OWNER";
   const actorRole: VisitActorRole = schedulerRole;
 
   if (schedulerRole === "AGENT") {
@@ -122,7 +136,7 @@ export async function createVisitService(input: {
     if (!agentIsActive) {
       throw new Error("AGENT_NOT_ACTIVE");
     }
-  } else if (context.ownerId !== input.userId) {
+  } else if (context.ownerId !== input.userId && !isAdmin(rawRole)) {
     throw new Error("FORBIDDEN");
   }
 

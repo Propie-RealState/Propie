@@ -4,6 +4,8 @@ import type {
   User,
 } from '../types/users';
 
+import type { RegisterableUserRole } from '../types/roles';
+
 
 
 // ========================================================
@@ -98,11 +100,7 @@ export async function createUser(
 
     passwordHash: string;
 
-    role:
-    | 'OWNER'
-    | 'AGENT'
-    | 'CLIENT';
-
+    role: RegisterableUserRole;
   }
 ): Promise<User> {
   const result =
