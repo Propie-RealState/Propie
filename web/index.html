@@ -30,6 +30,15 @@
         background: #f7f7f7;
       }
     </style>
+    <script>
+      (function () {
+        var h = Math.round(
+          (window.visualViewport && window.visualViewport.height) ||
+            window.innerHeight,
+        );
+        document.documentElement.style.setProperty("--app-height", h + "px");
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
