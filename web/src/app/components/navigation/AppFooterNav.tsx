@@ -176,7 +176,7 @@ export function AppFooterNav() {
 
         {audience === 'client' && (
           <>
-            {navBtn(Search, 'Explorar', '/explore')}
+            {navBtn(Search, 'Explorar', '/explorar')}
             {navBtn(Heart, 'Favoritos', '/favoritos')}
             {navBtn(CalendarDays, 'Visitas', '/visitas')}
             {navBtn(MessageCircle, 'Mensajes', '/mensajes', undefined, unreadConversations)}
@@ -186,7 +186,7 @@ export function AppFooterNav() {
 
         {audience === 'publisher' && (
           <>
-            {navBtn(Search, 'Explorar', '/explore')}
+            {navBtn(Search, 'Explorar', '/explorar')}
             {navBtn(Plus, 'Publicar', '/publicar', startCreatePublish)}
             {navBtn(Building2, 'Mis Props.', '/mis-propiedades')}
             {navBtn(MessageCircle, 'Mensajes', '/mensajes', undefined, unreadConversations)}

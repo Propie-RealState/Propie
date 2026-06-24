@@ -17,12 +17,14 @@ import {
   createAgentApplicationSchema,
   updateAgentApplicationStatusSchema,
 } from "../schemas/agent-application.schema";
+import { USER_ROLES } from "@/constants/roles";
+import { hasRole } from "@/utils/authorization";
 
 export async function createAgentApplicationController(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  if (request.user.role !== "AGENT") {
+  if (!hasRole(request.user.role, USER_ROLES.AGENT)) {
     return reply.status(403).send({
       success: false,
       message: "Only agents can send applications",
@@ -74,7 +76,7 @@ export async function getMyAgentApplicationByPropertyController(
   }>,
   reply: FastifyReply,
 ) {
-  if (request.user.role !== "AGENT") {
+  if (!hasRole(request.user.role, USER_ROLES.AGENT)) {
     return reply.status(403).send({
       success: false,
       message: "Only agents can inspect their applications",

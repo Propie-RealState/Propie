@@ -1,5 +1,7 @@
 import { apiFetch }
 from "../../../../lib/api";
+import { trackEvent } from "../../../../lib/analytics";
+import { AnalyticsEvents } from "../../../../lib/analytics-events";
 
 export async function createProperty(
   input: {
@@ -9,7 +11,7 @@ export async function createProperty(
   }
 ) {
 
-  return apiFetch(
+  const result = await apiFetch(
     "/properties",
     {
       method: "POST",
@@ -19,4 +21,13 @@ export async function createProperty(
       ),
     }
   );
+
+  if (result?.propertyId) {
+    trackEvent(AnalyticsEvents.PROPERTY_CREATED, {
+      propertyId: result.propertyId,
+      propertyType: input.propertyType,
+    });
+  }
+
+  return result;
 }

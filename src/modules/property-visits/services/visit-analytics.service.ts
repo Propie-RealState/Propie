@@ -1,5 +1,7 @@
 import { db } from "@/database/client";
 
+import { resolveScopedOperationalRole } from "@/utils/authorization";
+
 import {
   countVisitsByAgentRepository,
   countVisitsByPropertyRepository,
@@ -18,13 +20,7 @@ async function getUserRole(userId: string) {
     [userId],
   );
 
-  const role = result.rows[0]?.role;
-
-  if (role !== "OWNER" && role !== "AGENT") {
-    return null;
-  }
-
-  return role;
+  return resolveScopedOperationalRole(result.rows[0]?.role);
 }
 
 export async function visitAnalyticsService(input: {

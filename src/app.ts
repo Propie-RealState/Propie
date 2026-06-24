@@ -42,6 +42,8 @@ import { notificationsRoutes } from "./modules/notifications/routes/notification
 
 import { agentsRoutes } from "./modules/agents/routes/agents.routes";
 
+import { adminRoutes } from "./modules/admin/routes/admin.routes";
+
 // ========================================================
 // BUILD APP
 // ========================================================
@@ -224,6 +226,13 @@ export async function buildApp() {
     agentsRoutes,
     {
       prefix: "/agents",
+    }
+  );
+
+  await app.register(
+    adminRoutes,
+    {
+      prefix: "/admin",
     }
   );
 

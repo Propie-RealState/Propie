@@ -1,4 +1,6 @@
 import { apiFetch } from "../../../../lib/api";
+import { trackEvent } from "../../../../lib/analytics";
+import { AnalyticsEvents } from "../../../../lib/analytics-events";
 
 export type AgentApplicationStatus =
   | "PENDING"
@@ -41,10 +43,16 @@ export async function sendAgentApplication(input: {
   propertyId: string;
   message: string;
 }) {
-  return apiFetch("/agent-applications", {
+  const result = await apiFetch("/agent-applications", {
     method: "POST",
     body: JSON.stringify(input),
   });
+
+  trackEvent(AnalyticsEvents.AGENT_APPLICATION_SUBMITTED, {
+    propertyId: input.propertyId,
+  });
+
+  return result;
 }
 
 export async function getOwnerAgentApplications() {
@@ -71,10 +79,17 @@ export async function updateOwnerAgentApplicationStatus(
   applicationId: string,
   status: "ACCEPTED" | "REJECTED",
 ) {
-  return apiFetch(`/agent-applications/${applicationId}/status`, {
+  const result = await apiFetch(`/agent-applications/${applicationId}/status`, {
     method: "PATCH",
     body: JSON.stringify({
       status,
     }),
   });
+
+  const event = status === "ACCEPTED"
+    ? AnalyticsEvents.AGENT_APPLICATION_ACCEPTED
+    : AnalyticsEvents.AGENT_APPLICATION_REJECTED;
+  trackEvent(event, { applicationId });
+
+  return result;
 }

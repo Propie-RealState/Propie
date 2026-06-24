@@ -28,7 +28,7 @@ async function skipBlockingPrompts(page: Page) {
 export async function waitForAppReady(page: Page) {
   await primeTestSession(page);
   await page.goto("/");
-  await page.waitForURL(/\/explore/, { timeout: 20_000 });
+  await page.waitForURL(/\/explor(ar|e)/, { timeout: 20_000 });
   await expect(page.getByRole("button", { name: "Ingresar" })).toBeVisible({
     timeout: 15_000,
   });
@@ -57,7 +57,7 @@ export async function login(
   await page.locator("form").evaluate((form) => {
     (form as HTMLFormElement).requestSubmit();
   });
-  await expect(page).toHaveURL(/\/explore/, { timeout: 20_000 });
+  await expect(page).toHaveURL(/\/explor(ar|e)/, { timeout: 20_000 });
   await dismissOverlays(page);
 }
 

@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
 
     password_hash TEXT NOT NULL,
 
-    role TEXT NOT NULL DEFAULT 'CLIENT' CHECK (role IN ('CLIENT', 'OWNER', 'AGENT')),
+    role TEXT NOT NULL DEFAULT 'CLIENT' CHECK (role IN ('CLIENT', 'OWNER', 'AGENT', 'ADMIN')),
 
     avatar_url TEXT,
 

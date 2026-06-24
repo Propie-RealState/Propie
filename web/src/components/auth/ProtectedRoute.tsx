@@ -27,7 +27,7 @@ export function ProtectedRoute({
 
     return (
       <Navigate
-        to="/ingresar"
+        to="/explorar"
         replace
       />
     );

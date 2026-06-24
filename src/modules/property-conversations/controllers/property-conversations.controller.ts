@@ -130,6 +130,7 @@ export async function listConversationsController(
   try {
     const conversations = await listConversationsService({
       userId: request.user.id,
+      userRole: request.user.role,
     });
 
     return reply.send({
@@ -148,6 +149,7 @@ export async function listHistoricalConversationsController(
   try {
     const conversations = await listHistoricalConversationsService({
       userId: request.user.id,
+      userRole: request.user.role,
     });
 
     return reply.send({
@@ -172,6 +174,7 @@ export async function getConversationController(
 
     const conversation = await getConversationService({
       userId: request.user.id,
+      userRole: request.user.role,
       conversationId: params.id,
     });
 
@@ -198,6 +201,7 @@ export async function listMessagesController(
 
     const messages = await listMessagesService({
       userId: request.user.id,
+      userRole: request.user.role,
       conversationId: params.id,
       limit: query.limit,
       offset: query.offset,

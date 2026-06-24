@@ -1,0 +1,29 @@
+-- =============================================================================
+-- Grant ADMIN role to an existing user (manual bootstrap only)
+-- =============================================================================
+--
+-- Prerequisites:
+--   1. Run migrations (includes 039-add-admin-role.sql).
+--   2. User must already exist (registered as CLIENT, OWNER, or AGENT).
+--
+-- Usage (replace email):
+--
+--   UPDATE users
+--   SET role = 'ADMIN', updated_at = now()
+--   WHERE email = 'admin@example.com';
+--
+-- Verify:
+--
+--   SELECT id, email, role, is_active FROM users WHERE email = 'admin@example.com';
+--
+-- After promotion, user must log out and log in again so JWT carries role ADMIN.
+--
+-- Security:
+--   - Never expose ADMIN in registration or profile APIs.
+--   - Do not run this against production without audit trail.
+
+-- Example (uncomment and edit):
+-- UPDATE users
+-- SET role = 'ADMIN', updated_at = now()
+-- WHERE email = 'admin@example.com'
+--   AND role IN ('CLIENT', 'OWNER', 'AGENT');

@@ -20,7 +20,7 @@ export function PublisherRoute({
   if (!user) {
     return (
       <Navigate
-        to="/ingresar"
+        to="/explorar"
         replace
       />
     );

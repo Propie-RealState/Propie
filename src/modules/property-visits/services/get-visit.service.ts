@@ -1,3 +1,6 @@
+import { findUserById } from "@/database/repositories/user.repository";
+import { isAdmin } from "@/utils/authorization";
+
 import { canViewVisit } from "../repositories/can-access-visit.repository";
 import { findVisitByIdRepository } from "../repositories/visits.repository";
 import { mapVisitRow } from "../utils/map-visit";
@@ -6,10 +9,13 @@ export async function getVisitService(input: {
   userId: string;
   visitId: string;
 }) {
-  const allowed = await canViewVisit({
-    userId: input.userId,
-    visitId: input.visitId,
-  });
+  const user = await findUserById(input.userId);
+  const allowed = user && isAdmin(user.role)
+    ? true
+    : await canViewVisit({
+        userId: input.userId,
+        visitId: input.visitId,
+      });
 
   if (!allowed) {
     throw new Error("FORBIDDEN");

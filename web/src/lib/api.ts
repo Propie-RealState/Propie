@@ -117,7 +117,7 @@ export async function apiFetch(
 
       localStorage.removeItem("refreshToken");
 
-      window.location.href = "/ingresar";
+      window.location.href = "/explorar";
 
       throw error;
     }

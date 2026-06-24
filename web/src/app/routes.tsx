@@ -20,6 +20,7 @@ import RegisterClient from "./pages/RegisterClient";
 import RegisterClientInfo from "./pages/RegisterClientInfo";
 import { PublisherRoute } from "../components/auth/PublisherRoute";
 import { ProtectedRoute } from "../components/auth/ProtectedRoute";
+import { AdminRoute } from "../components/auth/AdminRoute";
 import Favorites from "./modules/favorites/pages/Favorites";
 
 import PublishStep1 from "./modules/publish/pages/PublishStep1";
@@ -43,6 +44,7 @@ import MyVisits from "./modules/visits/pages/MyVisits";
 import VisitDetails from "./modules/visits/pages/VisitDetails";
 import Notifications from "./modules/agent-applications/pages/Notifications";
 import AgentApplications from "./modules/agent-applications/pages/Messages";
+import AdminDashboard from "./modules/admin/pages/AdminDashboard";
 
 const PropertyMap = lazy(
   () => import("./modules/map/pages/PropertyMap")
@@ -97,17 +99,17 @@ export const router =
 
         {
           index: true,
-          element: <Navigate to="/explore" replace />,
+          element: <Navigate to="/explorar" replace />,
         },
 
         {
           path: "explore",
-          Component: Explore,
+          element: <Navigate to="/explorar" replace />,
         },
 
         {
           path: "explorar",
-          element: <Navigate to="/explore" replace />,
+          Component: Explore,
         },
 
         {
@@ -285,6 +287,15 @@ export const router =
             <ProtectedRoute>
               <AgentApplications />
             </ProtectedRoute>
+          ),
+        },
+
+        {
+          path: "admin",
+          element: (
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
           ),
         },
 

@@ -9,6 +9,8 @@ import {
   syncLocalFavoritesToServer,
 } from "../lib/favorites-storage";
 import { AUTH_SESSION_READY_EVENT } from "../lib/location-preferences";
+import { identifyUser, resetUser, trackEvent } from "../lib/analytics";
+import { AnalyticsEvents } from "../lib/analytics-events";
 
 
 
@@ -141,6 +143,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       syncUserTypeFromRole(response.data.role);
 
+      identifyUser(response.data.id, { role: response.data.role, email: response.data.email });
+
     }
 
   }, []);
@@ -237,6 +241,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     syncUserTypeFromRole(user.role);
 
+    identifyUser(user.id, { role: user.role, email: user.email });
+    trackEvent(AnalyticsEvents.AUTH_LOGIN, { role: user.role });
+
     void syncLocalFavoritesToServer();
     window.dispatchEvent(new Event(AUTH_SESSION_READY_EVENT));
 
@@ -245,6 +252,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
   function logout() {
+
+    trackEvent(AnalyticsEvents.AUTH_LOGOUT);
+    resetUser();
 
     localStorage.removeItem("accessToken");
 
