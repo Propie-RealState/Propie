@@ -17,6 +17,7 @@ import { getNavAudience } from '../../../lib/roles';
 import { useAppTheme } from '../../../theme/useAppTheme';
 import { usePropertyPublish } from '../../modules/publish/context/PropertyPublishContext';
 import { useUnreadConversationCount } from '../../../hooks/useUnreadConversationCount';
+import { isPublicRegistrationEnabled } from '../../../lib/feature-flags';
 
 export function AppFooterNav() {
   const navigate = useNavigate();
@@ -170,7 +171,7 @@ export function AppFooterNav() {
         {audience === 'guest' && (
           <>
             {authBtn('Ingresar', '/ingresar', LogIn, true)}
-            {authBtn('Registrate', '/registro', UserPlus)}
+            {isPublicRegistrationEnabled() && authBtn('Registrate', '/registro', UserPlus)}
           </>
         )}
 

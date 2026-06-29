@@ -2,6 +2,8 @@ import { buildApp } from './app';
 
 import '@/config/env';
 
+import { assertE2eCaptureVerificationSafe } from '@/config/e2e-capture-verification';
+
 import {
   testDatabaseConnection,
 } from '@/database/client';
@@ -14,6 +16,8 @@ import {
 
 async function startServer() {
   try {
+    assertE2eCaptureVerificationSafe();
+
     await testDatabaseConnection();
 
     const app =

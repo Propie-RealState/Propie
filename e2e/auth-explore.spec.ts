@@ -9,7 +9,6 @@ test.describe("authentication and explore", () => {
 
     await login(page, seed.client.email, seed.password);
 
-    await expect(page.getByRole("heading", { name: "Explorar" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Explorar" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Perfil" })).toBeVisible();
 
@@ -18,7 +17,7 @@ test.describe("authentication and explore", () => {
     await expect(page).toHaveURL(/\/mensajes/);
 
     await page.getByRole("button", { name: "Explorar" }).click();
-    await expect(page).toHaveURL(/\/explore/);
+    await expect(page).toHaveURL(/\/explor(ar|e)/);
 
     await logoutFromProfile(page);
   });

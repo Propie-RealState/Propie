@@ -4,6 +4,7 @@ import type { FastifyInstance } from "fastify";
 
 import { db } from "@/database/client";
 import type { RegisterInput } from "@/modules/auth/schemas/register.schema";
+import { readCapturedVerificationCode } from "@/services/auth/email-verification.test-utils";
 
 export const TEST_PASSWORD = "TestPass1!";
 
@@ -14,8 +15,8 @@ export type RegisteredUser = {
   email: string;
   password: string;
   role: UserRole;
-  accessToken: string;
-  refreshToken: string;
+  accessToken?: string;
+  refreshToken?: string;
 };
 
 export function uniqueEmail(role: string) {
@@ -46,7 +47,7 @@ export function buildRegisterPayload(
   };
 }
 
-export async function registerUserViaApi(
+export async function registerUnverifiedUserViaApi(
   app: FastifyInstance,
   role: UserRole,
   overrides: Partial<RegisterInput> = {},
@@ -65,19 +66,90 @@ export async function registerUserViaApi(
 
   const body = response.json() as {
     data: {
+      email: string;
+      requiresVerification: boolean;
+    };
+  };
+
+  const userRow = await db.query<{ id: string }>(
+    `SELECT id FROM users WHERE email = $1`,
+    [payload.email],
+  );
+
+  return {
+    userId: userRow.rows[0].id,
+    email: body.data.email,
+    password: payload.password,
+    role,
+  };
+}
+
+export async function registerUserViaApi(
+  app: FastifyInstance,
+  role: UserRole,
+  overrides: Partial<RegisterInput> = {},
+): Promise<RegisteredUser> {
+  return registerAndVerifyUserViaApi(app, role, overrides);
+}
+
+export async function verifyEmailViaApi(
+  app: FastifyInstance,
+  email: string,
+  code?: string,
+) {
+  const verificationCode = code ?? readCapturedVerificationCode(email);
+
+  if (!verificationCode) {
+    throw new Error(`Missing verification code for ${email}`);
+  }
+
+  return app.inject({
+    method: "POST",
+    url: "/auth/verify-email",
+    payload: {
+      email,
+      code: verificationCode,
+    },
+  });
+}
+
+export async function registerAndVerifyUserViaApi(
+  app: FastifyInstance,
+  role: UserRole,
+  overrides: Partial<RegisterInput> = {},
+): Promise<RegisteredUser> {
+  const registered = await registerUnverifiedUserViaApi(app, role, overrides);
+  const verifyResponse = await verifyEmailViaApi(app, registered.email);
+
+  if (verifyResponse.statusCode !== 200) {
+    throw new Error(
+      `Verify failed: ${verifyResponse.statusCode} ${verifyResponse.body}`,
+    );
+  }
+
+  const loginResponse = await loginViaApi(
+    app,
+    registered.email,
+    registered.password,
+  );
+
+  if (loginResponse.statusCode !== 200) {
+    throw new Error(
+      `Login failed: ${loginResponse.statusCode} ${loginResponse.body}`,
+    );
+  }
+
+  const loginBody = loginResponse.json() as {
+    data: {
       accessToken: string;
       refreshToken: string;
-      user: { id: string };
     };
   };
 
   return {
-    userId: body.data.user.id,
-    email: payload.email,
-    password: payload.password,
-    role,
-    accessToken: body.data.accessToken,
-    refreshToken: body.data.refreshToken,
+    ...registered,
+    accessToken: loginBody.data.accessToken,
+    refreshToken: loginBody.data.refreshToken,
   };
 }
 
@@ -90,6 +162,28 @@ export async function loginViaApi(
     method: "POST",
     url: "/auth/login",
     payload: { email, password },
+  });
+}
+
+export async function refreshViaApi(
+  app: FastifyInstance,
+  refreshToken: string,
+) {
+  return app.inject({
+    method: "POST",
+    url: "/auth/refresh",
+    payload: { refreshToken },
+  });
+}
+
+export async function logoutViaApi(
+  app: FastifyInstance,
+  refreshToken: string,
+) {
+  return app.inject({
+    method: "POST",
+    url: "/auth/logout",
+    payload: { refreshToken },
   });
 }
 
@@ -137,6 +231,10 @@ export async function cleanupTestUsers(userIds: string[]) {
     return;
   }
 
+  await db.query(
+    `DELETE FROM email_verification_tokens WHERE user_id = ANY($1::uuid[])`,
+    [userIds],
+  );
   await db.query(`DELETE FROM sessions WHERE user_id = ANY($1::uuid[])`, [
     userIds,
   ]);

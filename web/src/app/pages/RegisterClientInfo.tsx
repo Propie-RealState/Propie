@@ -12,6 +12,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getPendingAvatarFile, clearPendingAvatarFile } from '../../lib/pending-avatar';
 import { uploadAvatar } from '../modules/profile/services/upload-avatar.service';
 import { CharCounter, FieldError, validateBio, buildRegistrationContext, ensureRegistrationReady, handleRegisterValidationFailure } from '../../features/register/validation';
+import { continueRegistrationAfterSignup } from '../../features/register/continue-registration-after-signup';
 import { trackEvent } from '../../lib/analytics';
 import { AnalyticsEvents } from '../../lib/analytics-events';
 
@@ -61,40 +62,16 @@ export default function RegisterClientInfo() {
         body: JSON.stringify(payload),
       });
 
-      const authData = response?.data;
-
-      if (
-        !authData?.accessToken ||
-        !authData?.refreshToken ||
-        !authData?.user
-      ) {
+      if (!response?.data?.requiresVerification || !response?.data?.email) {
         throw new Error('INVALID_REGISTER_RESPONSE');
       }
 
       trackEvent(AnalyticsEvents.AUTH_SIGNUP, { role: 'CLIENT' });
 
-      auth.login(
-        authData.accessToken,
-        authData.refreshToken,
-        authData.user,
-      );
-
-      sessionStorage.removeItem('userType');
-
-      const pendingAvatar = getPendingAvatarFile();
-      if (pendingAvatar) {
-        try {
-          await uploadAvatar(pendingAvatar);
-        } catch {
-          // Non-fatal: avatar upload failure should not block registration completion.
-        } finally {
-          clearPendingAvatarFile();
-        }
-      }
-
-      reset();
-
-      setShowSuccess(true);
+      await continueRegistrationAfterSignup(auth, data, {
+        onVerificationRequired: () => navigate('/registro/verification'),
+        onSignupComplete: () => setShowSuccess(true),
+      });
     } catch (error) {
       if (!handleRegisterValidationFailure(error, data, navigate)) {
         console.error(error);
@@ -106,8 +83,9 @@ export default function RegisterClientInfo() {
 
   const handleSuccessFinish = useCallback(() => {
     setShowSuccess(false);
-    navigate('/explore', { replace: true });
-  }, [navigate]);
+    reset();
+    navigate('/explorar', { replace: true });
+  }, [navigate, reset]);
 
   const charCount = data.bio.length;
   const maxChars = 300;

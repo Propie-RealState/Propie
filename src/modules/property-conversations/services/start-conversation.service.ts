@@ -3,7 +3,7 @@ import { db } from "@/database/client";
 import { USER_ROLES } from "@/constants/roles";
 import { hasRole } from "@/utils/authorization";
 
-import { upsertParticipantStates } from "../repositories/participant-states.repository";
+import { ensureParticipantStates } from "../repositories/participant-states.repository";
 import {
   getActiveAgentIdsForProperty,
   getConversationContext,
@@ -63,7 +63,7 @@ export async function startConversationService(input: {
     throw new Error("CONVERSATION_NOT_FOUND");
   }
 
-  await upsertParticipantStates({
+  await ensureParticipantStates({
     conversationId: conversation.id,
     participants: [
       { userId: context.clientId, role: "CLIENT" },

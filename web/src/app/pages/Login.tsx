@@ -6,6 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 import React from "react";
 import { apiFetch } from "../../lib/api";
 import { showToast } from "../../lib/toast";
+import { isPublicRegistrationEnabled } from "../../lib/feature-flags";
 export default function Login() {
   const navigate = useNavigate();
   const auth = useAuth();
@@ -588,7 +589,7 @@ export default function Login() {
           </form>
 
           {/* Fine print */}
-          {!show2FA && (
+          {!show2FA && isPublicRegistrationEnabled() && (
             <p style={{ marginTop: 24, textAlign: "center", color: "#9a9aa0", fontSize: 12, lineHeight: 1.6 }}>
               ¿No tenés cuenta?{" "}
               <span

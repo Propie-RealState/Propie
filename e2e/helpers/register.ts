@@ -12,7 +12,7 @@ export async function primeRegisterSession(page: Page) {
 
 export async function waitPastSplash(page: Page) {
   await page.goto("/");
-  await page.waitForURL(/\/explore/, { timeout: 25_000 });
+  await page.waitForURL(/\/explor(ar|e)/, { timeout: 25_000 });
 }
 
 export async function startOwnerRegistration(page: Page) {
@@ -93,9 +93,54 @@ export async function fillValidSecurity(page: Page) {
   await page.locator("#recoveryPhone").fill("1123456789");
 }
 
-export async function passVerification(page: Page) {
+export async function advancePastAccount(page: Page) {
+  await page.getByTestId("register-continue").click();
+  await expect(page).toHaveURL(/\/registro\/personal-data/, { timeout: 15_000 });
+}
+
+export async function submitOwnerRegistration(page: Page) {
+  const registerResponse = page.waitForResponse(
+    (response) =>
+      response.url().includes("/auth/register") &&
+      response.request().method() === "POST",
+  );
+
+  await page.getByRole("button", { name: /Finalizar/i }).click();
+
+  const response = await registerResponse;
+  expect(response.status()).toBe(201);
+  await expect(page).toHaveURL(/\/registro\/verification/, { timeout: 20_000 });
+}
+
+export async function passEmailVerification(page: Page, email: string) {
+  const { readFileSync } = await import("node:fs");
+  const { join } = await import("node:path");
+
+  await expect(page).toHaveURL(/\/registro\/verification/, { timeout: 20_000 });
+
+  const codePath = join(
+    process.cwd(),
+    "e2e",
+    ".verification-codes",
+    `${email.trim().toLowerCase()}.code`,
+  );
+
+  await expect
+    .poll(() => {
+      try {
+        return readFileSync(codePath, "utf8").trim();
+      } catch {
+        return "";
+      }
+    })
+    .toMatch(/^\d{6}$/);
+
+  const code = readFileSync(codePath, "utf8").trim();
   const input = page.getByPlaceholder("000000");
   await input.click();
-  await input.pressSequentially("123456");
-  await expect(page).toHaveURL(/\/registro\/personal-data/, { timeout: 15_000 });
+  await input.pressSequentially(code);
+  await expect(page.getByText("Verificado")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole("button", { name: "Perfil" })).toBeVisible({
+    timeout: 45_000,
+  });
 }

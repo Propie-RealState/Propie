@@ -1,72 +1,26 @@
-import { db } from '@/database/client';
-
 import {
-  hashToken,
-} from './session';
+  findSessionByTokenHash,
+  revokeSession,
+} from "@/database/repositories/session.repository";
 
-export async function logoutSession(
-  refreshToken: string
-) {
+import { verifyRefreshToken } from "./jwt";
 
-  // ====================================================
-  // HASH TOKEN
-  // ====================================================
+import { hashToken } from "./session";
 
-  const refreshTokenHash =
-    hashToken(refreshToken);
-
-  // ====================================================
-  // FIND SESSION
-  // ====================================================
-
-  const sessionResult =
-    await db.query(
-      `
-        SELECT *
-        FROM sessions
-        WHERE refresh_token_hash = $1
-        LIMIT 1
-      `,
-      [refreshTokenHash]
-    );
-
-  const session =
-    sessionResult.rows[0];
-
-  // ====================================================
-  // VALIDATE SESSION
-  // ====================================================
-
-  if (!session) {
-    throw new Error(
-      'SESSION_NOT_FOUND'
-    );
+export async function logoutSession(refreshToken: string) {
+  try {
+    verifyRefreshToken(refreshToken);
+  } catch {
+    return { success: true };
   }
 
-  if (session.is_revoked) {
-    throw new Error(
-      'SESSION_ALREADY_REVOKED'
-    );
+  const session = await findSessionByTokenHash(hashToken(refreshToken));
+
+  if (!session || session.isRevoked) {
+    return { success: true };
   }
 
-  // ====================================================
-  // REVOKE SESSION
-  // ====================================================
+  await revokeSession(session.id);
 
-  await db.query(
-    `
-      UPDATE sessions
-      SET is_revoked = true
-      WHERE id = $1
-    `,
-    [session.id]
-  );
-
-  // ====================================================
-  // RESPONSE
-  // ====================================================
-
-  return {
-    success: true,
-  };
+  return { success: true };
 }

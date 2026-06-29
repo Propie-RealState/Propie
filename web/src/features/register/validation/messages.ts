@@ -21,7 +21,7 @@ export const validationMessages = {
   acceptPrivacy: "Debés aceptar la política de privacidad",
   verificationCode: {
     format: "El código debe tener exactamente 6 dígitos",
-    invalid: "Código incorrecto. Probá con 123456",
+    invalid: "Código incorrecto. Revisá el código e intentá de nuevo.",
   },
   dni: {
     format: "El DNI debe tener entre 7 y 8 dígitos numéricos",

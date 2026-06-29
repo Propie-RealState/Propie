@@ -4,15 +4,13 @@ import { LoginSchema } from "../database/types/auth";
 
 import { login } from "../services/auth/auth.service";
 
-import { refreshSession } from "../services/auth/refresh";
+import { refreshSession, RefreshSessionError } from "../services/auth/refresh";
 
 import { authMiddleware } from "../middlewares/auth.middleware";
 
 import { roleMiddleware } from "../middlewares/role.middleware";
 
 import { logoutSession } from "../services/auth/logout";
-
-import { cleanupSessions } from "../services/auth/cleanup";
 
 import {
   requestPasswordReset,
@@ -22,9 +20,16 @@ import {
 import {
   ForgotPasswordSchema,
   ResetPasswordSchema,
+  ResendVerificationSchema,
+  VerifyEmailSchema,
 } from "../database/types/auth";
 
-import { rateLimitRouteConfig } from "@/config/rate-limit";
+import { rateLimitByEmailRouteConfig, rateLimitRouteConfig } from "@/config/rate-limit";
+
+import {
+  resendEmailVerificationCode,
+  verifyEmailWithCode,
+} from "@/services/auth/email-verification.service";
 
 import { getMyProfile } from "../modules/profiles/services/profile.service";
 
@@ -70,6 +75,28 @@ export async function authRoutes(app: FastifyInstance) {
     } catch (error) {
       console.error(error);
 
+      if (error instanceof Error) {
+        if (error.message === "EMAIL_NOT_VERIFIED") {
+          return reply.status(403).send({
+            success: false,
+            error: {
+              code: "EMAIL_NOT_VERIFIED",
+              message: "Verify your email before signing in.",
+            },
+          });
+        }
+
+        if (error.message === "ACCOUNT_INACTIVE") {
+          return reply.status(403).send({
+            success: false,
+            error: {
+              code: "ACCOUNT_INACTIVE",
+              message: "This account is inactive.",
+            },
+          });
+        }
+      }
+
       return reply.status(401).send({
         success: false,
 
@@ -112,6 +139,25 @@ export async function authRoutes(app: FastifyInstance) {
       });
     } catch (error) {
       console.error(error);
+
+      if (error instanceof RefreshSessionError) {
+        const statusByCode: Record<string, number> = {
+          ACCOUNT_INACTIVE: 403,
+          EMAIL_NOT_VERIFIED: 403,
+          USER_NOT_FOUND: 401,
+          REFRESH_TOKEN_REUSE: 401,
+          SESSION_EXPIRED: 401,
+          INVALID_REFRESH_TOKEN: 401,
+        };
+
+        return reply.status(statusByCode[error.code] ?? 401).send({
+          success: false,
+          error: {
+            code: error.code,
+            message: error.message,
+          },
+        });
+      }
 
       return reply.status(401).send({
         success: false,
@@ -186,6 +232,131 @@ export async function authRoutes(app: FastifyInstance) {
               message: "Invalid or expired reset token",
             },
           });
+        }
+
+        console.error(error);
+
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid request",
+          },
+        });
+      }
+    },
+  );
+
+  // ======================================================
+  // EMAIL VERIFICATION
+  // ======================================================
+
+  app.post(
+    "/verify-email",
+    { config: rateLimitByEmailRouteConfig("authVerifyEmail") },
+    async (request, reply) => {
+      try {
+        const input = VerifyEmailSchema.parse(request.body);
+
+        await verifyEmailWithCode(input);
+
+        return reply.status(200).send({
+          success: true,
+          message: "Email verified successfully.",
+        });
+      } catch (error) {
+        if (error instanceof Error) {
+          const verificationErrors: Record<
+            string,
+            { status: number; message: string }
+          > = {
+            INVALID_VERIFICATION_CODE: {
+              status: 400,
+              message: "Invalid verification code.",
+            },
+            VERIFICATION_CODE_EXPIRED: {
+              status: 400,
+              message: "Verification code expired.",
+            },
+            VERIFICATION_CODE_ALREADY_USED: {
+              status: 400,
+              message: "Verification code already used.",
+            },
+            EMAIL_ALREADY_VERIFIED: {
+              status: 409,
+              message: "Email is already verified.",
+            },
+            VERIFICATION_NOT_FOUND: {
+              status: 404,
+              message: "No verification code found for this account.",
+            },
+            ACCOUNT_INACTIVE: {
+              status: 403,
+              message: "This account is inactive.",
+            },
+          };
+
+          const mapped = verificationErrors[error.message];
+
+          if (mapped) {
+            return reply.status(mapped.status).send({
+              success: false,
+              error: {
+                code: error.message,
+                message: mapped.message,
+              },
+            });
+          }
+        }
+
+        console.error(error);
+
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid request",
+          },
+        });
+      }
+    },
+  );
+
+  app.post(
+    "/verification/resend",
+    { config: rateLimitByEmailRouteConfig("authVerificationResend") },
+    async (request, reply) => {
+      try {
+        const input = ResendVerificationSchema.parse(request.body);
+
+        await resendEmailVerificationCode(input.email);
+
+        return reply.status(200).send({
+          success: true,
+          message:
+            "If an account exists for that email, a new verification code has been sent.",
+        });
+      } catch (error) {
+        if (error instanceof Error) {
+          if (error.message === "EMAIL_ALREADY_VERIFIED") {
+            return reply.status(409).send({
+              success: false,
+              error: {
+                code: "EMAIL_ALREADY_VERIFIED",
+                message: "Email is already verified.",
+              },
+            });
+          }
+
+          if (error.message === "ACCOUNT_INACTIVE") {
+            return reply.status(403).send({
+              success: false,
+              error: {
+                code: "ACCOUNT_INACTIVE",
+                message: "This account is inactive.",
+              },
+            });
+          }
         }
 
         console.error(error);
@@ -280,38 +451,11 @@ export async function authRoutes(app: FastifyInstance) {
       } catch (error) {
         console.error(error);
 
-        return reply.status(400).send({
-          success: false,
-
-          error: {
-            code: "LOGOUT_ERROR",
-
-            message: "Failed to logout",
-          },
-        });
-      }
-    },
-  );
-
-  app.delete(
-    "/sessions/cleanup",
-
-    async (_request, reply) => {
-      try {
-        const result = await cleanupSessions();
-
         return reply.status(200).send({
           success: true,
-
-          data: result,
-        });
-      } catch (error) {
-        console.error(error);
-
-        return reply.status(500).send({
-          success: false,
         });
       }
     },
   );
+
 }

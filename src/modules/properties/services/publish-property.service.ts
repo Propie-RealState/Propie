@@ -44,7 +44,11 @@ import {
         "Property not found"
       );
     }
-  
+
+    if (property.published_at) {
+      throw new Error("Property already published");
+    }
+
     await assertCanManageProperty(
       input.userId,
       input.propertyId,

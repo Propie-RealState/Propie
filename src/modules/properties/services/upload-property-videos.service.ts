@@ -5,6 +5,7 @@ import type { MultipartFile } from "@fastify/multipart";
 
 import { createPropertyVideoRepository } from "../repositories/property-media.repository";
 import { uploadToStorage } from "@/lib/supabase";
+import { FileValidationError, validateVideoUpload } from "@/lib/storage/file-validation";
 
 const ALLOWED_VIDEO_EXTENSIONS = new Set([
   ".mp4",
@@ -18,6 +19,25 @@ export async function savePropertyVideoFromMultipart(
   file: MultipartFile,
 ) {
   const extension = path.extname(file.filename).toLowerCase();
+  const buffer = await file.toBuffer();
+
+  try {
+    validateVideoUpload({
+      mimetype: file.mimetype,
+      size: buffer.length,
+      filename: file.filename,
+    });
+  } catch (error) {
+    if (error instanceof FileValidationError) {
+      if (error.code === "INVALID_EXTENSION") {
+        throw new Error("INVALID_VIDEO_FORMAT");
+      }
+
+      throw error;
+    }
+
+    throw error;
+  }
 
   if (!ALLOWED_VIDEO_EXTENSIONS.has(extension)) {
     throw new Error("INVALID_VIDEO_FORMAT");
@@ -25,9 +45,7 @@ export async function savePropertyVideoFromMultipart(
 
   const storagePath = `videos/${propertyId}/${randomUUID()}${extension}`;
 
-  const buffer = await file.toBuffer();
-
-  const videoUrl = await uploadToStorage(
+  const videoPath = await uploadToStorage(
     storagePath,
     buffer,
     file.mimetype,
@@ -35,6 +53,6 @@ export async function savePropertyVideoFromMultipart(
 
   return createPropertyVideoRepository({
     propertyId,
-    videoUrl,
+    videoUrl: videoPath,
   });
 }

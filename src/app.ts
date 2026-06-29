@@ -6,12 +6,6 @@ import rateLimit from "@fastify/rate-limit";
 
 import multipart from "@fastify/multipart";
 
-import fastifyStatic from "@fastify/static";
-
-import path from "node:path";
-
-import fs from "node:fs";
-
 import {
   authRoutes,
 } from "./routes/auth.routes";
@@ -43,6 +37,8 @@ import { notificationsRoutes } from "./modules/notifications/routes/notification
 import { agentsRoutes } from "./modules/agents/routes/agents.routes";
 
 import { adminRoutes } from "./modules/admin/routes/admin.routes";
+
+import { mediaRoutes } from "./modules/media/routes/media.routes";
 
 // ========================================================
 // BUILD APP
@@ -119,21 +115,6 @@ export async function buildApp() {
         fileSize: 100 * 1024 * 1024,
         files: 10,
       },
-    }
-  );
-
-  // ======================================================
-  // STATIC FILES
-  // ======================================================
-
-  const uploadsDir = path.join(process.cwd(), "uploads");
-  fs.mkdirSync(uploadsDir, { recursive: true });
-
-  await app.register(
-    fastifyStatic,
-    {
-      root: uploadsDir,
-      prefix: "/uploads/",
     }
   );
 
@@ -233,6 +214,13 @@ export async function buildApp() {
     adminRoutes,
     {
       prefix: "/admin",
+    }
+  );
+
+  await app.register(
+    mediaRoutes,
+    {
+      prefix: "/media",
     }
   );
 

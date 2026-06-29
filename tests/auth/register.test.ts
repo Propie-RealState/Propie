@@ -5,7 +5,7 @@ import { db } from "@/database/client";
 import {
   buildRegisterPayload,
   cleanupTestUsers,
-  registerUserViaApi,
+  registerUnverifiedUserViaApi,
   uniqueEmail,
 } from "../helpers/auth-fixtures";
 
@@ -14,6 +14,7 @@ describe("auth register", () => {
   const userIds: string[] = [];
 
   beforeAll(async () => {
+    process.env.E2E_CAPTURE_VERIFICATION = "true";
     app = await buildApp();
   });
 
@@ -23,27 +24,38 @@ describe("auth register", () => {
   });
 
   it.each(["OWNER", "AGENT", "CLIENT"] as const)(
-    "registers a %s and auto-logs in",
+    "registers a %s and creates a verification token",
     async (role) => {
-      const registered = await registerUserViaApi(app, role);
+      const registered = await registerUnverifiedUserViaApi(app, role);
       userIds.push(registered.userId);
 
-      expect(registered.accessToken).toEqual(expect.any(String));
-      expect(registered.refreshToken).toEqual(expect.any(String));
+      expect(registered.accessToken).toBeUndefined();
 
-      const row = await db.query<{ role: string; email: string }>(
-        `SELECT role, email FROM users WHERE id = $1`,
+      const row = await db.query<{ role: string; email: string; is_verified: boolean }>(
+        `SELECT role, email, is_verified FROM users WHERE id = $1`,
         [registered.userId],
       );
 
       expect(row.rows[0].role).toBe(role);
       expect(row.rows[0].email).toBe(registered.email);
+      expect(row.rows[0].is_verified).toBe(false);
+
+      const tokenCount = await db.query<{ count: string }>(
+        `
+          SELECT COUNT(*)::text AS count
+          FROM email_verification_tokens
+          WHERE user_id = $1
+        `,
+        [registered.userId],
+      );
+
+      expect(Number(tokenCount.rows[0]?.count ?? 0)).toBe(1);
     },
   );
 
   it("rejects duplicate email", async () => {
     const email = uniqueEmail("duplicate");
-    const first = await registerUserViaApi(app, "OWNER", { email });
+    const first = await registerUnverifiedUserViaApi(app, "OWNER", { email });
     userIds.push(first.userId);
 
     const response = await app.inject({
@@ -77,5 +89,23 @@ describe("auth register", () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.json().error).toBe("VALIDATION_ERROR");
+  });
+
+  it("returns 403 when public registration is disabled", async () => {
+    const previous = process.env.PUBLIC_REGISTRATION_ENABLED;
+    process.env.PUBLIC_REGISTRATION_ENABLED = "false";
+
+    try {
+      const response = await app.inject({
+        method: "POST",
+        url: "/auth/register",
+        payload: buildRegisterPayload("OWNER"),
+      });
+
+      expect(response.statusCode).toBe(403);
+      expect(response.json().error).toBe("REGISTRATION_DISABLED");
+    } finally {
+      process.env.PUBLIC_REGISTRATION_ENABLED = previous;
+    }
   });
 });

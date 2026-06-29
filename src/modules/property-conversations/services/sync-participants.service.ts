@@ -1,6 +1,9 @@
 import { db } from "@/database/client";
 
-import { upsertParticipantStates } from "../repositories/participant-states.repository";
+import {
+  ensureParticipantStates,
+  reinstateParticipantOnProperty,
+} from "../repositories/participant-states.repository";
 
 export async function syncParticipantsOnAgentEnabled(input: {
   propertyId: string;
@@ -18,7 +21,7 @@ export async function syncParticipantsOnAgentEnabled(input: {
   );
 
   for (const conversation of conversations.rows) {
-    await upsertParticipantStates({
+    await ensureParticipantStates({
       conversationId: conversation.id,
       participants: [
         {
@@ -28,6 +31,11 @@ export async function syncParticipantsOnAgentEnabled(input: {
       ],
     });
   }
+
+  await reinstateParticipantOnProperty({
+    propertyId: input.propertyId,
+    userId: input.agentId,
+  });
 }
 
 export async function revokeParticipantOnAgentDeactivated(input: {

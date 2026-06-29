@@ -77,12 +77,12 @@ export default defineConfig({
               },
             },
           },
-          // Property photos uploaded to the API: CacheFirst
+          // Authorized media proxy (signed URL redirect)
           {
-            urlPattern: /^https:\/\/propie-api\.onrender\.com\/uploads\/.*/i,
+            urlPattern: /^https:\/\/propie-api\.onrender\.com\/media\/.*/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'uploads-cache',
+              cacheName: 'media-cache',
               expiration: {
                 maxEntries: 300,
                 maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days

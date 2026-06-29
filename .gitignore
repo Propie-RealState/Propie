@@ -131,6 +131,7 @@ coverage/
 playwright-report/
 test-results/
 e2e/.seed-output.json
+e2e/.verification-codes/
 
 # =========================
 # GENERATED FILES

@@ -7,12 +7,8 @@ import {
   markVisitReminderSentRepository,
 } from "../repositories/visit-reminders.repository";
 import { findVisitByIdRepository } from "../repositories/visits.repository";
-
-const REMINDABLE_STATUSES = new Set([
-  "SCHEDULED",
-  "CONFIRMED",
-  "RESCHEDULED",
-]);
+import { isActiveVisitStatus } from "../utils/visit-status-transitions";
+import type { VisitStatus } from "../types/visit.types";
 
 export async function processVisitRemindersService() {
   const dueReminders = await findDueVisitRemindersRepository();
@@ -21,7 +17,7 @@ export async function processVisitRemindersService() {
   for (const reminder of dueReminders) {
     const visit = await findVisitByIdRepository(reminder.visit_id);
 
-    if (!visit || !REMINDABLE_STATUSES.has(visit.status)) {
+    if (!visit || !isActiveVisitStatus(visit.status as VisitStatus)) {
       await markVisitReminderSentRepository(reminder.id);
       continue;
     }

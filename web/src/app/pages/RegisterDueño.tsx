@@ -28,7 +28,7 @@ export default function RegisterPropie({
       updateData({ role: "OWNER" });
       sessionStorage.setItem("userType", "propie");
     }
-    navigate("/registro/verification");
+    navigate("/registro/personal-data");
   };
 
   const handleSocialLogin = (provider: string) => {
@@ -40,7 +40,7 @@ export default function RegisterPropie({
       sessionStorage.setItem("userType", "propie");
     }
     console.log(`Login con ${provider}`, provider);
-    navigate("/registro/verification");
+    navigate("/registro/personal-data");
   };
 
   return (

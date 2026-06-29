@@ -12,7 +12,6 @@ import {
   validateProfilePhotoStep,
   validateSecurityStep,
 } from "./schemas";
-import { validateVerificationCode } from "./validators";
 
 export type RegisterRedirectState = {
   registerFieldErrors?: FieldErrors;
@@ -36,10 +35,6 @@ const FIELD_STEP_ROUTES: Array<{
   {
     fields: ["firstName", "lastName", "email", "password", "acceptTerms", "acceptPrivacy"],
     route: (role) => getRegisterAccountRoute(role),
-  },
-  {
-    fields: ["verificationCode"],
-    route: () => "/registro/verification",
   },
   {
     fields: ["dni", "birthDate", "nationality", "cuitCuil", "address", "location"],
@@ -87,13 +82,6 @@ export function ensureRegistrationReady(
   | { valid: false; route: string; errors: FieldErrors } {
   const checks = [
     collectStepFailure(getRegisterAccountRoute(data.role), validateAccountStep(data)),
-    collectStepFailure("/registro/verification", (() => {
-      const result = validateVerificationCode(data.verificationCode);
-      return {
-        valid: result.valid,
-        errors: result.valid ? {} : { verificationCode: result.error },
-      };
-    })()),
     collectStepFailure(
       "/registro/personal-data",
       validatePersonalDataPersistedStep(data),

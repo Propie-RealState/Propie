@@ -41,6 +41,11 @@ export default defineConfig({
       url: "http://127.0.0.1:3000/auth/health",
       reuseExistingServer: !process.env.CI,
       timeout: 180_000,
+      env: {
+        E2E_CAPTURE_VERIFICATION: "true",
+        EMAIL_VERIFICATION_REQUIRED: "true",
+        PUBLIC_REGISTRATION_ENABLED: "true",
+      },
     },
     {
       command:
@@ -48,6 +53,10 @@ export default defineConfig({
       url: "http://127.0.0.1:5173",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
+      env: {
+        VITE_EMAIL_VERIFICATION_ENABLED: "true",
+        VITE_PUBLIC_REGISTRATION_ENABLED: "true",
+      },
     },
   ],
 });

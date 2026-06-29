@@ -8,7 +8,9 @@ export async function apiFetch(
   const shouldRefreshSession =
     !path.startsWith("/auth/login") &&
     !path.startsWith("/auth/register") &&
-    !path.startsWith("/auth/refresh");
+    !path.startsWith("/auth/refresh") &&
+    !path.startsWith("/auth/verify-email") &&
+    !path.startsWith("/auth/verification/resend");
 
   // ====================================================
   // ACCESS TOKEN

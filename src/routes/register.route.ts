@@ -9,9 +9,10 @@ import {
   findUserByEmail,
 } from "../database/repositories/user.repository";
 
-import { login } from "../services/auth/auth.service";
 import { createProfile } from "@/modules/profiles/repositories/profiles.repository";
 import { rateLimitRouteConfig } from "@/config/rate-limit";
+import { isPublicRegistrationEnabled } from "@/config/public-registration";
+import { issueEmailVerificationCode } from "@/services/auth/email-verification.service";
 
 // ========================================================
 // REGISTER ROUTE
@@ -23,9 +24,11 @@ export async function registerRoute(app: FastifyInstance) {
     { config: rateLimitRouteConfig("authRegister") },
 
     async (request, reply) => {
-      // =====================================
-      // VALIDATE
-      // =====================================
+      if (!isPublicRegistrationEnabled()) {
+        return reply.status(403).send({
+          error: "REGISTRATION_DISABLED",
+        });
+      }
 
       const parsed = RegisterSchema.safeParse(request.body);
 
@@ -97,14 +100,10 @@ export async function registerRoute(app: FastifyInstance) {
         // Avatar is uploaded separately via POST /profile/me/avatar after registration.
       });
 
-      // =====================================
-      // AUTO LOGIN
-      // =====================================
-
-      const authData = await login({
-        email: data.email,
-
-        password: data.password,
+      await issueEmailVerificationCode({
+        userId: user.id,
+        email: user.email,
+        firstName: user.firstName,
       });
 
       // =====================================
@@ -114,7 +113,10 @@ export async function registerRoute(app: FastifyInstance) {
       return reply.status(201).send({
         success: true,
 
-        data: authData,
+        data: {
+          email: user.email,
+          requiresVerification: true,
+        },
       });
     },
   );

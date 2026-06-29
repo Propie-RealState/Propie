@@ -1,147 +1,115 @@
-import { db } from '../../database/client';
+import { findUserById } from "@/database/repositories/user.repository";
+import {
+  createSession,
+  findSessionByTokenHash,
+  revokeAllUserSessions,
+  revokeSession,
+} from "@/database/repositories/session.repository";
 
 import {
   generateAccessToken,
   generateRefreshToken,
   verifyRefreshToken,
-} from './jwt';
+} from "./jwt";
 
-import {
-  hashToken,
-} from './session';
+import { hashToken } from "./session";
+import { isEmailVerificationRequired } from "@/config/email-verification-required";
 
-export async function refreshSession(
-  refreshToken: string
-) {
+const REFRESH_SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+export class RefreshSessionError extends Error {
+  constructor(
+    message: string,
+    readonly code: string,
+  ) {
+    super(message);
+    this.name = "RefreshSessionError";
+  }
+}
+
+export async function refreshSession(refreshToken: string) {
+  let payload;
+
   try {
-
-    // ====================================================
-    // VERIFY JWT
-    // ====================================================
-
-    const payload =
-      verifyRefreshToken(
-        refreshToken
-      );
-
-    // ====================================================
-    // HASH TOKEN
-    // ====================================================
-
-    const refreshTokenHash =
-      hashToken(refreshToken);
-
-    // ====================================================
-    // FIND SESSION
-    // ====================================================
-
-    const sessionResult =
-      await db.query(
-        `
-        SELECT *
-        FROM sessions
-        WHERE refresh_token_hash = $1
-        LIMIT 1
-      `,
-        [refreshTokenHash]
-      );
-
-    const session =
-      sessionResult.rows[0];
-
-    // ====================================================
-    // VALIDATE SESSION
-    // ====================================================
-
-    if (!session) {
-      throw new Error(
-        'INVALID_SESSION'
-      );
-    }
-
-    if (session.is_revoked) {
-      throw new Error(
-        'SESSION_REVOKED'
-      );
-    }
-
-    if (
-      new Date(session.expires_at)
-      < new Date()
-    ) {
-      throw new Error(
-        'SESSION_EXPIRED'
-      );
-    }
-
-    // ====================================================
-    // REVOKE OLD SESSION
-    // ====================================================
-
-    await db.query(
-      `
-      UPDATE sessions
-      SET is_revoked = true
-      WHERE id = $1
-    `,
-      [session.id]
-    );
-
-    // ====================================================
-    // GENERATE NEW TOKENS
-    // ====================================================
-
-    const newAccessToken =
-      generateAccessToken({
-        userId: payload.sub,
-        email: payload.email,
-        role: payload.role,
-      });
-
-    const newRefreshToken =
-      generateRefreshToken({
-        userId: payload.sub,
-        email: payload.email,
-        role: payload.role,
-      });
-
-    // ====================================================
-    // SAVE NEW SESSION
-    // ====================================================
-
-    await db.query(
-      `
-      INSERT INTO sessions (
-        user_id,
-        refresh_token_hash,
-        expires_at
-      )
-      VALUES (
-        $1,
-        $2,
-        NOW() + interval '30 days'
-      )
-    `,
-      [
-        payload.sub,
-        hashToken(newRefreshToken),
-      ]
-    );
-
-    // ====================================================
-    // RESPONSE
-    // ====================================================
-
-    return {
-      accessToken:
-        newAccessToken,
-
-      refreshToken:
-        newRefreshToken,
-    };
-  } catch (error) {
-    throw new Error(
-      'INVALID_REFRESH_TOKEN'
+    payload = verifyRefreshToken(refreshToken);
+  } catch {
+    throw new RefreshSessionError(
+      "Invalid refresh token",
+      "INVALID_REFRESH_TOKEN",
     );
   }
+
+  const refreshTokenHash = hashToken(refreshToken);
+  const session = await findSessionByTokenHash(refreshTokenHash);
+
+  if (!session) {
+    throw new RefreshSessionError(
+      "Invalid refresh token",
+      "INVALID_REFRESH_TOKEN",
+    );
+  }
+
+  if (payload.sub !== session.userId) {
+    await revokeAllUserSessions(session.userId);
+    throw new RefreshSessionError(
+      "Invalid refresh token",
+      "INVALID_REFRESH_TOKEN",
+    );
+  }
+
+  if (session.isRevoked) {
+    await revokeAllUserSessions(session.userId);
+    console.warn("[auth] Refresh token reuse detected; revoked all user sessions", {
+      userId: session.userId,
+      sessionId: session.id,
+    });
+    throw new RefreshSessionError(
+      "Refresh token reuse detected",
+      "REFRESH_TOKEN_REUSE",
+    );
+  }
+
+  if (new Date(session.expiresAt) < new Date()) {
+    await revokeSession(session.id);
+    throw new RefreshSessionError("Session expired", "SESSION_EXPIRED");
+  }
+
+  const user = await findUserById(session.userId);
+
+  if (!user) {
+    await revokeAllUserSessions(session.userId);
+    throw new RefreshSessionError("User not found", "USER_NOT_FOUND");
+  }
+
+  if (user.status === "INACTIVE") {
+    await revokeAllUserSessions(user.id);
+    throw new RefreshSessionError("Account inactive", "ACCOUNT_INACTIVE");
+  }
+
+  if (isEmailVerificationRequired() && !user.isVerified) {
+    await revokeAllUserSessions(user.id);
+    throw new RefreshSessionError("Email not verified", "EMAIL_NOT_VERIFIED");
+  }
+
+  await revokeSession(session.id);
+
+  const tokenInput = {
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+  };
+
+  const newAccessToken = generateAccessToken(tokenInput);
+  const newRefreshToken = generateRefreshToken(tokenInput);
+
+  await createSession({
+    userId: user.id,
+    refreshTokenHash: hashToken(newRefreshToken),
+    expiresAt: new Date(Date.now() + REFRESH_SESSION_TTL_MS),
+  });
+
+  return {
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
+  };
 }

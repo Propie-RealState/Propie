@@ -21,14 +21,14 @@ export default function RegisterAgente() {
   const handleValidSubmit = () => {
     updateData({ role: "AGENT" });
     syncUserTypeFromRole("AGENT");
-    navigate("/registro/verification");
+    navigate("/registro/personal-data");
   };
 
   const handleSocialLogin = (provider: string) => {
     updateData({ role: "AGENT" });
     syncUserTypeFromRole("AGENT");
     console.log(`Login con ${provider}`);
-    navigate("/registro/verification");
+    navigate("/registro/personal-data");
   };
 
   return (

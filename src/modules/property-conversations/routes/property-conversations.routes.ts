@@ -4,11 +4,14 @@ import { USER_ROLES } from "@/constants/roles";
 import { authMiddleware } from "@/middlewares/auth.middleware";
 import { requireRoles } from "@/middlewares/require-roles.middleware";
 import {
+  archiveConversationController,
+  closeConversationController,
   getConversationController,
   listConversationsController,
   listHistoricalConversationsController,
   listMessagesController,
   markReadController,
+  reopenConversationController,
   sendMessageController,
   startConversationController,
   startInternalConversationController,
@@ -94,5 +97,34 @@ export async function propertyConversationsRoutes(
       preHandler: [authMiddleware, requireAuthenticated],
     },
     markReadController as RouteHandlerMethod,
+  );
+
+  const requireConversationManager = requireRoles([
+    USER_ROLES.OWNER,
+    USER_ROLES.AGENT,
+  ]);
+
+  app.post(
+    "/:id/archive",
+    {
+      preHandler: [authMiddleware, requireConversationManager],
+    },
+    archiveConversationController as RouteHandlerMethod,
+  );
+
+  app.post(
+    "/:id/close",
+    {
+      preHandler: [authMiddleware, requireConversationManager],
+    },
+    closeConversationController as RouteHandlerMethod,
+  );
+
+  app.post(
+    "/:id/reopen",
+    {
+      preHandler: [authMiddleware, requireConversationManager],
+    },
+    reopenConversationController as RouteHandlerMethod,
   );
 }

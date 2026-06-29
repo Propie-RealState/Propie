@@ -1,17 +1,17 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthHeroHeader } from "../components/AuthHeroHeader";
-import { ArrowLeft, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import React from "react";
 import { useRegister } from "../../context/RegisterContext";
-import { RegisterSuccessOverlay } from "../components/register/RegisterSuccessOverlay";
+import { useAuth } from "../../context/AuthContext";
 import { REGISTER_COMPLETION } from "../components/register/registerCompletionTheme";
+import { RegisterSuccessOverlay } from "../components/register/RegisterSuccessOverlay";
 import { apiFetch } from "../../lib/api";
 import { buildRegisterPayload } from "../../lib/buildRegisterPayload";
-import { useAuth } from "../../context/AuthContext";
-import { getPendingAvatarFile, clearPendingAvatarFile } from "../../lib/pending-avatar";
-import { uploadAvatar } from "../modules/profile/services/upload-avatar.service";
+import { getPendingAvatarFile } from "../../lib/pending-avatar";
 import { CharCounter, FieldError, validateBio, buildRegistrationContext, ensureRegistrationReady, handleRegisterValidationFailure } from "../../features/register/validation";
+import { continueRegistrationAfterSignup } from "../../features/register/continue-registration-after-signup";
 import { trackEvent } from "../../lib/analytics";
 import { AnalyticsEvents } from "../../lib/analytics-events";
 
@@ -19,8 +19,8 @@ export default function RegisterOwnerInfo() {
   const navigate = useNavigate();
   const auth = useAuth();
   const { data, updateData, reset } = useRegister();
-  const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const ownerTheme = REGISTER_COMPLETION.OWNER;
 
@@ -60,40 +60,16 @@ export default function RegisterOwnerInfo() {
         body: JSON.stringify(payload),
       });
 
-      const authData = response?.data;
-
-      if (
-        !authData?.accessToken ||
-        !authData?.refreshToken ||
-        !authData?.user
-      ) {
+      if (!response?.data?.requiresVerification || !response?.data?.email) {
         throw new Error("INVALID_REGISTER_RESPONSE");
       }
 
       trackEvent(AnalyticsEvents.AUTH_SIGNUP, { role: "OWNER" });
 
-      auth.login(
-        authData.accessToken,
-        authData.refreshToken,
-        authData.user
-      );
-
-      sessionStorage.setItem("userType", "propie");
-
-      const pendingAvatar = getPendingAvatarFile();
-      if (pendingAvatar) {
-        try {
-          await uploadAvatar(pendingAvatar);
-        } catch {
-          // Non-fatal: avatar upload failure should not block registration completion.
-        } finally {
-          clearPendingAvatarFile();
-        }
-      }
-
-      reset();
-
-      setShowSuccess(true);
+      await continueRegistrationAfterSignup(auth, data, {
+        onVerificationRequired: () => navigate("/registro/verification"),
+        onSignupComplete: () => setShowSuccess(true),
+      });
     } catch (error) {
       if (!handleRegisterValidationFailure(error, data, navigate)) {
         console.error(error);
@@ -102,11 +78,6 @@ export default function RegisterOwnerInfo() {
       setIsSubmitting(false);
     }
   };
-
-  const handleSuccessFinish = useCallback(() => {
-    setShowSuccess(false);
-    navigate("/explore", { replace: true });
-  }, [navigate]);
 
   const charCount = data.bio.length;
   const maxChars = 300;
@@ -122,14 +93,6 @@ export default function RegisterOwnerInfo() {
         fontFamily: "'Inter', sans-serif",
       }}
     >
-      <RegisterSuccessOverlay
-        open={showSuccess}
-        variant="OWNER"
-        title="¡Tu cuenta está lista!"
-        subtitle="Ya creamos tu perfil de propietario. Bienvenido a Propie."
-        onFinish={handleSuccessFinish}
-      />
-
       {/* ── HERO ── */}
       <div
         style={{
@@ -275,6 +238,18 @@ export default function RegisterOwnerInfo() {
           </div>
         </div>
       </div>
+
+      <RegisterSuccessOverlay
+        open={showSuccess}
+        variant="OWNER"
+        title="¡Tu cuenta está lista!"
+        subtitle="Ya creamos tu perfil de propietario. Bienvenido a Propie."
+        onFinish={() => {
+          setShowSuccess(false);
+          reset();
+          navigate("/explorar", { replace: true });
+        }}
+      />
     </div>
   );
 }

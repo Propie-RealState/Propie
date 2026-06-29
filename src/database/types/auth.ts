@@ -176,11 +176,30 @@ export type ResetPasswordInput =
     z.infer<typeof ResetPasswordSchema>;
 
 export const VerifyEmailSchema = z.object({
-    token: z.string(),
+    email: z
+        .email()
+        .transform((value) =>
+            value.toLowerCase().trim()
+        ),
+
+    code: z
+        .string()
+        .regex(/^\d{6}$/, "Verification code must be 6 digits"),
 });
 
 export type VerifyEmailInput =
     z.infer<typeof VerifyEmailSchema>;
+
+export const ResendVerificationSchema = z.object({
+    email: z
+        .email()
+        .transform((value) =>
+            value.toLowerCase().trim()
+        ),
+});
+
+export type ResendVerificationInput =
+    z.infer<typeof ResendVerificationSchema>;
 
 export const SessionSchema = z.object({
     id: z.uuid(),

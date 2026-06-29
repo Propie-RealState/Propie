@@ -297,6 +297,24 @@ export async function findConversationDetailByIdRepository(
   return result.rows[0] ?? null;
 }
 
+export async function updateConversationStatusRepository(input: {
+  conversationId: string;
+  status: PropertyConversationRow["status"];
+}): Promise<PropertyConversationRow | null> {
+  const result = await db.query<PropertyConversationRow>(
+    `
+      UPDATE property_conversations
+      SET status = $2,
+          updated_at = now()
+      WHERE id = $1
+      RETURNING ${CONVERSATION_RETURNING_FIELDS}
+    `,
+    [input.conversationId, input.status],
+  );
+
+  return result.rows[0] ?? null;
+}
+
 export async function listHistoricalConversationsRepository(
   userId: string,
 ): Promise<PropertyConversationRow[]> {

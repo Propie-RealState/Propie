@@ -4,32 +4,169 @@ import { AuthHeroHeader } from "../components/AuthHeroHeader";
 import { Mail, Check } from "lucide-react";
 import React from "react";
 import { useRegister } from "../../context/RegisterContext";
+import { useAuth } from "../../context/AuthContext";
 import { getAppTheme } from "../../theme/app-theme";
+import { apiFetch } from "../../lib/api";
+import { RegisterSuccessOverlay } from "../components/register/RegisterSuccessOverlay";
+import { REGISTER_COMPLETION } from "../components/register/registerCompletionTheme";
+import { completeSignupSession } from "../../features/register/complete-signup-session";
 import {
   FieldError,
-  MOCK_VERIFICATION_CODE,
   fieldAriaProps,
   getFieldBorder,
   useFormValidation,
-  validateVerificationCode,
   validateVerificationStep,
 } from "../../features/register/validation";
+import {
+  canManualSubmitVerification,
+  clearVerificationBlock,
+  isRateLimitError,
+  mapVerificationError,
+  readVerificationBlock,
+  shouldTriggerAutoSubmit,
+  writeVerificationBlock,
+} from "../../features/register/verification/email-verification";
+
+function maskEmail(email: string): string {
+  const [localPart, domain] = email.split("@");
+  if (!localPart || !domain) {
+    return "tu email";
+  }
+
+  const visible = localPart.slice(0, Math.min(2, localPart.length));
+  return `${visible}${"•".repeat(Math.max(localPart.length - visible.length, 2))}@${domain}`;
+}
 
 export default function RegisterVerification() {
   const navigate = useNavigate();
-  const { data, updateData } = useRegister();
+  const auth = useAuth();
+  const { data, updateData, reset } = useRegister();
   const [emailCode, setEmailCode] = useState(data.verificationCode || "");
   const [emailTimer, setEmailTimer] = useState(60);
   const [emailVerified, setEmailVerified] = useState(false);
-  const [invalidAttempt, setInvalidAttempt] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [rateLimited, setRateLimited] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const advanceStartedRef = useRef(false);
+  const lastSubmittedCodeRef = useRef<string | null>(null);
+  const isVerifyingRef = useRef(false);
+  const rateLimitedRef = useRef(false);
+  const emailVerifiedRef = useRef(false);
+  const handleBlurRef = useRef<(field: string) => void>(() => {});
 
   const theme = getAppTheme(data.role === "AGENT");
+  const successVariant =
+    data.role === "AGENT"
+      ? "AGENT"
+      : data.role === "CLIENT"
+        ? "CLIENT"
+        : "OWNER";
 
   const getValues = useCallback(() => ({ verificationCode: emailCode }), [emailCode]);
   const validateAll = useCallback(() => validateVerificationStep(emailCode), [emailCode]);
   const validation = useFormValidation(getValues, validateAll);
+  handleBlurRef.current = validation.handleBlur;
+
+  emailVerifiedRef.current = emailVerified;
+
+  useEffect(() => {
+    const blockedCode = readVerificationBlock(data.email);
+    if (!blockedCode) {
+      return;
+    }
+
+    rateLimitedRef.current = true;
+    setRateLimited(true);
+    lastSubmittedCodeRef.current = blockedCode;
+    setSubmitError(mapVerificationError({ statusCode: 429 }));
+  }, [data.email]);
+
+  const resetSubmissionState = useCallback(() => {
+    lastSubmittedCodeRef.current = null;
+    rateLimitedRef.current = false;
+    setRateLimited(false);
+    clearVerificationBlock(data.email);
+  }, [data.email]);
+
+  const completeRegistration = useCallback(async () => {
+    await completeSignupSession(auth, data);
+    setShowSuccess(true);
+  }, [auth, data]);
+
+  const submitVerification = useCallback(
+    async (code: string, source: "auto" | "manual") => {
+      if (isVerifyingRef.current || emailVerifiedRef.current) {
+        return;
+      }
+
+      if (source === "auto" && rateLimitedRef.current) {
+        return;
+      }
+
+      if (source === "auto" && lastSubmittedCodeRef.current === code) {
+        return;
+      }
+
+      if (
+        source === "manual" &&
+        !canManualSubmitVerification({
+          code,
+          emailVerified: emailVerifiedRef.current,
+          isSubmitting: isVerifyingRef.current,
+        })
+      ) {
+        return;
+      }
+
+      isVerifyingRef.current = true;
+      lastSubmittedCodeRef.current = code;
+      setIsSubmitting(true);
+      setSubmitError(null);
+
+      try {
+        await apiFetch("/auth/verify-email", {
+          method: "POST",
+          body: JSON.stringify({
+            email: data.email,
+            code,
+          }),
+        });
+
+        clearVerificationBlock(data.email);
+
+        clearVerificationBlock(data.email);
+
+        updateData({
+          verificationCode: code,
+          verifiedAt: new Date().toISOString(),
+        });
+
+        setEmailVerified(true);
+        emailVerifiedRef.current = true;
+        await completeRegistration();
+      } catch (error) {
+        if (isRateLimitError(error)) {
+          rateLimitedRef.current = true;
+          setRateLimited(true);
+          writeVerificationBlock(data.email, code);
+        }
+
+        setSubmitError(mapVerificationError(error));
+        handleBlurRef.current("verificationCode");
+      } finally {
+        isVerifyingRef.current = false;
+        setIsSubmitting(false);
+      }
+    },
+    [completeRegistration, data.email, updateData],
+  );
+
+  useEffect(() => {
+    if (!data.email && !showSuccess && !emailVerified) {
+      navigate("/registro");
+    }
+  }, [data.email, emailVerified, navigate, showSuccess]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -42,52 +179,48 @@ export default function RegisterVerification() {
     }
   }, [emailTimer, emailVerified]);
 
-  useEffect(() => {
-    if (emailCode.length !== 6) {
-      setInvalidAttempt(false);
-      return;
+  const handleManualVerify = () => {
+    void submitVerification(emailCode, "manual");
+  };
+
+  const handleCodeChange = (previousCode: string, value: string) => {
+    if (value !== previousCode) {
+      resetSubmissionState();
     }
 
-    const result = validateVerificationCode(emailCode);
-    if (!result.valid) {
-      if (emailCode !== MOCK_VERIFICATION_CODE) {
-        setInvalidAttempt(true);
-        validation.handleBlur("verificationCode");
-      }
-      return;
+    setEmailCode(value);
+    setSubmitError(null);
+    validation.handleChange("verificationCode", value);
+
+    if (shouldTriggerAutoSubmit(previousCode, value)) {
+      void submitVerification(value, "auto");
     }
-
-    if (advanceStartedRef.current) return;
-    advanceStartedRef.current = true;
-
-    setInvalidAttempt(false);
-    updateData({ verificationCode: emailCode, verifiedAt: new Date().toISOString() });
-
-    const showVerifiedTimer = window.setTimeout(() => {
-      setEmailVerified(true);
-    }, 500);
-    const navigateTimer = window.setTimeout(() => {
-      navigate("/registro/personal-data");
-    }, 1300);
-
-    return () => {
-      clearTimeout(showVerifiedTimer);
-      clearTimeout(navigateTimer);
-    };
-  }, [emailCode, navigate, updateData]);
+  };
 
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
     const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    setEmailCode(pasted);
-    validation.handleChange("verificationCode", pasted);
+    handleCodeChange(emailCode, pasted);
   };
 
-  const handleResendEmail = () => {
-    setEmailTimer(60);
-    setEmailCode("");
-    setInvalidAttempt(false);
-    inputRef.current?.focus();
+  const handleResendEmail = async () => {
+    if (!data.email || emailTimer > 0) {
+      return;
+    }
+
+    try {
+      await apiFetch("/auth/verification/resend", {
+        method: "POST",
+        body: JSON.stringify({ email: data.email }),
+      });
+      setEmailTimer(60);
+      setEmailCode("");
+      setSubmitError(null);
+      resetSubmissionState();
+      inputRef.current?.focus();
+    } catch (error) {
+      setSubmitError(mapVerificationError(error));
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -96,13 +229,52 @@ export default function RegisterVerification() {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const hasError = validation.showError("verificationCode") || invalidAttempt;
-  const errorMessage = invalidAttempt
-    ? "Código incorrecto. Probá con 123456"
-    : validation.getError("verificationCode");
+  const hasError =
+    Boolean(submitError) ||
+    validation.showError("verificationCode");
+  const errorMessage =
+    submitError ?? validation.getError("verificationCode");
+
+  const canVerify =
+    canManualSubmitVerification({
+      code: emailCode,
+      emailVerified,
+      isSubmitting,
+    });
+
+  const successCopy =
+    data.role === "AGENT"
+      ? {
+          title: "¡Tu cuenta está lista!",
+          subtitle: "Ya creamos tu perfil de agente. Bienvenido a Propie.",
+          theme: REGISTER_COMPLETION.AGENT,
+        }
+      : data.role === "CLIENT"
+        ? {
+            title: "¡Tu cuenta está lista!",
+            subtitle: "Ya creamos tu perfil. Bienvenido a Propie.",
+            theme: REGISTER_COMPLETION.OWNER,
+          }
+        : {
+            title: "¡Tu cuenta está lista!",
+            subtitle: "Ya creamos tu perfil de propietario. Bienvenido a Propie.",
+            theme: REGISTER_COMPLETION.OWNER,
+          };
 
   return (
     <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", background: "#f5f5f7", fontFamily: "'Inter', sans-serif" }}>
+      <RegisterSuccessOverlay
+        open={showSuccess}
+        variant={successVariant}
+        title={successCopy.title}
+        subtitle={successCopy.subtitle}
+        onFinish={() => {
+          setShowSuccess(false);
+          reset();
+          navigate("/explorar", { replace: true });
+        }}
+      />
+
       <div style={{ position: "relative", background: theme.heroGradient, display: "flex", flexDirection: "column", alignItems: "center", paddingBottom: 0 }}>
         <AuthHeroHeader />
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "32px 28px 12px" }}>
@@ -121,7 +293,9 @@ export default function RegisterVerification() {
               </div>
               <div style={{ flex: 1 }}>
                 <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>Código Email</h3>
-                <p style={{ margin: "2px 0 0", fontSize: 13, color: "#6e6e73" }}>Enviado a tu••••@email.com</p>
+                <p style={{ margin: "2px 0 0", fontSize: 13, color: "#6e6e73" }}>
+                  Enviado a {maskEmail(data.email)}
+                </p>
               </div>
               {emailVerified && (
                 <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, fontWeight: 600, color: "#34C759" }}>
@@ -140,13 +314,20 @@ export default function RegisterVerification() {
                 value={emailCode}
                 onChange={(e) => {
                   const value = e.target.value.replace(/\D/g, "").slice(0, 6);
-                  setEmailCode(value);
-                  validation.handleChange("verificationCode", value);
+                  handleCodeChange(emailCode, value);
                 }}
                 onBlur={() => validation.handleBlur("verificationCode")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (canVerify) {
+                      handleManualVerify();
+                    }
+                  }
+                }}
                 onPaste={handlePaste}
                 placeholder="000000"
-                disabled={emailVerified}
+                disabled={emailVerified || isSubmitting}
                 maxLength={6}
                 style={{
                   width: "100%",
@@ -173,13 +354,35 @@ export default function RegisterVerification() {
             <FieldError id="verificationCode-error" message={errorMessage} />
 
             {!emailVerified && (
+              <button
+                type="button"
+                onClick={handleManualVerify}
+                disabled={!canVerify}
+                style={{
+                  width: "100%",
+                  marginTop: 16,
+                  padding: "14px 16px",
+                  borderRadius: 14,
+                  border: "none",
+                  background: canVerify ? theme.primary : "#d1d1d6",
+                  color: "white",
+                  fontSize: 15,
+                  fontWeight: 700,
+                  cursor: canVerify ? "pointer" : "not-allowed",
+                }}
+              >
+                {isSubmitting ? "Verificando…" : "Verificar"}
+              </button>
+            )}
+
+            {!emailVerified && (
               <div style={{ marginTop: 12, textAlign: "center", fontSize: 13 }}>
                 {emailTimer > 0 ? (
                   <span style={{ color: "#9a9aa0" }}>
                     Reenviar código en <span style={{ fontWeight: 600, color: theme.primary }}>{formatTime(emailTimer)}</span>
                   </span>
                 ) : (
-                  <button onClick={handleResendEmail} type="button" style={{ background: "transparent", border: "none", color: theme.primary, fontWeight: 600, cursor: "pointer", fontSize: 13 }}>
+                  <button onClick={() => void handleResendEmail()} type="button" style={{ background: "transparent", border: "none", color: theme.primary, fontWeight: 600, cursor: "pointer", fontSize: 13 }}>
                     Reenviar código
                   </button>
                 )}
@@ -187,9 +390,11 @@ export default function RegisterVerification() {
             )}
           </div>
 
-          <p style={{ marginTop: 16, textAlign: "center", color: "#9a9aa0", fontSize: 12, lineHeight: 1.6 }}>
-            Para probar, usá el código <span style={{ fontWeight: 600, color: theme.primary }}>123456</span>
-          </p>
+          {isSubmitting && (
+            <p style={{ margin: 0, textAlign: "center", color: "#6e6e73", fontSize: 13 }}>
+              Verificando código…
+            </p>
+          )}
         </div>
       </div>
     </div>

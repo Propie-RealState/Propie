@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 
-import { db } from "../../database/client";
+import { createSession } from "../../database/repositories/session.repository";
 
 import { findUserByEmail } from "../../database/repositories/user.repository";
 
@@ -13,6 +13,7 @@ import { hashToken } from "./session";
 import { findProfileByUserId } from "../../modules/profiles/repositories/profiles.repository";
 
 import { buildAuthUserPayload } from "../../modules/profiles/utils/map-profile";
+import { isEmailVerificationRequired } from "../../config/email-verification-required";
 
 // ========================================================
 // LOGIN
@@ -43,6 +44,14 @@ export async function login(input: LoginInput) {
     throw new Error("INVALID_CREDENTIALS");
   }
 
+  if (user.status === "INACTIVE") {
+    throw new Error("ACCOUNT_INACTIVE");
+  }
+
+  if (isEmailVerificationRequired() && !user.isVerified) {
+    throw new Error("EMAIL_NOT_VERIFIED");
+  }
+
   // ======================================================
   // GENERATE TOKENS
   // ======================================================
@@ -69,21 +78,11 @@ export async function login(input: LoginInput) {
 
   const refreshTokenHash = hashToken(refreshToken);
 
-  await db.query(
-    `
-      INSERT INTO sessions (
-        user_id,
-        refresh_token_hash,
-        expires_at
-      )
-      VALUES (
-        $1,
-        $2,
-        NOW() + interval '30 days'
-      )
-    `,
-    [user.id, refreshTokenHash],
-  );
+  await createSession({
+    userId: user.id,
+    refreshTokenHash,
+    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+  });
 
   // ======================================================
   // REMOVE PASSWORD HASH

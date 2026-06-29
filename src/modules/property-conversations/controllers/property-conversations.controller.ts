@@ -15,6 +15,12 @@ import { markReadService } from "../services/mark-read.service";
 import { sendMessageService } from "../services/send-message.service";
 import { startConversationService } from "../services/start-conversation.service";
 import { startInternalConversationService } from "../services/start-internal-conversation.service";
+import {
+  archiveConversationService,
+  closeConversationService,
+  ConversationStatusTransitionError,
+  reopenConversationService,
+} from "../services/update-conversation-status.service";
 
 function handleConversationError(
   error: unknown,
@@ -22,6 +28,19 @@ function handleConversationError(
 ) {
   if (!(error instanceof Error)) {
     throw error;
+  }
+
+  if (
+    error instanceof ConversationStatusTransitionError
+    || error.name === "ConversationStatusTransitionError"
+  ) {
+    return reply.status(400).send({
+      success: false,
+      error: {
+        code: "CONVERSATION_STATUS_TRANSITION_INVALID",
+        message: error.message,
+      },
+    });
   }
 
   switch (error.message) {
@@ -264,6 +283,81 @@ export async function markReadController(
       data: {
         conversationId: params.id,
       },
+    });
+  } catch (error) {
+    return handleConversationError(error, reply);
+  }
+}
+
+export async function archiveConversationController(
+  request: FastifyRequest<{
+    Params: {
+      id: string;
+    };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const params = ConversationIdParamsSchema.parse(request.params);
+
+    const conversation = await archiveConversationService({
+      userId: request.user.id,
+      conversationId: params.id,
+    });
+
+    return reply.send({
+      success: true,
+      data: conversation,
+    });
+  } catch (error) {
+    return handleConversationError(error, reply);
+  }
+}
+
+export async function closeConversationController(
+  request: FastifyRequest<{
+    Params: {
+      id: string;
+    };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const params = ConversationIdParamsSchema.parse(request.params);
+
+    const conversation = await closeConversationService({
+      userId: request.user.id,
+      conversationId: params.id,
+    });
+
+    return reply.send({
+      success: true,
+      data: conversation,
+    });
+  } catch (error) {
+    return handleConversationError(error, reply);
+  }
+}
+
+export async function reopenConversationController(
+  request: FastifyRequest<{
+    Params: {
+      id: string;
+    };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const params = ConversationIdParamsSchema.parse(request.params);
+
+    const conversation = await reopenConversationService({
+      userId: request.user.id,
+      conversationId: params.id,
+    });
+
+    return reply.send({
+      success: true,
+      data: conversation,
     });
   } catch (error) {
     return handleConversationError(error, reply);

@@ -1,5 +1,6 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { uploadAvatarService } from "../services/upload-avatar.service";
+import { FileValidationError } from "@/lib/storage/file-validation";
 
 export async function uploadAvatarController(
   request: FastifyRequest,
@@ -11,9 +12,25 @@ export async function uploadAvatarController(
     return reply.status(400).send({ error: "No file provided" });
   }
 
-  const buffer = await file.toBuffer();
+  try {
+    const buffer = await file.toBuffer();
+    const avatarUrl = await uploadAvatarService(request.user.id, buffer, {
+      mimetype: file.mimetype,
+      filename: file.filename,
+    });
 
-  const avatarUrl = await uploadAvatarService(request.user.id, buffer);
+    return reply.send({ success: true, avatarUrl });
+  } catch (error) {
+    if (error instanceof FileValidationError) {
+      return reply.status(400).send({
+        success: false,
+        error: {
+          code: error.code,
+          message: error.message,
+        },
+      });
+    }
 
-  return reply.send({ success: true, avatarUrl });
+    throw error;
+  }
 }
