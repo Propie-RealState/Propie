@@ -11,8 +11,6 @@ const NAME_PATTERN = /^[\p{L}\s\u00C0-\u024F'-]+$/u;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DIGITS_ONLY = /^\d+$/;
 
-export const MOCK_VERIFICATION_CODE = "123456";
-
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 export const PROFILE_PHOTO_TYPES = [
   "image/jpeg",
@@ -89,14 +87,7 @@ export function validateAcceptPrivacy(value: boolean): ValidationResult {
 }
 
 export function validateVerificationCode(value: string): ValidationResult {
-  if (!value) return invalidResult(validationMessages.required);
-  if (!DIGITS_ONLY.test(value) || value.length !== 6) {
-    return invalidResult(validationMessages.verificationCode.format);
-  }
-  if (value !== MOCK_VERIFICATION_CODE) {
-    return invalidResult(validationMessages.verificationCode.invalid);
-  }
-  return validResult();
+  return validateVerificationCodeFormat(value);
 }
 
 export function validateVerificationCodeFormat(value: string): ValidationResult {

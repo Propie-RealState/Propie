@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { randomUUID } from "node:crypto";
 
 import { uploadToStorage } from "@/lib/supabase";
+import { FileValidationError, validateImageUpload } from "@/lib/storage/file-validation";
 import {
   countPropertyImagesRepository,
   createPropertyImageRepository,
@@ -34,22 +35,43 @@ export async function uploadPropertyImagesController(
   const uploadedImages = [];
 
   for await (const file of parts) {
+    const rawBuffer = await file.toBuffer();
+
+    try {
+      validateImageUpload({
+        mimetype: file.mimetype,
+        size: rawBuffer.length,
+        filename: file.filename,
+      });
+    } catch (error) {
+      if (error instanceof FileValidationError) {
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: error.code,
+            message: error.message,
+          },
+        });
+      }
+
+      throw error;
+    }
+
     const uuid = randomUUID();
     const fullPath = `images/${propertyId}/${uuid}.webp`;
     const thumbPath = `images/${propertyId}/${uuid}_thumb.webp`;
 
-    const rawBuffer = await file.toBuffer();
     const { fullBuffer, thumbBuffer } = await processPropertyImage(rawBuffer);
 
-    const [imageUrl, thumbUrl] = await Promise.all([
+    const [imagePath, thumbPathStored] = await Promise.all([
       uploadToStorage(fullPath, fullBuffer, "image/webp"),
       uploadToStorage(thumbPath, thumbBuffer, "image/webp"),
     ]);
 
     const image = await createPropertyImageRepository({
       propertyId,
-      imageUrl,
-      thumbUrl,
+      imageUrl: imagePath,
+      thumbUrl: thumbPathStored,
       isCover: existingImagesCount === 0 && uploadedImages.length === 0,
     });
 
@@ -122,6 +144,16 @@ export async function uploadPropertyVideosController(
       if (error.message === "INVALID_VIDEO_FORMAT") {
         return reply.status(400).send({
           message: "Formato no permitido. Usá mp4, mov, webm o m4v",
+        });
+      }
+
+      if (error instanceof FileValidationError) {
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: error.code,
+            message: error.message,
+          },
         });
       }
 

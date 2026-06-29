@@ -15,9 +15,9 @@ import {
   updateVisitRepository,
 } from "../repositories/visits.repository";
 import { mapVisitRow } from "../utils/map-visit";
+import { assertVisitStatusTransition } from "../utils/visit-status-transitions";
+import type { VisitStatus } from "../types/visit.types";
 import { postVisitSystemMessageService } from "./post-visit-system-message.service";
-
-const ACTIVE_STATUSES = new Set(["SCHEDULED", "CONFIRMED", "RESCHEDULED"]);
 
 export async function confirmVisitService(input: {
   userId: string;
@@ -48,9 +48,13 @@ export async function confirmVisitService(input: {
     throw new Error("VISIT_NOT_FOUND");
   }
 
-  if (!ACTIVE_STATUSES.has(visit.status)) {
-    throw new Error("VISIT_NOT_ACTIVE");
+  const currentStatus = visit.status as VisitStatus;
+
+  if (currentStatus === "CONFIRMED") {
+    return mapVisitRow(visit);
   }
+
+  assertVisitStatusTransition(currentStatus, "CONFIRMED");
 
   const now = new Date().toISOString();
   const metadata = {

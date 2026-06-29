@@ -1,21 +1,7 @@
 import { db } from "@/database/client";
 
 import { canSendMessage } from "../repositories/can-access-conversation.repository";
-import {
-  incrementUnreadCountsForRecipients,
-  listActiveNotificationRecipientIds,
-} from "../repositories/participant-states.repository";
-import { getConversationContext } from "../repositories/participants.repository";
-import {
-  findConversationByIdRepository,
-  getPropertyChatGate,
-} from "../repositories/property-conversations.repository";
-import {
-  insertConversationMessage,
-  updateConversationLastMessage,
-} from "../repositories/messages.repository";
-import { mapMessageRow } from "../utils/map-message";
-import { notifyPropertyConversationMessage } from "@/modules/notifications/services/notification-dispatch.service";
+import { appendConversationEvent } from "./append-conversation-event.service";
 
 type SenderInfo = {
   id: string;
@@ -55,16 +41,6 @@ async function getSenderInfo(userId: string): Promise<SenderInfo | null> {
   };
 }
 
-function buildMessagePreview(body: string) {
-  const trimmed = body.trim();
-
-  if (trimmed.length <= 120) {
-    return trimmed;
-  }
-
-  return `${trimmed.slice(0, 117)}...`;
-}
-
 export async function sendMessageService(input: {
   userId: string;
   conversationId: string;
@@ -91,83 +67,12 @@ export async function sendMessageService(input: {
     throw new Error("FORBIDDEN");
   }
 
-  const conversation = await findConversationByIdRepository(
-    input.conversationId,
-  );
-
-  if (!conversation) {
-    throw new Error("CONVERSATION_NOT_FOUND");
-  }
-
-  if (conversation.status !== "OPEN") {
-    throw new Error("CONVERSATION_CLOSED");
-  }
-
-  const gate = await getPropertyChatGate(conversation.property_id);
-
-  if (!gate?.allowChat) {
-    throw new Error("CHAT_DISABLED");
-  }
-
-  const context = await getConversationContext(input.conversationId);
-
-  if (!context) {
-    throw new Error("CONVERSATION_NOT_FOUND");
-  }
-
-  const client = await db.connect();
-
-  try {
-    await client.query("BEGIN");
-
-    const message = await insertConversationMessage(
-      {
-        conversationId: input.conversationId,
-        senderId: sender.id,
-        senderRole: sender.role,
-        body: trimmedBody,
-      },
-      client,
-    );
-
-    await updateConversationLastMessage(
-      {
-        conversationId: input.conversationId,
-        preview: buildMessagePreview(trimmedBody),
-      },
-      client,
-    );
-
-    await incrementUnreadCountsForRecipients(
-      {
-        conversationId: input.conversationId,
-        senderId: sender.id,
-      },
-      client,
-    );
-
-    await client.query("COMMIT");
-
-    const recipientUserIds = await listActiveNotificationRecipientIds(
-      input.conversationId,
-      sender.id,
-    );
-
-    if (recipientUserIds.length > 0) {
-      await notifyPropertyConversationMessage({
-        conversationId: input.conversationId,
-        propertyId: context.propertyId,
-        senderName: sender.displayName,
-        preview: buildMessagePreview(trimmedBody),
-        recipientUserIds,
-      });
-    }
-
-    return mapMessageRow(message);
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
+  return appendConversationEvent({
+    conversationId: input.conversationId,
+    senderId: sender.id,
+    senderRole: sender.role,
+    body: trimmedBody,
+    contentType: "TEXT",
+    senderDisplayName: sender.displayName,
+  });
 }

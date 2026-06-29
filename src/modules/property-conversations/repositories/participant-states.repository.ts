@@ -36,7 +36,7 @@ type ParticipantSeed = {
   role: "CLIENT" | "OWNER" | "AGENT";
 };
 
-export async function upsertParticipantStates(input: {
+export async function ensureParticipantStates(input: {
   conversationId: string;
   participants: ParticipantSeed[];
 }) {
@@ -52,7 +52,6 @@ export async function upsertParticipantStates(input: {
         ON CONFLICT (conversation_id, user_id)
         DO UPDATE SET
           participant_role = EXCLUDED.participant_role,
-          revoked_at = NULL,
           updated_at = now()
       `,
       [
@@ -62,6 +61,45 @@ export async function upsertParticipantStates(input: {
       ],
     );
   }
+}
+
+/** @deprecated Use ensureParticipantStates — does not clear revoked_at */
+export const upsertParticipantStates = ensureParticipantStates;
+
+export async function reinstateParticipantState(input: {
+  conversationId: string;
+  userId: string;
+}) {
+  await db.query(
+    `
+      UPDATE property_conversation_participant_states
+      SET revoked_at = NULL,
+          updated_at = now()
+      WHERE conversation_id = $1
+        AND user_id = $2
+        AND revoked_at IS NOT NULL
+    `,
+    [input.conversationId, input.userId],
+  );
+}
+
+export async function reinstateParticipantOnProperty(input: {
+  propertyId: string;
+  userId: string;
+}) {
+  await db.query(
+    `
+      UPDATE property_conversation_participant_states ps
+      SET revoked_at = NULL,
+          updated_at = now()
+      FROM property_conversations pc
+      WHERE pc.id = ps.conversation_id
+        AND pc.property_id = $1
+        AND ps.user_id = $2
+        AND ps.revoked_at IS NOT NULL
+    `,
+    [input.propertyId, input.userId],
+  );
 }
 
 export async function incrementUnreadCountsForRecipients(

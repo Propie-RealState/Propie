@@ -17,10 +17,24 @@ import { listVisitsService } from "../services/list-visits.service";
 import { processVisitRemindersService } from "../services/process-visit-reminders.service";
 import { rescheduleVisitService } from "../services/reschedule-visit.service";
 import { visitAnalyticsService } from "../services/visit-analytics.service";
+import { VisitStatusTransitionError } from "../utils/visit-status-transitions";
 
 function handleVisitError(error: unknown, reply: FastifyReply) {
   if (!(error instanceof Error)) {
     throw error;
+  }
+
+  if (
+    error instanceof VisitStatusTransitionError
+    || error.name === "VisitStatusTransitionError"
+  ) {
+    return reply.status(400).send({
+      success: false,
+      error: {
+        code: "VISIT_NOT_ACTIVE",
+        message: error.message,
+      },
+    });
   }
 
   switch (error.message) {
@@ -34,6 +48,7 @@ function handleVisitError(error: unknown, reply: FastifyReply) {
       });
     case "VISIT_NOT_FOUND":
     case "CONVERSATION_NOT_FOUND":
+    case "PROPERTY_NOT_AVAILABLE":
       return reply.status(404).send({
         success: false,
         error: {

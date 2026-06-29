@@ -12,7 +12,7 @@ import { savePropertyAmenitiesService } from "../services/save-property-amenitie
 import { savePropertyCommercializationService } from "../services/save-property-commercialization.service";
 import { updatePropertyBasicService } from "../services/update-property-basic.service";
 import { updatePropertyLocationService } from "../services/update-property-location.service";
-import { updatePropertyStatusService } from "../services/update-property-status.service";
+import { updatePropertyStatusService, PropertyStatusTransitionError } from "../services/update-property-status.service";
 
 export async function createPropertyController(
   request: FastifyRequest<{
@@ -166,20 +166,34 @@ export async function publishPropertyController(
   }>,
   reply: FastifyReply,
 ) {
-  const user = request.user;
+  try {
+    const user = request.user;
 
-  const publisherType = user.role === "AGENT" ? "AGENT" : "OWNER";
+    const publisherType = user.role === "AGENT" ? "AGENT" : "OWNER";
 
-  const property = await publishPropertyService({
-    userId: user.id,
-    publisherType,
-    propertyId: request.params.id,
-  });
+    const property = await publishPropertyService({
+      userId: user.id,
+      publisherType,
+      propertyId: request.params.id,
+    });
 
-  return reply.send({
-    success: true,
-    property,
-  });
+    return reply.send({
+      success: true,
+      property,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === "Property already published") {
+      return reply.status(409).send({
+        success: false,
+        error: {
+          code: "ALREADY_PUBLISHED",
+          message: error.message,
+        },
+      });
+    }
+
+    throw error;
+  }
 }
 
 export async function updatePropertyStatusController(
@@ -206,6 +220,20 @@ export async function updatePropertyStatusController(
 
     if (error instanceof Error && error.message === "Property not found") {
       return reply.status(404).send({ message: error.message });
+    }
+
+    if (
+      error instanceof PropertyStatusTransitionError
+      || (error instanceof Error
+        && error.name === "PropertyStatusTransitionError")
+    ) {
+      return reply.status(400).send({
+        success: false,
+        error: {
+          code: "INVALID_STATUS_TRANSITION",
+          message: error instanceof Error ? error.message : "Invalid transition",
+        },
+      });
     }
 
     throw error;

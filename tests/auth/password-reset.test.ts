@@ -91,6 +91,32 @@ describe("password reset", () => {
     expect(newLogin.statusCode).toBe(200);
   });
 
+  it("revokes active sessions after password reset", async () => {
+    const resetUser = await registerUserViaApi(app, "OWNER");
+    userIds.push(resetUser.userId);
+
+    const rawToken = await seedPasswordResetToken(resetUser.userId);
+
+    const resetResponse = await app.inject({
+      method: "POST",
+      url: "/auth/reset-password",
+      payload: {
+        token: rawToken,
+        password: NEW_PASSWORD,
+      },
+    });
+
+    expect(resetResponse.statusCode).toBe(200);
+
+    const refreshResponse = await app.inject({
+      method: "POST",
+      url: "/auth/refresh",
+      payload: { refreshToken: resetUser.refreshToken },
+    });
+
+    expect(refreshResponse.statusCode).toBe(401);
+  });
+
   it("rejects reused tokens", async () => {
     const rawToken = await seedPasswordResetToken(user.userId);
 

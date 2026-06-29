@@ -1,8 +1,33 @@
 import {
   getConversationContext,
+  isActiveAgentOnProperty,
   isActiveParticipant,
 } from "./participants.repository";
 import { getParticipantState } from "./participant-states.repository";
+
+export async function canManageConversation(input: {
+  userId: string;
+  conversationId: string;
+}): Promise<boolean> {
+  const context = await getConversationContext(input.conversationId);
+
+  if (!context) {
+    return false;
+  }
+
+  if (context.ownerId === input.userId) {
+    return true;
+  }
+
+  if (context.conversationType === "PROPERTY_INTERNAL") {
+    return (
+      context.internalAgentId === input.userId
+      && await isActiveAgentOnProperty(input.userId, context.propertyId)
+    );
+  }
+
+  return isActiveAgentOnProperty(input.userId, context.propertyId);
+}
 
 export async function canAccessConversation(input: {
   userId: string;

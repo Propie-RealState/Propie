@@ -42,6 +42,8 @@ import { UpdatePropertyLocationSchema } from "../schemas/update-property-locatio
 import { UpdatePropertyStatusSchema } from "../schemas/update-property-status.schema";
 
 export async function propertiesRoutes(app: FastifyInstance) {
+  const requirePropertyManager = requireRoles(PROPERTY_MANAGER_ROLES);
+
   app.post(
     "/",
 
@@ -95,7 +97,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
   app.patch(
     "/:id/status",
     {
-      preHandler: authMiddleware,
+      preHandler: requirePropertyManager,
     },
     async (request, reply) => {
       const body = UpdatePropertyStatusSchema.parse(request.body);
@@ -123,7 +125,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
     "/:id/basic",
 
     {
-      preHandler: authMiddleware,
+      preHandler: requirePropertyManager,
     },
 
     updatePropertyBasicController as RouteHandlerMethod,
@@ -133,7 +135,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
     "/:id/location",
 
     {
-      preHandler: authMiddleware,
+      preHandler: requirePropertyManager,
     },
 
     async (request, reply) => {
@@ -159,7 +161,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
     "/:id/images",
 
     {
-      preHandler: authMiddleware,
+      preHandler: requirePropertyManager,
     },
 
     uploadPropertyImagesController as RouteHandlerMethod,
@@ -169,7 +171,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
     "/:id/amenities",
 
     {
-      preHandler: authMiddleware,
+      preHandler: requirePropertyManager,
     },
 
     async (request, reply) => {
@@ -194,7 +196,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
     "/:id/commercialization",
 
     {
-      preHandler: authMiddleware,
+      preHandler: requirePropertyManager,
     },
 
     async (request, reply) => {
@@ -218,7 +220,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
     "/:id/publish",
 
     {
-      preHandler: authMiddleware,
+      preHandler: requirePropertyManager,
     },
 
     publishPropertyController as RouteHandlerMethod,
@@ -227,7 +229,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
   app.patch(
     "/:propertyId/images/order",
     {
-      preHandler: authMiddleware,
+      preHandler: requirePropertyManager,
     },
     updatePropertyImagesOrderController as RouteHandlerMethod,
   );
@@ -235,7 +237,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
   app.delete(
     "/:propertyId/images/:imageId",
     {
-      preHandler: authMiddleware,
+      preHandler: requirePropertyManager,
     },
     deletePropertyImageController as RouteHandlerMethod,
   );
@@ -243,7 +245,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
   app.patch(
     "/:propertyId/images/:imageId/cover",
     {
-      preHandler: authMiddleware,
+      preHandler: requirePropertyManager,
     },
     updatePropertyImageCoverController as RouteHandlerMethod,
   );
@@ -251,7 +253,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
   app.post(
     "/:propertyId/videos",
     {
-      preHandler: authMiddleware,
+      preHandler: requirePropertyManager,
     },
     uploadPropertyVideosController as RouteHandlerMethod,
   );
@@ -259,7 +261,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
   app.patch(
     "/:propertyId/media/order",
     {
-      preHandler: authMiddleware,
+      preHandler: requirePropertyManager,
     },
     updatePropertyMediaOrderController as RouteHandlerMethod,
   );
@@ -267,7 +269,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
   app.delete(
     "/:propertyId/videos/:videoId",
     {
-      preHandler: authMiddleware,
+      preHandler: requirePropertyManager,
     },
     deletePropertyVideoController as RouteHandlerMethod,
   );

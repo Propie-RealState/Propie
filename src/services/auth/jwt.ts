@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken';
 
+import crypto from 'node:crypto';
+
 import type {
   JwtPayload,
 } from '@/database/types/auth';
@@ -73,6 +75,8 @@ export function generateRefreshToken(
       email: input.email,
 
       role: input.role,
+
+      jti: crypto.randomUUID(),
     },
 
     process.env.JWT_REFRESH_SECRET!,

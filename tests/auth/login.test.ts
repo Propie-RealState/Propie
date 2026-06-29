@@ -4,7 +4,7 @@ import { buildApp } from "@/app";
 import { db } from "@/database/client";
 import {
   cleanupTestUsers,
-  registerUserViaApi,
+  registerAndVerifyUserViaApi,
   TEST_PASSWORD,
   loginViaApi,
   uniqueEmail,
@@ -12,12 +12,13 @@ import {
 
 describe("auth login", () => {
   let app: Awaited<ReturnType<typeof buildApp>>;
-  let owner: Awaited<ReturnType<typeof registerUserViaApi>>;
+  let owner: Awaited<ReturnType<typeof registerAndVerifyUserViaApi>>;
   const userIds: string[] = [];
 
   beforeAll(async () => {
+    process.env.E2E_CAPTURE_VERIFICATION = "true";
     app = await buildApp();
-    owner = await registerUserViaApi(app, "OWNER");
+    owner = await registerAndVerifyUserViaApi(app, "OWNER");
     userIds.push(owner.userId);
   });
 
@@ -81,7 +82,7 @@ describe("auth login", () => {
   });
 
   it("blocks non-owners from owner-only routes", async () => {
-    const client = await registerUserViaApi(app, "CLIENT");
+    const client = await registerAndVerifyUserViaApi(app, "CLIENT");
     userIds.push(client.userId);
 
     const ownerOnlyResponse = await app.inject({

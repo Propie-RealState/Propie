@@ -16,13 +16,9 @@ import {
   updateVisitRepository,
 } from "../repositories/visits.repository";
 import { mapVisitRow } from "../utils/map-visit";
+import { assertVisitStatusTransition } from "../utils/visit-status-transitions";
+import type { VisitStatus } from "../types/visit.types";
 import { postVisitSystemMessageService } from "./post-visit-system-message.service";
-
-const CANCELLABLE_STATUSES = new Set([
-  "SCHEDULED",
-  "CONFIRMED",
-  "RESCHEDULED",
-]);
 
 export async function cancelVisitService(input: {
   userId: string;
@@ -54,9 +50,7 @@ export async function cancelVisitService(input: {
     throw new Error("VISIT_NOT_FOUND");
   }
 
-  if (!CANCELLABLE_STATUSES.has(visit.status)) {
-    throw new Error("VISIT_NOT_ACTIVE");
-  }
+  assertVisitStatusTransition(visit.status as VisitStatus, "CANCELLED");
 
   const reason = input.reason?.trim() || null;
   const now = new Date().toISOString();

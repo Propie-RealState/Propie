@@ -34,6 +34,7 @@ async function upsertUser(
         SET password_hash = $2,
             role = $3,
             is_active = true,
+            is_verified = true,
             updated_at = now()
         WHERE id = $1
       `,

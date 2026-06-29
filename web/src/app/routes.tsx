@@ -3,6 +3,7 @@ import React, { lazy, Suspense } from "react";
 import { Root } from "./Root";
 import { RegisterProvider } from "../context/RegisterContext";
 import { RegisterStepLayout } from "./components/register/RegisterStepLayout";
+import { RegistrationRouteGate } from "../components/auth/RegistrationRouteGate";
 
 import Explore from "./modules/explore/pages/Explore.tsx";
 import Login from "./pages/Login";
@@ -126,7 +127,7 @@ export const router =
           path: "registro",
           element: (
             <RegisterProvider>
-              <Outlet />
+              <RegistrationRouteGate />
             </RegisterProvider>
           ),
           children: [

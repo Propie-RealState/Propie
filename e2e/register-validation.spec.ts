@@ -6,7 +6,7 @@ import {
   fillValidPersonalData,
   fillValidSecurity,
   advanceToSecurity,
-  passVerification,
+  advancePastAccount,
   startAgentRegistration,
   startOwnerRegistration,
 } from "./helpers/register";
@@ -36,7 +36,7 @@ test.describe("registration validation", () => {
     await startOwnerRegistration(page);
     await fillValidAccount(page, `dni-test-${Date.now()}@test.com`);
     await page.getByTestId("register-continue").click();
-    await passVerification(page);
+    await advancePastAccount(page);
 
     await page.getByLabel("DNI").fill("123");
     await page.getByLabel("DNI").blur();
@@ -48,7 +48,7 @@ test.describe("registration validation", () => {
     await startOwnerRegistration(page);
     await fillValidAccount(page, `age-test-${Date.now()}@test.com`);
     await page.getByTestId("register-continue").click();
-    await passVerification(page);
+    await advancePastAccount(page);
 
     await page.getByLabel("DNI").fill("12345678");
     await page.getByLabel("Fecha de nacimiento").fill("2015-06-01");
@@ -61,7 +61,7 @@ test.describe("registration validation", () => {
     await startOwnerRegistration(page);
     await fillValidAccount(page, `cuit-test-${Date.now()}@test.com`);
     await page.getByTestId("register-continue").click();
-    await passVerification(page);
+    await advancePastAccount(page);
 
     await fillValidPersonalData(page);
     await page.getByLabel("CUIT/CUIL").fill("123");
@@ -74,7 +74,7 @@ test.describe("registration validation", () => {
     await startOwnerRegistration(page);
     await fillValidAccount(page, `phone-test-${Date.now()}@test.com`);
     await page.getByTestId("register-continue").click();
-    await passVerification(page);
+    await advancePastAccount(page);
     await advanceToSecurity(page);
 
     await page.locator("#recoveryEmail").fill("recovery@test.com");
@@ -88,7 +88,7 @@ test.describe("registration validation", () => {
     await startOwnerRegistration(page);
     await fillValidAccount(page, `pin-test-${Date.now()}@test.com`);
     await page.getByTestId("register-continue").click();
-    await passVerification(page);
+    await advancePastAccount(page);
     await advanceToSecurity(page);
 
     await page.getByTestId("register-field-pinEnabled").check({ force: true });
@@ -102,7 +102,7 @@ test.describe("registration validation", () => {
     await startOwnerRegistration(page);
     await fillValidAccount(page, `photo-test-${Date.now()}@test.com`);
     await page.getByTestId("register-continue").click();
-    await passVerification(page);
+    await advancePastAccount(page);
     await advanceToSecurity(page);
     await fillValidSecurity(page);
     await page.getByTestId("register-continue").click();
@@ -117,7 +117,7 @@ test.describe("registration validation", () => {
     await startAgentRegistration(page);
     await fillValidAccount(page, `agent-doc-${Date.now()}@test.com`);
     await page.getByTestId("register-continue").click();
-    await passVerification(page);
+    await advancePastAccount(page);
 
     await fillValidPersonalData(page);
     await expect(page.getByTestId("register-continue")).toBeDisabled();
@@ -131,7 +131,7 @@ test.describe("registration validation", () => {
     await startOwnerRegistration(page);
     await fillValidAccount(page, `valid-flow-${Date.now()}@test.com`);
     await page.getByTestId("register-continue").click();
-    await passVerification(page);
+    await advancePastAccount(page);
     await advanceToSecurity(page);
     await fillValidSecurity(page);
     await page.getByTestId("register-continue").click();

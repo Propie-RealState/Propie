@@ -24,6 +24,7 @@ import {
   ensureRegistrationReady,
   handleRegisterValidationFailure,
 } from "../../features/register/validation";
+import { continueRegistrationAfterSignup } from "../../features/register/continue-registration-after-signup";
 
 type EducationEntry = {
   id: string;
@@ -105,41 +106,16 @@ export default function RegisterAgentInfo() {
         body: JSON.stringify(payload),
       });
 
-      const authData = response?.data;
-
-      if (
-        !authData?.accessToken ||
-        !authData?.refreshToken ||
-        !authData?.user
-      ) {
+      if (!response?.data?.requiresVerification || !response?.data?.email) {
         throw new Error("INVALID_REGISTER_RESPONSE");
       }
 
       trackEvent(AnalyticsEvents.AUTH_SIGNUP, { role: "AGENT" });
 
-      auth.login(
-        authData.accessToken,
-        authData.refreshToken,
-        authData.user
-      );
-
-      sessionStorage.setItem("userType", "agente");
-
-      // Upload avatar if the user selected one during registration.
-      const pendingAvatar = getPendingAvatarFile();
-      if (pendingAvatar) {
-        try {
-          await uploadAvatar(pendingAvatar);
-        } catch {
-          // Non-fatal: avatar upload failure should not block registration completion.
-        } finally {
-          clearPendingAvatarFile();
-        }
-      }
-
-      reset();
-
-      setShowSuccess(true);
+      await continueRegistrationAfterSignup(auth, data, {
+        onVerificationRequired: () => navigate("/registro/verification"),
+        onSignupComplete: () => setShowSuccess(true),
+      });
     } catch (error) {
       if (!handleRegisterValidationFailure(error, data, navigate)) {
         console.error(error);
@@ -151,8 +127,9 @@ export default function RegisterAgentInfo() {
 
   const handleSuccessFinish = useCallback(() => {
     setShowSuccess(false);
-    navigate("/explore", { replace: true });
-  }, [navigate]);
+    reset();
+    navigate("/explorar", { replace: true });
+  }, [navigate, reset]);
 
   const addEducation = () => {
     const result = validateAgentEducation(newEducation);

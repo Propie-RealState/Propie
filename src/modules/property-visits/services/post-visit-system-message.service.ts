@@ -1,9 +1,7 @@
 import { db } from "@/database/client";
 
-import {
-  insertSystemConversationMessage,
-  updateConversationLastMessage,
-} from "@/modules/property-conversations/repositories/messages.repository";
+import { canSendMessage } from "@/modules/property-conversations/repositories/can-access-conversation.repository";
+import { appendConversationEvent } from "@/modules/property-conversations/services/append-conversation-event.service";
 import { getConversationContext } from "@/modules/property-conversations/repositories/participants.repository";
 
 import type { PropertyVisitRow } from "@/database/types/property-visits";
@@ -59,45 +57,29 @@ export async function postVisitSystemMessageService(input: {
     return null;
   }
 
+  const canSend = await canSendMessage({
+    userId: input.actorId,
+    conversationId: input.visit.conversation_id,
+  });
+
+  if (!canSend) {
+    return null;
+  }
+
   const body = buildSystemMessageBody(input.event, input.visit, {
     reason: input.reason,
     actorLabel: input.actorLabel,
   });
 
-  const client = await db.connect();
-
-  try {
-    await client.query("BEGIN");
-
-    const message = await insertSystemConversationMessage(
-      {
-        conversationId: input.visit.conversation_id,
-        senderId: input.actorId,
-        senderRole: input.actorRole,
-        body,
-        metadata: {
-          visitId: input.visit.id,
-          event: input.event,
-        },
-      },
-      client,
-    );
-
-    await updateConversationLastMessage(
-      {
-        conversationId: input.visit.conversation_id,
-        preview: body,
-      },
-      client,
-    );
-
-    await client.query("COMMIT");
-
-    return message;
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
+  return appendConversationEvent({
+    conversationId: input.visit.conversation_id,
+    senderId: input.actorId,
+    senderRole: input.actorRole,
+    body,
+    contentType: "SYSTEM",
+    metadata: {
+      visitId: input.visit.id,
+      event: input.event,
+    },
+  });
 }

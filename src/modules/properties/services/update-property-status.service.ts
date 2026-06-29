@@ -7,6 +7,10 @@ import { insertPropertyEventRepository } from "../repositories/property-events.r
 import { getPropertyByIdRepository } from "../repositories/property-read.repository";
 import { updatePropertyStatusRepository } from "../repositories/property-write.repository";
 import { assertIsPublisher } from "../utils/assert-is-publisher";
+import {
+  assertPropertyStatusTransition,
+  PropertyStatusTransitionError,
+} from "../utils/property-status-transitions";
 import { notifyPropertyActiveAgain } from "@/modules/notifications/services/notification-dispatch.service";
 
 type Input = {
@@ -33,6 +37,8 @@ export async function updatePropertyStatusService(input: Input) {
   if (previousStatus === input.status) {
     return property;
   }
+
+  assertPropertyStatusTransition(previousStatus, input.status);
 
   const updated = await updatePropertyStatusRepository({
     propertyId: input.propertyId,
@@ -62,3 +68,5 @@ export async function updatePropertyStatusService(input: Input) {
 
   return updated;
 }
+
+export { PropertyStatusTransitionError };

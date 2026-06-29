@@ -3,6 +3,7 @@ import React from "react";
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 
 import { apiFetch } from "../lib/api";
+import { API_URL } from "../lib/api-base";
 import { syncUserTypeFromRole } from "../theme/app-theme";
 import {
   loadFavoritesFromServer,
@@ -103,7 +104,7 @@ type AuthContextType = {
 
   login: (accessToken: string, refreshToken: string, user: User) => void;
 
-  logout: () => void;
+  logout: () => Promise<void>;
 
   refreshUser: () => Promise<void>;
 
@@ -251,30 +252,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
 
-  function logout() {
+  const logout = useCallback(async () => {
+    const storedRefreshToken = localStorage.getItem("refreshToken");
 
-    trackEvent(AnalyticsEvents.AUTH_LOGOUT);
-    resetUser();
+    try {
+      if (storedRefreshToken) {
+        await fetch(`${API_URL}/auth/logout`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            refreshToken: storedRefreshToken,
+          }),
+        });
+      }
+    } catch (error) {
+      console.warn("Backend logout failed", error);
+    } finally {
+      trackEvent(AnalyticsEvents.AUTH_LOGOUT);
+      resetUser();
 
-    localStorage.removeItem("accessToken");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
 
-
-
-    localStorage.removeItem("refreshToken");
-
-
-
-    setAccessToken(null);
-
-
-
-    setRefreshToken(null);
-
-
-
-    setUser(null);
-
-  }
+      setAccessToken(null);
+      setRefreshToken(null);
+      setUser(null);
+    }
+  }, []);
 
 
 

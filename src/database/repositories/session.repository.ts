@@ -258,11 +258,13 @@ export async function deleteAllUserSessions(
 // DELETE EXPIRED SESSIONS
 // ========================================================
 
-export async function deleteExpiredSessions(): Promise<void> {
-  await db.query(
+export async function deleteExpiredSessions(): Promise<number> {
+  const result = await db.query(
     `
       DELETE FROM sessions
       WHERE expires_at < now()
-    `
+    `,
   );
+
+  return result.rowCount ?? 0;
 }

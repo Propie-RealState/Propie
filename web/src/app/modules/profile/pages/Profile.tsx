@@ -161,9 +161,9 @@ export default function Profile() {
       ? "Explorador"
       : "Propietario";
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     sessionStorage.removeItem("userType");
-    logout();
+    await logout();
     setShowLogoutModal(false);
     navigate("/explore");
   };
