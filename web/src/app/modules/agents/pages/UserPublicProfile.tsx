@@ -26,6 +26,7 @@ import {
   type UserPublicProfile as UserPublicProfileType,
 } from "../services/agents.service";
 import { ProfilePropertiesList } from "../components/ProfilePropertiesList";
+import { pageScrollStyle, pageShellStyle } from "../../../components/layout/layout-styles";
 
 type UserProfileLocationState = {
   reviewPropertyId?: string;
@@ -164,12 +165,9 @@ export default function UserPublicProfile() {
     return (
       <div
         style={{
-          minHeight: "100dvh",
-          display: "flex",
+          ...pageShellStyle,
           alignItems: "center",
           justifyContent: "center",
-          background: "#f5f5f7",
-          fontFamily: "'Inter', sans-serif",
         }}
       >
         <div style={{ color: "#6e6e73", fontSize: 14 }}>Cargando perfil...</div>
@@ -181,12 +179,9 @@ export default function UserPublicProfile() {
     return (
       <div
         style={{
-          minHeight: "100dvh",
-          display: "flex",
+          ...pageShellStyle,
           alignItems: "center",
           justifyContent: "center",
-          background: "#f5f5f7",
-          fontFamily: "'Inter', sans-serif",
         }}
       >
         <div style={{ color: "#6e6e73", fontSize: 14 }}>Perfil no encontrado.</div>
@@ -211,18 +206,11 @@ export default function UserPublicProfile() {
   const activeProperties = profile.active_properties ?? 0;
 
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f5f5f7",
-        fontFamily: "'Inter', sans-serif",
-      }}
-    >
+    <div style={pageShellStyle}>
       {/* Header */}
       <div
         style={{
+          flexShrink: 0,
           background: "white",
           borderBottom: "1px solid #e5e5ea",
           padding: "16px 20px",
@@ -270,12 +258,11 @@ export default function UserPublicProfile() {
       {/* Content */}
       <div
         style={{
-          flex: 1,
+          ...pageScrollStyle,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           padding: "24px 20px 40px",
-          overflowY: "auto",
         }}
       >
         <div

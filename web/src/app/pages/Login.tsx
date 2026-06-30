@@ -7,6 +7,7 @@ import React from "react";
 import { apiFetch } from "../../lib/api";
 import { showToast } from "../../lib/toast";
 import { isPublicRegistrationEnabled } from "../../lib/feature-flags";
+import { pageScrollStyle, pageShellStyle } from "../components/layout/layout-styles";
 export default function Login() {
   const navigate = useNavigate();
   const auth = useAuth();
@@ -145,19 +146,12 @@ export default function Login() {
     : isEmailValid && isPasswordValid;
 
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f5f5f7",
-        fontFamily: "'Inter', sans-serif",
-      }}
-    >
+    <div style={pageShellStyle}>
       {/* ── HERO ── */}
       <div
         style={{
           position: "relative",
+          flexShrink: 0,
           background: "linear-gradient(160deg, #5A32F0 0%, #4417E6 55%, #3510B8 100%)",
           display: "flex",
           flexDirection: "column",
@@ -192,7 +186,7 @@ export default function Login() {
       {/* ── FORM ── */}
       <div
         style={{
-          flex: 1,
+          ...pageScrollStyle,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",

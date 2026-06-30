@@ -3,6 +3,7 @@ import { AuthHeroHeader } from "../components/AuthHeroHeader";
 import { Home, Briefcase, Search, ChevronRight } from "lucide-react";
 import React from "react";
 import { useRegister } from "../../context/RegisterContext";
+import { pageScrollStyle, pageShellStyle } from "../components/layout/layout-styles";
 export default function RegisterChoice() {
   const navigate = useNavigate();
   const { updateData } = useRegister();
@@ -31,20 +32,12 @@ export default function RegisterChoice() {
     navigate("/registro/client");
   }
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f5f5f7",
-        fontFamily: "'Inter', sans-serif",
-        overflowX: "hidden",
-      }}
-    >
+    <div style={pageShellStyle}>
       {/* ── HERO ── */}
       <div
         style={{
           position: "relative",
+          flexShrink: 0,
           background: "linear-gradient(160deg, #5A32F0 0%, #4417E6 55%, #3510B8 100%)",
           display: "flex",
           flexDirection: "column",
@@ -80,7 +73,7 @@ export default function RegisterChoice() {
       {/* ── CARDS ── */}
       <div
         style={{
-          flex: 1,
+          ...pageScrollStyle,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",

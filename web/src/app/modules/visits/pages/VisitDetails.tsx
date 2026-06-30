@@ -31,6 +31,7 @@ import {
   getVisitEventLabel,
 } from "../utils/visit-ui";
 import { showToast } from "../../../../lib/toast";
+import { pageScrollStyle, pageShellStyle } from "../../../components/layout/layout-styles";
 
 export default function VisitDetails() {
   const { visitId } = useParams<{ visitId: string }>();
@@ -151,15 +152,7 @@ export default function VisitDetails() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f5f5f7",
-        fontFamily: "'Inter', sans-serif",
-      }}
-    >
+    <div style={pageShellStyle}>
       <div
         style={{
           flexShrink: 0,
@@ -204,7 +197,7 @@ export default function VisitDetails() {
         {visit && <VisitStatusBadge status={visit.status} />}
       </div>
 
-      <div style={{ flex: 1, padding: 16, paddingBottom: 32 }}>
+      <div style={{ ...pageScrollStyle, padding: 16, paddingBottom: 32 }}>
         {loading ? (
           <div style={{ textAlign: "center", color: "#6e6e73", padding: 32 }}>
             Cargando visita...

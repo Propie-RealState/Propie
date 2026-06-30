@@ -25,6 +25,7 @@ import {
 } from "../services/agents.service";
 import { resolveMediaUrl } from "../../../../lib/api-base";
 import { ProfilePropertiesList } from "../components/ProfilePropertiesList";
+import { pageScrollStyle, pageShellStyle } from "../../../components/layout/layout-styles";
 
 type AgentProfileLocationState = {
   reviewPropertyId?: string;
@@ -88,12 +89,9 @@ export default function AgentPublicProfile() {
     return (
       <div
         style={{
-          minHeight: "100dvh",
-          display: "flex",
+          ...pageShellStyle,
           alignItems: "center",
           justifyContent: "center",
-          background: "#f5f5f7",
-          fontFamily: "'Inter', sans-serif",
         }}
       >
         <div style={{ color: "#6e6e73", fontSize: 14 }}>Cargando perfil...</div>
@@ -105,12 +103,9 @@ export default function AgentPublicProfile() {
     return (
       <div
         style={{
-          minHeight: "100dvh",
-          display: "flex",
+          ...pageShellStyle,
           alignItems: "center",
           justifyContent: "center",
-          background: "#f5f5f7",
-          fontFamily: "'Inter', sans-serif",
         }}
       >
         <div style={{ color: "#6e6e73", fontSize: 14 }}>Perfil no encontrado.</div>
@@ -148,18 +143,11 @@ export default function AgentPublicProfile() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f5f5f7",
-        fontFamily: "'Inter', sans-serif",
-      }}
-    >
+    <div style={pageShellStyle}>
       {/* Header */}
       <div
         style={{
+          flexShrink: 0,
           background: "white",
           borderBottom: "1px solid #e5e5ea",
           padding: "16px 20px",
@@ -207,12 +195,11 @@ export default function AgentPublicProfile() {
       {/* Content */}
       <div
         style={{
-          flex: 1,
+          ...pageScrollStyle,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           padding: "24px 20px 40px",
-          overflowY: "auto",
         }}
       >
         <div
