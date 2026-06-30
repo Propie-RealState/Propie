@@ -18,8 +18,6 @@ import {
   Bath,
   Maximize,
   Car,
-  ChevronLeft,
-  ChevronRight,
   MessageCircle,
   Star,
   Send,
@@ -31,7 +29,6 @@ import {
   Users,
   CheckCircle,
   Clock,
-  X,
   Briefcase,
   UserCheck,
 } from "lucide-react";
@@ -65,14 +62,25 @@ import {
 import { showToast } from "../../../../lib/toast";
 import { ExplorePageSkeleton } from "../../../components/skeletons/PageSkeletons";
 import {
-  modalBackdropStyle,
-  modalPanelStyle,
+  PropertyGallerySkeleton,
+  PropertyImageGallery,
+} from "../components/PropertyImageGallery";
+import { AppModal } from "../../../components/layout/AppModal";
+import "./property-details.css";
+import {
+  pageHeaderStyle,
   pageShellStyle,
   pageScrollStyle,
   stickyCtaPadding,
 } from "../../../components/layout/layout-styles";
 
 type UserType = "guest" | "client" | "owner" | "agente" | null;
+
+const propertyDetailsCtaStyle: React.CSSProperties = {
+  padding: stickyCtaPadding,
+  paddingLeft: "max(20px, env(safe-area-inset-left))",
+  paddingRight: "max(20px, env(safe-area-inset-right))",
+};
 
 // ─── Publicado por card ────────────────────────────────────────────────────────
 
@@ -322,7 +330,6 @@ export default function PropertyDetails() {
 
   const { user } = useAuth();
   const isLoggedIn = !!user;
-  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
   const [isSendingRequest, setIsSendingRequest] = useState(false);
@@ -380,8 +387,6 @@ export default function PropertyDetails() {
       : "0 4px 16px rgba(68,23,230,0.24)",
   };
 
-  const totalPhotos = property?.images?.length || 0;
-
   useEffect(() => {
     async function loadAgentApplicationStatus() {
       if (!id || !user || !isAgentRole(user.role)) {
@@ -423,16 +428,6 @@ export default function PropertyDetails() {
 
     void loadPropertyConversationCount();
   }, [property?.id, canManageProperty, user?.id]);
-
-  const nextPhoto = () => {
-    if (!totalPhotos) return;
-    setCurrentPhotoIndex((prev) => (prev + 1) % totalPhotos);
-  };
-
-  const prevPhoto = () => {
-    if (!totalPhotos) return;
-    setCurrentPhotoIndex((prev) => (prev - 1 + totalPhotos) % totalPhotos);
-  };
 
   const handleShare = () => {
     navigate(`/compartir/${property?.id}`);
@@ -583,8 +578,27 @@ export default function PropertyDetails() {
 
   if (loading) {
     return (
-      <div style={{ ...pageShellStyle, background: "#f5f5f7" }}>
-        <ExplorePageSkeleton />
+      <div style={{ ...pageShellStyle, background: "#ededed" }}>
+        <div
+          style={{
+            ...pageScrollStyle,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "stretch",
+          }}
+        >
+          <div
+            className="property-details-header property-details-header--skeleton"
+            style={pageHeaderStyle}
+            aria-hidden
+          />
+          <section className="property-details-gallery" aria-hidden>
+            <PropertyGallerySkeleton />
+          </section>
+          <section className="property-details-panel" aria-hidden>
+            <ExplorePageSkeleton />
+          </section>
+        </div>
       </div>
     );
   }
@@ -601,22 +615,25 @@ export default function PropertyDetails() {
   ].filter(Boolean);
 
   return (
-    <div style={{ ...pageShellStyle, background: "#f5f5f7" }}>
-      {/* Header */}
+    <div style={{ ...pageShellStyle, background: "#ededed" }}>
       <div
         style={{
-          background: "white",
-          borderBottom: "1px solid #e5e5ea",
-          padding: "16px 20px",
+          ...pageScrollStyle,
           display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
+          flexDirection: "column",
+          alignItems: "stretch",
         }}
       >
+        <div
+          className="property-details-header"
+          style={{
+            ...pageHeaderStyle,
+            width: "100%",
+            alignSelf: "stretch",
+          }}
+        >
         <button
+          className="property-details-header__back"
           onClick={() => {
             if (backTo) {
               navigate(backTo);
@@ -641,10 +658,11 @@ export default function PropertyDetails() {
           Volver
         </button>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div className="property-details-header__actions">
           {isLoggedIn && <NotificationsBell />}
           {!isLoggedIn && (
             <button
+              className="property-details-header__icon-btn"
               onClick={() => navigate("/ingresar")}
               style={{
                 background: colors.primary,
@@ -661,6 +679,7 @@ export default function PropertyDetails() {
             </button>
           )}
           <button
+            className="property-details-header__icon-btn"
             onClick={handleShare}
             style={{
               background: "#f0f0f0",
@@ -678,6 +697,7 @@ export default function PropertyDetails() {
           {canManageProperty && (
             <>
               <button
+                className="property-details-header__icon-btn"
                 style={{
                   background: "#f0f0f0",
                   border: "none",
@@ -692,6 +712,7 @@ export default function PropertyDetails() {
                 <BarChart3 size={18} color="#1a1a1a" />
               </button>
               <button
+                className="property-details-header__icon-btn"
                 onClick={handleEdit}
                 style={{
                   background: "#f0f0f0",
@@ -709,103 +730,17 @@ export default function PropertyDetails() {
             </>
           )}
         </div>
-      </div>
-
-      {/* Carrusel de fotos */}
-      <div
-        style={{
-          position: "relative",
-          width: "100%",
-          aspectRatio: "16/10",
-          background: "#000",
-        }}
-      >
-        <img
-          src={property.images[currentPhotoIndex]?.url}
-          alt="Propiedad"
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-        />
-
-        <button
-          onClick={prevPhoto}
-          style={{
-            position: "absolute",
-            left: 16,
-            top: "50%",
-            transform: "translateY(-50%)",
-            background: "rgba(0,0,0,0.5)",
-            border: "none",
-            borderRadius: "50%",
-            width: 40,
-            height: 40,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            backdropFilter: "blur(8px)",
-          }}
-        >
-          <ChevronLeft size={24} color="white" />
-        </button>
-        <button
-          onClick={nextPhoto}
-          style={{
-            position: "absolute",
-            right: 16,
-            top: "50%",
-            transform: "translateY(-50%)",
-            background: "rgba(0,0,0,0.5)",
-            border: "none",
-            borderRadius: "50%",
-            width: 40,
-            height: 40,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            backdropFilter: "blur(8px)",
-          }}
-        >
-          <ChevronRight size={24} color="white" />
-        </button>
-
-        <div
-          style={{
-            position: "absolute",
-            bottom: 16,
-            right: 16,
-            background: "rgba(0,0,0,0.7)",
-            color: "white",
-            padding: "6px 12px",
-            borderRadius: 8,
-            fontSize: 13,
-            fontWeight: 600,
-            backdropFilter: "blur(8px)",
-          }}
-        >
-          {currentPhotoIndex + 1} / {totalPhotos}
         </div>
-      </div>
 
-      {/* Content */}
-      <div
-        style={{
-          ...pageScrollStyle,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          padding: "20px 20px 100px",
-        }}
-      >
-        <div
-          style={{
-            width: "100%",
-            maxWidth: 640,
-            display: "flex",
-            flexDirection: "column",
-            gap: 20,
-          }}
-        >
+        <section className="property-details-gallery" aria-label={`Fotos de ${property.title}`}>
+          <PropertyImageGallery
+            images={property.images}
+            title={property.title}
+          />
+        </section>
+
+        <section className="property-details-panel">
+        <div className="property-details-content">
           {/* Price & Type */}
           <div>
             <div
@@ -823,15 +758,7 @@ export default function PropertyDetails() {
             >
               {formatOperationType(property.operationType)}
             </div>
-            <h1
-              style={{
-                margin: "0 0 8px",
-                fontSize: 28,
-                fontWeight: 800,
-                color: "#1a1a1a",
-                fontFamily: "'Sora', sans-serif",
-              }}
-            >
+            <h1 className="property-details-price">
               {formatPrice(property.price, property.currency)}
             </h1>
             <div
@@ -1124,310 +1051,238 @@ export default function PropertyDetails() {
 
             </>
           )}
-        </div>
-      </div>
 
-      {/* Modal: Solicitud de agente */}
-      {showRequestModal && (
-        <div
-          style={modalBackdropStyle}
-          onClick={() => setShowRequestModal(false)}
-        >
-          <div
-            style={{ ...modalPanelStyle, maxWidth: 480 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: 20,
-              }}
-            >
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: 20,
-                  fontWeight: 700,
-                  color: "#1a1a1a",
-                  fontFamily: "'Sora', sans-serif",
+          {userType === "client" && (
+            <div className="property-details-cta" style={propertyDetailsCtaStyle}>
+              <button
+                type="button"
+                onClick={() => {
+                  if (id) {
+                    toggleFavoriteId(id);
+                  }
                 }}
-              >
-                Solicitar comercialización
-              </h3>
-              <button
-                onClick={() => setShowRequestModal(false)}
-                style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
-              >
-                <X size={24} color="#1a1a1a" />
-              </button>
-            </div>
-
-            <p
-              style={{
-                margin: "0 0 20px",
-                fontSize: 14,
-                color: "#6e6e73",
-                lineHeight: 1.6,
-              }}
-            >
-              Enviale un mensaje al propietario explicando por qué sos el agente ideal para
-              comercializar esta propiedad.
-            </p>
-
-            <textarea
-              value={requestMessage}
-              onChange={(e) => setRequestMessage(e.target.value)}
-              placeholder="Hola! Me especializo en esta zona y me gustaría comercializar tu propiedad..."
-              rows={6}
-              style={{
-                width: "100%",
-                padding: "14px 16px",
-                borderRadius: 14,
-                border: "1.5px solid #e5e5ea",
-                fontSize: 15,
-                color: "#1a1a1a",
-                outline: "none",
-                resize: "none",
-                fontFamily: "'Inter', sans-serif",
-                lineHeight: 1.6,
-                boxSizing: "border-box",
-                marginBottom: 16,
-              }}
-            />
-
-            <div style={{ display: "flex", gap: 10 }}>
-              <button
-                onClick={() => setShowRequestModal(false)}
                 style={{
-                  flex: 1,
-                  background: "white",
-                  border: "1.5px solid #e5e5ea",
-                  borderRadius: 14,
-                  padding: "14px",
-                  color: "#1a1a1a",
-                  fontSize: 15,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSendRequest}
-                disabled={!requestMessage.trim() || isSendingRequest}
-                style={{
-                  flex: 1,
-                  background:
-                    requestMessage.trim() && !isSendingRequest
-                      ? colors.primary
-                      : "#e5e5ea",
+                  background: "#f0f0f0",
                   border: "none",
-                  borderRadius: 14,
+                  borderRadius: 12,
                   padding: "14px",
-                  color:
-                    requestMessage.trim() && !isSendingRequest
-                      ? "white"
-                      : "#9a9aa0",
-                  fontSize: 15,
-                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Heart
+                  size={22}
+                  color={id && isFavorite(id) ? colors.primary : "#1a1a1a"}
+                  fill={id && isFavorite(id) ? colors.primary : "none"}
+                />
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleContactar()}
+                disabled={isStartingConversation || !canContactProperty}
+                style={{
+                  flex: 1,
+                  background: canContactProperty ? colors.primary : "#e5e5ea",
+                  border: "none",
+                  borderRadius: 12,
+                  padding: "14px",
+                  color: canContactProperty ? "white" : "#9a9aa0",
+                  fontSize: 16,
+                  fontWeight: 700,
                   cursor:
-                    requestMessage.trim() && !isSendingRequest
-                      ? "pointer"
-                      : "not-allowed",
+                    isStartingConversation || !canContactProperty
+                      ? "not-allowed"
+                      : "pointer",
+                  opacity: isStartingConversation ? 0.7 : 1,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   gap: 8,
                 }}
               >
-                <Send size={16} />
-                {isSendingRequest ? "Enviando..." : "Enviar solicitud"}
+                <MessageCircle size={20} />
+                {isStartingConversation
+                  ? "Abriendo..."
+                  : canContactProperty
+                    ? "Contactar"
+                    : "Chat no disponible"}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* CTA sticky - Registered client (explore-only account) */}
-      {userType === "client" && (
-        <div
+          {userType === "guest" && (
+            <div className="property-details-cta" style={propertyDetailsCtaStyle}>
+              <button
+                type="button"
+                onClick={() => navigate("/ingresar")}
+                style={{
+                  background: "#f0f0f0",
+                  border: "none",
+                  borderRadius: 12,
+                  padding: "14px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Heart size={22} color="#1a1a1a" />
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/ingresar")}
+                style={{
+                  flex: 1,
+                  background: colors.primary,
+                  border: "none",
+                  borderRadius: 12,
+                  padding: "14px",
+                  color: "white",
+                  fontSize: 16,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                }}
+              >
+                <MessageCircle size={20} />
+                Contactar
+              </button>
+            </div>
+          )}
+
+          {isAgent &&
+            !canManageProperty &&
+            property?.acceptsAgentParticipation !== false && (
+              <div className="property-details-cta" style={propertyDetailsCtaStyle}>
+                <button
+                  onClick={handleApplyAgent}
+                  disabled={requestSent}
+                  style={{
+                    flex: 1,
+                    background: requestSent ? "#dcfce7" : colors.gradient,
+                    border: "none",
+                    borderRadius: 14,
+                    padding: "16px",
+                    color: requestSent ? "#166534" : "white",
+                    fontSize: 16,
+                    fontWeight: 700,
+                    cursor: requestSent ? "default" : "pointer",
+                    boxShadow: requestSent ? "none" : colors.shadow,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                  }}
+                >
+                  {requestSent ? (
+                    <CheckCircle size={20} />
+                  ) : (
+                    <Briefcase size={20} />
+                  )}
+                  {requestSent ? "Solicitud enviada" : "Enviar solicitud"}
+                </button>
+              </div>
+            )}
+        </div>
+        </section>
+      </div>
+
+      <AppModal
+        open={showRequestModal}
+        onClose={() => setShowRequestModal(false)}
+        title="Solicitar comercialización"
+        titleId="agent-request-modal-title"
+        maxWidth={480}
+      >
+        <p
           style={{
-            position: "fixed",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            background: "white",
-            borderTop: "1px solid #e5e5ea",
-            padding: stickyCtaPadding,
-            paddingLeft: "max(20px, env(safe-area-inset-left))",
-            paddingRight: "max(20px, env(safe-area-inset-right))",
-            display: "flex",
-            gap: 12,
-            zIndex: 10,
+            margin: "0 0 20px",
+            fontSize: 14,
+            color: "#6e6e73",
+            lineHeight: 1.6,
           }}
         >
-          <button
-            type="button"
-            onClick={() => {
-              if (id) {
-                toggleFavoriteId(id);
-              }
-            }}
-            style={{
-              background: "#f0f0f0",
-              border: "none",
-              borderRadius: 12,
-              padding: "14px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Heart
-              size={22}
-              color={id && isFavorite(id) ? colors.primary : "#1a1a1a"}
-              fill={id && isFavorite(id) ? colors.primary : "none"}
-            />
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleContactar()}
-            disabled={isStartingConversation || !canContactProperty}
-            style={{
-              flex: 1,
-              background: canContactProperty ? colors.primary : "#e5e5ea",
-              border: "none",
-              borderRadius: 12,
-              padding: "14px",
-              color: canContactProperty ? "white" : "#9a9aa0",
-              fontSize: 16,
-              fontWeight: 700,
-              cursor:
-                isStartingConversation || !canContactProperty
-                  ? "not-allowed"
-                  : "pointer",
-              opacity: isStartingConversation ? 0.7 : 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-            }}
-          >
-            <MessageCircle size={20} />
-            {isStartingConversation
-              ? "Abriendo..."
-              : canContactProperty
-                ? "Contactar"
-                : "Chat no disponible"}
-          </button>
-        </div>
-      )}
+          Enviale un mensaje al propietario explicando por qué sos el agente ideal para
+          comercializar esta propiedad.
+        </p>
 
-      {/* CTA sticky - Guest */}
-      {userType === "guest" && (
-        <div
+        <textarea
+          value={requestMessage}
+          onChange={(e) => setRequestMessage(e.target.value)}
+          placeholder="Hola! Me especializo en esta zona y me gustaría comercializar tu propiedad..."
+          rows={6}
           style={{
-            position: "fixed",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            background: "white",
-            borderTop: "1px solid #e5e5ea",
-            padding: stickyCtaPadding,
-            paddingLeft: "max(20px, env(safe-area-inset-left))",
-            paddingRight: "max(20px, env(safe-area-inset-right))",
-            display: "flex",
-            gap: 12,
-            zIndex: 10,
+            width: "100%",
+            padding: "14px 16px",
+            borderRadius: 14,
+            border: "1.5px solid #e5e5ea",
+            fontSize: 15,
+            color: "#1a1a1a",
+            outline: "none",
+            resize: "none",
+            fontFamily: "'Inter', sans-serif",
+            lineHeight: 1.6,
+            boxSizing: "border-box",
+            marginBottom: 16,
           }}
-        >
-          <button
-            type="button"
-            onClick={() => navigate("/ingresar")}
-            style={{
-              background: "#f0f0f0",
-              border: "none",
-              borderRadius: 12,
-              padding: "14px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Heart size={22} color="#1a1a1a" />
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate("/ingresar")}
-            style={{
-              flex: 1,
-              background: colors.primary,
-              border: "none",
-              borderRadius: 12,
-              padding: "14px",
-              color: "white",
-              fontSize: 16,
-              fontWeight: 700,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-            }}
-          >
-            <MessageCircle size={20} />
-            Contactar
-          </button>
-        </div>
-      )}
+        />
 
-      {/* CTA sticky - Agent */}
-      {isAgent && !canManageProperty && property?.acceptsAgentParticipation !== false && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            background: "white",
-            borderTop: "1px solid #e5e5ea",
-            padding: stickyCtaPadding,
-            paddingLeft: "max(20px, env(safe-area-inset-left))",
-            paddingRight: "max(20px, env(safe-area-inset-right))",
-            display: "flex",
-            gap: 12,
-            zIndex: 10,
-          }}
-        >
+        <div style={{ display: "flex", gap: 10 }}>
           <button
-            onClick={handleApplyAgent}
-            disabled={requestSent}
+            onClick={() => setShowRequestModal(false)}
             style={{
               flex: 1,
-              background: requestSent ? "#dcfce7" : colors.gradient,
+              background: "white",
+              border: "1.5px solid #e5e5ea",
+              borderRadius: 14,
+              padding: "14px",
+              color: "#1a1a1a",
+              fontSize: 15,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleSendRequest}
+            disabled={!requestMessage.trim() || isSendingRequest}
+            style={{
+              flex: 1,
+              background:
+                requestMessage.trim() && !isSendingRequest
+                  ? colors.primary
+                  : "#e5e5ea",
               border: "none",
               borderRadius: 14,
-              padding: "16px",
-              color: requestSent ? "#166534" : "white",
-              fontSize: 16,
-              fontWeight: 700,
-              cursor: requestSent ? "default" : "pointer",
-              boxShadow: requestSent ? "none" : colors.shadow,
+              padding: "14px",
+              color:
+                requestMessage.trim() && !isSendingRequest
+                  ? "white"
+                  : "#9a9aa0",
+              fontSize: 15,
+              fontWeight: 600,
+              cursor:
+                requestMessage.trim() && !isSendingRequest
+                  ? "pointer"
+                  : "not-allowed",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               gap: 8,
             }}
           >
-            {requestSent ? <CheckCircle size={20} /> : <Briefcase size={20} />}
-            {requestSent ? "Solicitud enviada" : "Enviar solicitud"}
+            <Send size={16} />
+            {isSendingRequest ? "Enviando..." : "Enviar solicitud"}
           </button>
         </div>
-      )}
+      </AppModal>
+
     </div>
   );
 }

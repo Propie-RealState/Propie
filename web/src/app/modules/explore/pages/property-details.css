@@ -1,0 +1,123 @@
+/* Mobile <768 | Tablet 768–1023 | Desktop ≥1024 */
+
+.property-details-header {
+  padding: clamp(12px, 3vw, 16px) clamp(14px, 4vw, 20px);
+  gap: clamp(8px, 2vw, 12px);
+  row-gap: 8px;
+  min-width: 0;
+}
+
+.property-details-header--skeleton {
+  min-height: 56px;
+  box-sizing: border-box;
+  background: linear-gradient(90deg, #ececef 25%, #f5f5f7 50%, #ececef 75%);
+  background-size: 200% 100%;
+  animation: property-details-header-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes property-details-header-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.property-details-header__back {
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.property-details-header__actions {
+  display: flex;
+  align-items: center;
+  gap: clamp(6px, 2vw, 12px);
+  flex-shrink: 0;
+}
+
+.property-details-header__icon-btn {
+  padding: clamp(6px, 2vw, 8px) clamp(8px, 2.5vw, 12px);
+}
+
+/* Gallery lives in normal document flow — never sticky/fixed */
+.property-details-gallery {
+  position: relative;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+/* White content block below gallery (Mercado Libre inmuebles pattern) */
+.property-details-panel {
+  width: 100%;
+  flex-shrink: 0;
+  background: #fff;
+  align-self: stretch;
+}
+
+.property-details-content {
+  width: 100%;
+  max-width: 640px;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: clamp(16px, 4vw, 20px);
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.property-details-price {
+  margin: 0 0 8px;
+  font-size: clamp(22px, 5.5vw, 28px);
+  font-weight: 800;
+  color: #1a1a1a;
+  font-family: "Sora", sans-serif;
+  line-height: 1.15;
+}
+
+.property-details-cta {
+  width: 100%;
+  background: white;
+  border-top: 1px solid #ebebeb;
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  box-sizing: border-box;
+}
+
+/* Tablet */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .property-details-content {
+    max-width: 680px;
+    padding-inline: clamp(20px, 4vw, 28px);
+  }
+
+  .property-details-price {
+    font-size: clamp(24px, 3.5vw, 28px);
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .property-details-panel {
+    max-width: 960px;
+    align-self: center;
+  }
+
+  .property-details-content {
+    max-width: 720px;
+    padding-inline: clamp(24px, 3vw, 32px);
+  }
+
+  .property-details-price {
+    font-size: 28px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .property-details-content {
+    max-width: 760px;
+  }
+}
