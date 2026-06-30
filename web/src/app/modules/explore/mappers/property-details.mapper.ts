@@ -18,13 +18,18 @@ function normalizeCurrency(
   ) {
     const images =
       property.images?.map(
-        (image: PropertyImageDTO) => ({
-          id: image.id,
-  
-          url: resolveMediaUrl(image.image_url) ?? "",
-  
-          isCover: image.is_cover,
-        })
+        (image: PropertyImageDTO) => {
+          const url = resolveMediaUrl(image.image_url) ?? "";
+          const thumbUrl =
+            resolveMediaUrl(image.thumb_url) ?? url;
+
+          return {
+            id: image.id,
+            url,
+            thumbUrl,
+            isCover: image.is_cover,
+          };
+        },
       ) || [];
   
     const coverImage =

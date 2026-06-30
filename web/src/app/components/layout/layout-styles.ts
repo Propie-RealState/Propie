@@ -22,7 +22,7 @@ export const pageScrollStyle: CSSProperties = {
   touchAction: "pan-y",
 };
 
-/** Sticky page header used on detail screens */
+/** Scrollable page header on detail screens (not position: sticky) */
 export const pageHeaderStyle: CSSProperties = {
   flexShrink: 0,
   background: "white",

@@ -2,6 +2,8 @@ export interface PropertyImageDTO {
     id: string;
   
     image_url: string;
+
+    thumb_url?: string | null;
   
     is_cover: boolean;
   
