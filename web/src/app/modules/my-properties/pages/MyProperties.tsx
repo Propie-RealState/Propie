@@ -25,13 +25,7 @@ export default function MyProperties() {
 
   if (loading) {
     return (
-      <div
-        style={{
-          minHeight: "100dvh",
-          background: "#f5f5f7",
-          fontFamily: "'Inter', sans-serif",
-        }}
-      >
+      <div style={{ ...pageShellStyle, background: "#f5f5f7" }}>
         <PropertyListSkeleton count={4} />
       </div>
     );
@@ -41,13 +35,12 @@ export default function MyProperties() {
     return (
       <div
         style={{
-          minHeight: "100dvh",
+          ...pageShellStyle,
           display: "grid",
           placeItems: "center",
           padding: 24,
           textAlign: "center",
           color: "#6e6e73",
-          fontFamily: "'Inter', sans-serif",
         }}
       >
         <div>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Copy, Check } from "lucide-react";
 import React from "react";
+import { pageScrollStyle, pageShellStyle } from "../components/layout/layout-styles";
 
 // Import social media icons
 const WhatsAppIcon = () => (
@@ -88,18 +89,11 @@ export default function Share() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f5f5f7",
-        fontFamily: "'Inter', sans-serif",
-      }}
-    >
+    <div style={pageShellStyle}>
       {/* Header */}
       <div
         style={{
+          flexShrink: 0,
           background: "white",
           borderBottom: "1px solid #e5e5ea",
           padding: "16px 20px",
@@ -148,12 +142,11 @@ export default function Share() {
       {/* Content */}
       <div
         style={{
-          flex: 1,
+          ...pageScrollStyle,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           padding: "24px 20px 40px",
-          overflowY: "auto",
         }}
       >
         <div style={{ width: "100%", maxWidth: 640, display: "flex", flexDirection: "column", gap: 20 }}>

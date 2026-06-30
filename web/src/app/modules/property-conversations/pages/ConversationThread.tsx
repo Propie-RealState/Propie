@@ -25,6 +25,7 @@ import {
   getConversationRoleLabel,
 } from "../utils/conversation-role-ui";
 import { showToast } from "../../../../lib/toast";
+import { pageScrollStyle, pageShellStyle } from "../../../components/layout/layout-styles";
 
 function formatAuthUserName(user: {
   profile?: { first_name?: string | null; last_name?: string | null } | null;
@@ -158,15 +159,7 @@ export default function ConversationThread() {
   }
 
   return (
-    <div
-      style={{
-        height: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f5f5f7",
-        fontFamily: "'Inter', sans-serif",
-      }}
-    >
+    <div style={pageShellStyle}>
       <div
         style={{
           flexShrink: 0,
@@ -259,8 +252,7 @@ export default function ConversationThread() {
 
       <div
         style={{
-          flex: 1,
-          overflowY: "auto",
+          ...pageScrollStyle,
           padding: "20px 16px",
           display: "flex",
           flexDirection: "column",
