@@ -1,7 +1,6 @@
 import type { FastifyInstance, RouteHandlerMethod } from "fastify";
 
 import { USER_ROLES } from "@/constants/roles";
-import { authMiddleware } from "@/middlewares/auth.middleware";
 import { cronSecretMiddleware } from "@/middlewares/cron-secret.middleware";
 import { requireRoles } from "@/middlewares/require-roles.middleware";
 
@@ -27,7 +26,7 @@ export async function propertyVisitsRoutes(app: FastifyInstance) {
   app.get(
     "/",
     {
-      preHandler: [authMiddleware, requireAuthenticated],
+      preHandler: requireAuthenticated,
     },
     listVisitsController as RouteHandlerMethod,
   );
@@ -35,10 +34,7 @@ export async function propertyVisitsRoutes(app: FastifyInstance) {
   app.get(
     "/analytics",
     {
-      preHandler: [
-        authMiddleware,
-        requireRoles([USER_ROLES.OWNER, USER_ROLES.AGENT]),
-      ],
+      preHandler: requireRoles([USER_ROLES.OWNER, USER_ROLES.AGENT]),
     },
     visitAnalyticsController as RouteHandlerMethod,
   );
@@ -54,7 +50,7 @@ export async function propertyVisitsRoutes(app: FastifyInstance) {
   app.get(
     "/:id",
     {
-      preHandler: [authMiddleware, requireAuthenticated],
+      preHandler: requireAuthenticated,
     },
     getVisitController as RouteHandlerMethod,
   );
@@ -62,10 +58,7 @@ export async function propertyVisitsRoutes(app: FastifyInstance) {
   app.post(
     "/",
     {
-      preHandler: [
-        authMiddleware,
-        requireRoles([USER_ROLES.OWNER, USER_ROLES.AGENT]),
-      ],
+      preHandler: requireRoles([USER_ROLES.OWNER, USER_ROLES.AGENT]),
     },
     createVisitController as RouteHandlerMethod,
   );
@@ -73,7 +66,7 @@ export async function propertyVisitsRoutes(app: FastifyInstance) {
   app.post(
     "/:id/confirm",
     {
-      preHandler: [authMiddleware, requireAuthenticated],
+      preHandler: requireAuthenticated,
     },
     confirmVisitController as RouteHandlerMethod,
   );
@@ -81,10 +74,7 @@ export async function propertyVisitsRoutes(app: FastifyInstance) {
   app.post(
     "/:id/reschedule",
     {
-      preHandler: [
-        authMiddleware,
-        requireRoles([USER_ROLES.OWNER, USER_ROLES.AGENT]),
-      ],
+      preHandler: requireRoles([USER_ROLES.OWNER, USER_ROLES.AGENT]),
     },
     rescheduleVisitController as RouteHandlerMethod,
   );
@@ -92,7 +82,7 @@ export async function propertyVisitsRoutes(app: FastifyInstance) {
   app.post(
     "/:id/cancel",
     {
-      preHandler: [authMiddleware, requireAuthenticated],
+      preHandler: requireAuthenticated,
     },
     cancelVisitController as RouteHandlerMethod,
   );
@@ -100,10 +90,7 @@ export async function propertyVisitsRoutes(app: FastifyInstance) {
   app.post(
     "/:id/complete",
     {
-      preHandler: [
-        authMiddleware,
-        requireRoles([USER_ROLES.OWNER, USER_ROLES.AGENT]),
-      ],
+      preHandler: requireRoles([USER_ROLES.OWNER, USER_ROLES.AGENT]),
     },
     completeVisitController as RouteHandlerMethod,
   );

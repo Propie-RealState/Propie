@@ -1,5 +1,6 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 
+import { applyPublicReadCache } from "@/lib/http/cache-headers";
 import {
   getAgentPublicProfileService,
   getUserPublicProfileService,
@@ -24,6 +25,7 @@ export async function getUserPublicProfileController(
     });
   }
 
+  applyPublicReadCache(reply);
   return reply.send({
     success: true,
     data: profile,
@@ -49,5 +51,6 @@ export async function getAgentPublicProfileController(
     });
   }
 
+  applyPublicReadCache(reply);
   return reply.send({ success: true, data: profile });
 }

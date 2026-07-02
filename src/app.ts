@@ -1,10 +1,12 @@
 import Fastify from "fastify";
 
+import compress from "@fastify/compress";
 import cors from "@fastify/cors";
 
 import rateLimit from "@fastify/rate-limit";
 
 import multipart from "@fastify/multipart";
+import zlib from "node:zlib";
 
 import {
   authRoutes,
@@ -40,6 +42,9 @@ import { adminRoutes } from "./modules/admin/routes/admin.routes";
 
 import { mediaRoutes } from "./modules/media/routes/media.routes";
 
+import { healthRoute } from "./routes/health.route";
+import { DEFAULT_BODY_LIMIT } from "./config/body-limits";
+
 // ========================================================
 // BUILD APP
 // ========================================================
@@ -49,7 +54,7 @@ export async function buildApp() {
   const app =
     Fastify({
       logger: true,
-      bodyLimit: 104_857_600,
+      bodyLimit: DEFAULT_BODY_LIMIT,
       requestTimeout: 300_000,
     });
 
@@ -82,6 +87,19 @@ export async function buildApp() {
 
   await app.register(rateLimit, {
     global: false,
+  });
+
+  await app.register(compress, {
+    threshold: 1024,
+    encodings: ["br", "gzip", "deflate"],
+    brotliOptions: {
+      params: {
+        [zlib.constants.BROTLI_PARAM_QUALITY]: 4,
+      },
+    },
+    zlibOptions: {
+      level: 6,
+    },
   });
 
   await app.register(
@@ -121,6 +139,8 @@ export async function buildApp() {
   // ======================================================
   // ROUTES
   // ======================================================
+
+  await app.register(healthRoute);
 
   await app.register(
     authRoutes,

@@ -1,0 +1,2 @@
+export const DEFAULT_BODY_LIMIT = 1_048_576;
+export const UPLOAD_BODY_LIMIT = 104_857_600;

@@ -1,5 +1,6 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 
+import { applyPublicReadCache } from "@/lib/http/cache-headers";
 import {
   getCommercializedPropertiesService,
   getPublishedPropertiesService,
@@ -17,6 +18,7 @@ export async function getCommercializedPropertiesController(
 
   const properties = await getCommercializedPropertiesService(agentId);
 
+  applyPublicReadCache(reply);
   return reply.send({ success: true, data: properties });
 }
 
@@ -32,5 +34,6 @@ export async function getPublishedPropertiesController(
 
   const properties = await getPublishedPropertiesService(userId);
 
+  applyPublicReadCache(reply);
   return reply.send({ success: true, data: properties });
 }

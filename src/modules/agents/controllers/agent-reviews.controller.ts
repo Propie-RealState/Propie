@@ -1,5 +1,6 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 
+import { applyPublicReadCache } from "@/lib/http/cache-headers";
 import {
   checkCanReviewService,
   createUserReviewService,
@@ -51,6 +52,7 @@ export async function listUserReviewsController(
     offset: query.offset ? parseInt(query.offset, 10) : 0,
   });
 
+  applyPublicReadCache(reply);
   return reply.send({ success: true, data: reviews });
 }
 
@@ -112,5 +114,6 @@ export async function listLegacyAgentReviewsController(
     offset: query.offset ? parseInt(query.offset, 10) : 0,
   });
 
+  applyPublicReadCache(reply);
   return reply.send({ success: true, data: reviews });
 }

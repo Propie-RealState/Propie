@@ -213,15 +213,33 @@ export default function Explore() {
 
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isCompact, setIsCompact] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    getPublishedProperties().then((data) => {
-      setProperties(data);
-      setLoading(false);
-    });
+    let cancelled = false;
+
+    getPublishedProperties()
+      .then((data) => {
+        if (cancelled) return;
+        setProperties(data);
+        setLoadError(null);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setLoadError("No pudimos cargar las propiedades. Revisá tu conexión e intentá de nuevo.");
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -332,6 +350,52 @@ export default function Explore() {
     return (
       <div style={{ ...pageShellStyle, background: "#f5f5f7" }}>
         <ExplorePageSkeleton />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div
+        style={{
+          ...pageShellStyle,
+          background: "#f5f5f7",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 24,
+          textAlign: "center",
+        }}
+      >
+        <p style={{ margin: "0 0 16px", color: "#1a1a1a", fontSize: 16, fontWeight: 600 }}>
+          {loadError}
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setLoading(true);
+            setLoadError(null);
+            getPublishedProperties()
+              .then((data) => {
+                setProperties(data);
+                setLoadError(null);
+              })
+              .catch(() => {
+                setLoadError("No pudimos cargar las propiedades. Revisá tu conexión e intentá de nuevo.");
+              })
+              .finally(() => setLoading(false));
+          }}
+          style={{
+            padding: "12px 20px",
+            borderRadius: 12,
+            border: "none",
+            background: theme.primary,
+            color: "white",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          Reintentar
+        </button>
       </div>
     );
   }

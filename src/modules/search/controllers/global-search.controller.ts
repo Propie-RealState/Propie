@@ -3,6 +3,7 @@ import {
   FastifyRequest,
 } from "fastify";
 
+import { applyOptionalAuthPublicCache } from "@/lib/http/cache-headers";
 import { isAgentDiscoveryAudience } from "@/modules/properties/utils/discovery-audience";
 import { GlobalSearchQuerySchema } from "../schemas/global-search.schema";
 import { globalSearchService } from "../services/global-search.service";
@@ -19,5 +20,6 @@ export async function globalSearchController(
     forAgentDiscovery: isAgentDiscoveryAudience(request),
   });
 
+  applyOptionalAuthPublicCache(request, reply, 30);
   return reply.send(results);
 }
