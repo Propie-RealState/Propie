@@ -2,7 +2,8 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Outlet, useLocation, useNavigationType } from "react-router-dom";
-import React from "react";
+import React, { Suspense } from "react";
+import { RouteFallback } from "./RouteFallback";
 
 // Easing from the reference: smooth cinematic feel, slight ease-out spring
 const EASE = [0.54, 0.35, 0.29, 0.99] as const;
@@ -35,7 +36,9 @@ export function PageTransition() {
           animate={{ opacity: 1, y: 0, transition: reduceMotion ? { duration: 0 } : ENTER }}
           exit={reduceMotion ? { opacity: 1 } : { opacity: 0, y: exitY, transition: EXIT }}
         >
-          <Outlet />
+          <Suspense fallback={<RouteFallback />}>
+            <Outlet />
+          </Suspense>
         </motion.div>
       </AnimatePresence>
     </div>

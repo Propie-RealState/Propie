@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PropertyCompactCard } from "../../../components/properties/PropertyCompactCard";
 import "../../../components/properties/property-presentation.css";
@@ -15,8 +15,7 @@ import {
 import { useGlobalSearch } from "../hooks/useGlobalSearch";
 import type { GlobalSearchSelection } from "../types/global-search.types";
 import { useAuth } from "../../../../context/AuthContext";
-import type { Property } from "../types/property.types";
-import { getPublishedProperties } from "../services/explore.service";
+import { usePublishedProperties } from "../hooks/usePublishedProperties";
 import { useAppTheme } from "../../../../theme/useAppTheme";
 import { useMapStore } from "../../map/stores/useMapStore";
 import type { MapFilters } from "../../map/types/map.types";
@@ -211,36 +210,18 @@ export default function Explore() {
   const navigate = useNavigate();
   const theme = useAppTheme();
 
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const {
+    data: properties = [],
+    isLoading: loading,
+    isError,
+    refetch,
+  } = usePublishedProperties();
+  const loadError = isError
+    ? "No pudimos cargar las propiedades. Revisá tu conexión e intentá de nuevo."
+    : null;
   const [isCompact, setIsCompact] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    getPublishedProperties()
-      .then((data) => {
-        if (cancelled) return;
-        setProperties(data);
-        setLoadError(null);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setLoadError("No pudimos cargar las propiedades. Revisá tu conexión e intentá de nuevo.");
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     const el = scrollAreaRef.current;
@@ -290,10 +271,15 @@ export default function Explore() {
     return () => window.removeEventListener("favorites:changed", sync);
   }, []);
 
-  const toggleFav = (id: string) => {
-    if (!user) { navigate("/ingresar"); return; }
-    toggleFavoriteId(id);
-  };
+  const toggleFav = useCallback(
+    (id: string) => {
+      if (!user) { navigate("/ingresar"); return; }
+      toggleFavoriteId(id);
+    },
+    [user, navigate],
+  );
+
+  const favoriteSet = useMemo(() => new Set(favorites), [favorites]);
 
   const searchPropertyIds = useMemo(
     () => new Set(searchResults.properties.map((p) => p.id)),
@@ -371,19 +357,7 @@ export default function Explore() {
         </p>
         <button
           type="button"
-          onClick={() => {
-            setLoading(true);
-            setLoadError(null);
-            getPublishedProperties()
-              .then((data) => {
-                setProperties(data);
-                setLoadError(null);
-              })
-              .catch(() => {
-                setLoadError("No pudimos cargar las propiedades. Revisá tu conexión e intentá de nuevo.");
-              })
-              .finally(() => setLoading(false));
-          }}
+          onClick={() => refetch()}
           style={{
             padding: "12px 20px",
             borderRadius: 12,
@@ -547,8 +521,8 @@ export default function Explore() {
               <PropertyCompactCard
                 key={property.id}
                 property={property}
-                isFav={favorites.includes(property.id)}
-                onToggleFav={() => toggleFav(property.id)}
+                isFav={favoriteSet.has(property.id)}
+                onToggleFav={toggleFav}
               />
             ))}
           </div>

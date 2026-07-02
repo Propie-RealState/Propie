@@ -1,13 +1,19 @@
-import posthog from "posthog-js";
+import type { PostHog } from "posthog-js";
 
 const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
 const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST as string | undefined;
 
-let initialized = false;
+// posthog-js is loaded lazily so it never blocks React startup and stays out of
+// the initial bundle (it lands in its own async "posthog" chunk).
+let instance: PostHog | null = null;
+let initStarted = false;
 
-export function initAnalytics() {
-  if (initialized) return;
+export async function initAnalytics(): Promise<void> {
+  if (initStarted) return;
   if (!POSTHOG_KEY) return;
+  initStarted = true;
+
+  const { default: posthog } = await import("posthog-js");
 
   posthog.init(POSTHOG_KEY, {
     api_host: POSTHOG_HOST || "https://us.i.posthog.com",
@@ -18,22 +24,17 @@ export function initAnalytics() {
     disable_session_recording: import.meta.env.DEV,
   });
 
-  initialized = true;
+  instance = posthog;
 }
 
 export function identifyUser(userId: string, properties: Record<string, unknown>) {
-  if (!initialized) return;
-  posthog.identify(userId, properties);
+  instance?.identify(userId, properties);
 }
 
 export function resetUser() {
-  if (!initialized) return;
-  posthog.reset();
+  instance?.reset();
 }
 
 export function trackEvent(event: string, properties?: Record<string, unknown>) {
-  if (!initialized) return;
-  posthog.capture(event, properties);
+  instance?.capture(event, properties);
 }
-
-export { posthog };

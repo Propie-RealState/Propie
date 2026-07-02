@@ -6,8 +6,7 @@ import { Heart } from 'lucide-react';
 import { AppFooterNav } from '../../../components/navigation/AppFooterNav';
 import { NotificationsBell } from '../../../components/navigation/NotificationsBell';
 import PropertyCard from '../../explore/components/PropertyCard';
-import { getPublishedProperties } from '../../explore/services/explore.service';
-import type { Property } from '../../explore/types/property.types';
+import { usePublishedProperties } from '../../explore/hooks/usePublishedProperties';
 import { getFavoriteIds, toggleFavoriteId } from '../../../../lib/favorites-storage';
 import { useAppTheme } from '../../../../theme/useAppTheme';
 import { FavoritesPageSkeleton } from '../../../components/skeletons/PageSkeletons';
@@ -16,9 +15,8 @@ import { pageShellStyle } from '../../../components/layout/layout-styles';
 export default function Favorites() {
   const navigate = useNavigate();
   const theme = useAppTheme();
-  const [properties, setProperties] = useState<Property[]>([]);
+  const { data: properties = [], isLoading: loading } = usePublishedProperties();
   const [favoriteIds, setFavoriteIds] = useState<string[]>(getFavoriteIds());
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     function syncFavorites() {
@@ -29,16 +27,6 @@ export default function Favorites() {
     return () => {
       window.removeEventListener('favorites:changed', syncFavorites);
     };
-  }, []);
-
-  useEffect(() => {
-    async function load() {
-      const data = await getPublishedProperties();
-      setProperties(data);
-      setLoading(false);
-    }
-
-    load();
   }, []);
 
   const favorites = useMemo(

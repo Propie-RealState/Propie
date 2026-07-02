@@ -1,8 +1,6 @@
-/* Brand PDF: primaria Mont (Montserrat Black como sustituto web), secundaria Roboto */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* Brand PDF: primaria Mont (Montserrat Black como sustituto web), secundaria Roboto.
+   Font <link> tags live in index.html (preconnect + single non-blocking request)
+   so they no longer render-block the CSS pipeline. */
 
 /* Hide scrollbars globally while keeping scroll functionality */
 * {

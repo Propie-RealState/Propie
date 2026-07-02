@@ -5,51 +5,59 @@ import { RegisterProvider } from "../context/RegisterContext";
 import { RegisterStepLayout } from "./components/register/RegisterStepLayout";
 import { RegistrationRouteGate } from "../components/auth/RegistrationRouteGate";
 
+// Explore stays eager: it is the default landing route and the critical path.
 import Explore from "./modules/explore/pages/Explore.tsx";
-import Login from "./pages/Login";
 
-import RegisterChoice from "./pages/RegisterChoice";
-import RegisterPropie from "./pages/RegisterDueño";
-import RegisterAgente from "./pages/RegisterAgente";
-import RegisterVerification from "./pages/RegisterVerification";
-import RegisterPersonalData from "./pages/RegisterPersonalData";
-import RegisterSecurity from "./pages/RegisterSecurity";
-import RegisterProfilePhoto from "./pages/RegisterProfilePhoto";
-import RegisterOwnerInfo from "./pages/RegisterOwnerInfo";
-import RegisterAgentInfo from "./pages/RegisterAgentInfo";
-import RegisterClient from "./pages/RegisterClient";
-import RegisterClientInfo from "./pages/RegisterClientInfo";
 import { PublisherRoute } from "../components/auth/PublisherRoute";
 import { ProtectedRoute } from "../components/auth/ProtectedRoute";
 import { AdminRoute } from "../components/auth/AdminRoute";
-import Favorites from "./modules/favorites/pages/Favorites";
-
-import PublishStep1 from "./modules/publish/pages/PublishStep1";
-import PublishStep2 from "./modules/publish/pages/PublishStep2";
-import PublishStep3 from "./modules/publish/pages/PublishStep3";
-import PublishStep4 from "./modules/publish/pages/PublishStep4";
-import PublishStep5 from "./modules/publish/pages/PublishStep5";
-
-import PropertyDetails from "./modules/explore/pages/PropertyDetails";
-import EditProperty from "./modules/explore/pages/EditProperty";
-
-import Share from "./pages/Share";
-import Profile from "./modules/profile/pages/Profile.tsx";
-import AgentPublicProfile from "./modules/agents/pages/AgentPublicProfile.tsx";
-import UserPublicProfile from "./modules/agents/pages/UserPublicProfile.tsx";
+// Lightweight (types + localStorage only) and wraps every route, so it stays
+// eager — lazy-loading it here would delay the critical Explore route.
 import { PropertyPublishProvider } from "./modules/publish/context/PropertyPublishContext";
-import MyProperties from "./modules/my-properties/pages/MyProperties";
-import ConversationsInbox from "./modules/property-conversations/pages/ConversationsInbox";
-import ConversationThread from "./modules/property-conversations/pages/ConversationThread";
-import MyVisits from "./modules/visits/pages/MyVisits";
-import VisitDetails from "./modules/visits/pages/VisitDetails";
-import Notifications from "./modules/agent-applications/pages/Notifications";
-import AgentApplications from "./modules/agent-applications/pages/Messages";
-import AdminDashboard from "./modules/admin/pages/AdminDashboard";
 
-const PropertyMap = lazy(
-  () => import("./modules/map/pages/PropertyMap")
-);
+// ==================================================
+// Lazy-loaded routes — split out of the initial bundle.
+// Each becomes its own chunk fetched on navigation.
+// ==================================================
+const Login = lazy(() => import("./pages/Login"));
+
+const RegisterChoice = lazy(() => import("./pages/RegisterChoice"));
+const RegisterPropie = lazy(() => import("./pages/RegisterDueño"));
+const RegisterAgente = lazy(() => import("./pages/RegisterAgente"));
+const RegisterVerification = lazy(() => import("./pages/RegisterVerification"));
+const RegisterPersonalData = lazy(() => import("./pages/RegisterPersonalData"));
+const RegisterSecurity = lazy(() => import("./pages/RegisterSecurity"));
+const RegisterProfilePhoto = lazy(() => import("./pages/RegisterProfilePhoto"));
+const RegisterOwnerInfo = lazy(() => import("./pages/RegisterOwnerInfo"));
+const RegisterAgentInfo = lazy(() => import("./pages/RegisterAgentInfo"));
+const RegisterClient = lazy(() => import("./pages/RegisterClient"));
+const RegisterClientInfo = lazy(() => import("./pages/RegisterClientInfo"));
+
+const Favorites = lazy(() => import("./modules/favorites/pages/Favorites"));
+
+const PublishStep1 = lazy(() => import("./modules/publish/pages/PublishStep1"));
+const PublishStep2 = lazy(() => import("./modules/publish/pages/PublishStep2"));
+const PublishStep3 = lazy(() => import("./modules/publish/pages/PublishStep3"));
+const PublishStep4 = lazy(() => import("./modules/publish/pages/PublishStep4"));
+const PublishStep5 = lazy(() => import("./modules/publish/pages/PublishStep5"));
+
+const PropertyDetails = lazy(() => import("./modules/explore/pages/PropertyDetails"));
+const EditProperty = lazy(() => import("./modules/explore/pages/EditProperty"));
+
+const Share = lazy(() => import("./pages/Share"));
+const Profile = lazy(() => import("./modules/profile/pages/Profile.tsx"));
+const AgentPublicProfile = lazy(() => import("./modules/agents/pages/AgentPublicProfile.tsx"));
+const UserPublicProfile = lazy(() => import("./modules/agents/pages/UserPublicProfile.tsx"));
+const MyProperties = lazy(() => import("./modules/my-properties/pages/MyProperties"));
+const ConversationsInbox = lazy(() => import("./modules/property-conversations/pages/ConversationsInbox"));
+const ConversationThread = lazy(() => import("./modules/property-conversations/pages/ConversationThread"));
+const MyVisits = lazy(() => import("./modules/visits/pages/MyVisits"));
+const VisitDetails = lazy(() => import("./modules/visits/pages/VisitDetails"));
+const Notifications = lazy(() => import("./modules/agent-applications/pages/Notifications"));
+const AgentApplications = lazy(() => import("./modules/agent-applications/pages/Messages"));
+const AdminDashboard = lazy(() => import("./modules/admin/pages/AdminDashboard"));
+
+const PropertyMap = lazy(() => import("./modules/map/pages/PropertyMap"));
 
 function MapRoute() {
   return (
@@ -57,20 +65,13 @@ function MapRoute() {
       fallback={
         <div
           style={{
-            height:
-              "100dvh",
-            display:
-              "grid",
-            placeItems:
-              "center",
-            background:
-              "#f5f5f7",
-            color:
-              "#141414",
-            fontFamily:
-              "'Inter', sans-serif",
-            fontWeight:
-              800,
+            height: "100dvh",
+            display: "grid",
+            placeItems: "center",
+            background: "#f5f5f7",
+            color: "#141414",
+            fontFamily: "'Inter', sans-serif",
+            fontWeight: 800,
           }}
         >
           Cargando mapa...
@@ -81,274 +82,271 @@ function MapRoute() {
     </Suspense>
   );
 }
-export const router =
-  createBrowserRouter([
-    {
-      path: "/",
-    
-      element: (
-        <PropertyPublishProvider>
-          <Root />
-        </PropertyPublishProvider>
-      ),
-    
-      children: [
 
-        // ==================================================
-        // PUBLIC
-        // ==================================================
+export const router = createBrowserRouter([
+  {
+    path: "/",
 
-        {
-          index: true,
-          element: <Navigate to="/explorar" replace />,
-        },
+    element: (
+      <PropertyPublishProvider>
+        <Root />
+      </PropertyPublishProvider>
+    ),
 
-        {
-          path: "explore",
-          element: <Navigate to="/explorar" replace />,
-        },
+    children: [
+      // ==================================================
+      // PUBLIC
+      // ==================================================
 
-        {
-          path: "explorar",
-          Component: Explore,
-        },
+      {
+        index: true,
+        element: <Navigate to="/explorar" replace />,
+      },
 
-        {
-          path: "mapa",
-          Component: MapRoute,
-        },
+      {
+        path: "explore",
+        element: <Navigate to="/explorar" replace />,
+      },
 
-        {
-          path: "ingresar",
-          Component: Login,
-        },
+      {
+        path: "explorar",
+        Component: Explore,
+      },
 
-        {
-          path: "registro",
-          element: (
-            <RegisterProvider>
-              <RegistrationRouteGate />
-            </RegisterProvider>
-          ),
-          children: [
-            {
-              index: true,
-              Component: RegisterChoice,
-            },
+      {
+        path: "mapa",
+        Component: MapRoute,
+      },
 
-            {
-              element: <RegisterStepLayout />,
-              children: [
-                {
-                  path: "owner",
-                  Component: RegisterPropie,
-                },
+      {
+        path: "ingresar",
+        Component: Login,
+      },
 
-                {
-                  path: "agent",
-                  Component: RegisterAgente,
-                },
+      {
+        path: "registro",
+        element: (
+          <RegisterProvider>
+            <RegistrationRouteGate />
+          </RegisterProvider>
+        ),
+        children: [
+          {
+            index: true,
+            Component: RegisterChoice,
+          },
 
-                {
-                  path: "client",
-                  Component: RegisterClient,
-                },
+          {
+            element: <RegisterStepLayout />,
+            children: [
+              {
+                path: "owner",
+                Component: RegisterPropie,
+              },
 
-                {
-                  path: "verification",
-                  Component: RegisterVerification,
-                },
+              {
+                path: "agent",
+                Component: RegisterAgente,
+              },
 
-                {
-                  path: "personal-data",
-                  Component: RegisterPersonalData,
-                },
+              {
+                path: "client",
+                Component: RegisterClient,
+              },
 
-                {
-                  path: "security",
-                  Component: RegisterSecurity,
-                },
+              {
+                path: "verification",
+                Component: RegisterVerification,
+              },
 
-                {
-                  path: "profile-photo",
-                  Component: RegisterProfilePhoto,
-                },
+              {
+                path: "personal-data",
+                Component: RegisterPersonalData,
+              },
 
-                {
-                  path: "owner-info",
-                  Component: RegisterOwnerInfo,
-                },
+              {
+                path: "security",
+                Component: RegisterSecurity,
+              },
 
-                {
-                  path: "agent-info",
-                  Component: RegisterAgentInfo,
-                },
+              {
+                path: "profile-photo",
+                Component: RegisterProfilePhoto,
+              },
 
-                {
-                  path: "client-info",
-                  Component: RegisterClientInfo,
-                },
-              ],
-            },
-          ],
-        },
+              {
+                path: "owner-info",
+                Component: RegisterOwnerInfo,
+              },
 
-        {
-          path: "propiedad/:id",
-          Component: PropertyDetails,
-        },
+              {
+                path: "agent-info",
+                Component: RegisterAgentInfo,
+              },
 
-        {
-          path: "compartir/:id",
-          Component: Share,
-        },
+              {
+                path: "client-info",
+                Component: RegisterClientInfo,
+              },
+            ],
+          },
+        ],
+      },
 
-        {
-          path: "agentes/:agentId",
-          Component: AgentPublicProfile,
-        },
+      {
+        path: "propiedad/:id",
+        Component: PropertyDetails,
+      },
 
-        {
-          path: "perfil/:userId",
-          Component: UserPublicProfile,
-        },
+      {
+        path: "compartir/:id",
+        Component: Share,
+      },
 
+      {
+        path: "agentes/:agentId",
+        Component: AgentPublicProfile,
+      },
 
+      {
+        path: "perfil/:userId",
+        Component: UserPublicProfile,
+      },
 
-        // ==================================================
-        // PROTECTED
-        // ==================================================
+      // ==================================================
+      // PROTECTED
+      // ==================================================
 
-        {
-          path: "perfil",
-          element: (
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          ),
-        },
+      {
+        path: "perfil",
+        element: (
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        ),
+      },
 
-        {
-          path: "favoritos",
-          element: (
-            <ProtectedRoute>
-              <Favorites />
-            </ProtectedRoute>
-          ),
-        },
+      {
+        path: "favoritos",
+        element: (
+          <ProtectedRoute>
+            <Favorites />
+          </ProtectedRoute>
+        ),
+      },
 
-        {
-          path: "mensajes",
-          element: (
-            <ProtectedRoute>
-              <ConversationsInbox />
-            </ProtectedRoute>
-          ),
-        },
+      {
+        path: "mensajes",
+        element: (
+          <ProtectedRoute>
+            <ConversationsInbox />
+          </ProtectedRoute>
+        ),
+      },
 
-        {
-          path: "mensajes/:conversationId",
-          element: (
-            <ProtectedRoute>
-              <ConversationThread />
-            </ProtectedRoute>
-          ),
-        },
+      {
+        path: "mensajes/:conversationId",
+        element: (
+          <ProtectedRoute>
+            <ConversationThread />
+          </ProtectedRoute>
+        ),
+      },
 
-        {
-          path: "visitas",
-          element: (
-            <ProtectedRoute>
-              <MyVisits />
-            </ProtectedRoute>
-          ),
-        },
+      {
+        path: "visitas",
+        element: (
+          <ProtectedRoute>
+            <MyVisits />
+          </ProtectedRoute>
+        ),
+      },
 
-        {
-          path: "visitas/:visitId",
-          element: (
-            <ProtectedRoute>
-              <VisitDetails />
-            </ProtectedRoute>
-          ),
-        },
+      {
+        path: "visitas/:visitId",
+        element: (
+          <ProtectedRoute>
+            <VisitDetails />
+          </ProtectedRoute>
+        ),
+      },
 
-        {
-          path: "notificaciones",
-          element: (
-            <ProtectedRoute>
-              <Notifications />
-            </ProtectedRoute>
-          ),
-        },
+      {
+        path: "notificaciones",
+        element: (
+          <ProtectedRoute>
+            <Notifications />
+          </ProtectedRoute>
+        ),
+      },
 
-        {
-          path: "solicitudes-agentes",
-          element: (
-            <ProtectedRoute>
-              <AgentApplications />
-            </ProtectedRoute>
-          ),
-        },
+      {
+        path: "solicitudes-agentes",
+        element: (
+          <ProtectedRoute>
+            <AgentApplications />
+          </ProtectedRoute>
+        ),
+      },
 
-        {
-          path: "admin",
-          element: (
-            <AdminRoute>
-              <AdminDashboard />
-            </AdminRoute>
-          ),
-        },
+      {
+        path: "admin",
+        element: (
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
+        ),
+      },
 
-        {
-          path: "mis-propiedades",
-          element: (
-            <PublisherRoute>
-              <MyProperties />
-            </PublisherRoute>
-          ),
-        },
-        {
-          path: "/mis-propiedades/:id/editar",
-          element: (
-            <PublisherRoute>
-              <EditProperty />
-            </PublisherRoute>
-          ),
-        },
-        {
-          path: "/publicar",
-          element: (
-            <PublisherRoute>
-              <Outlet />
-            </PublisherRoute>
-          ),
-        
-          children: [
-            {
-              index: true,
-              element: <PublishStep1 />,
-            },
-        
-            {
-              path: "fotos-videos",
-              element: <PublishStep2 />,
-            },
-        
-            {
-              path: "informacion",
-              element: <PublishStep3 />,
-            },
-            {
-              path: "comercializacion",
-              element: <PublishStep4 />,
-            },
-            {
-              path: "revision",
-              element: <PublishStep5 />,
-            },
-          ],
-        }
-      ],
-    },
-  ]);
+      {
+        path: "mis-propiedades",
+        element: (
+          <PublisherRoute>
+            <MyProperties />
+          </PublisherRoute>
+        ),
+      },
+      {
+        path: "/mis-propiedades/:id/editar",
+        element: (
+          <PublisherRoute>
+            <EditProperty />
+          </PublisherRoute>
+        ),
+      },
+      {
+        path: "/publicar",
+        element: (
+          <PublisherRoute>
+            <Outlet />
+          </PublisherRoute>
+        ),
+
+        children: [
+          {
+            index: true,
+            element: <PublishStep1 />,
+          },
+
+          {
+            path: "fotos-videos",
+            element: <PublishStep2 />,
+          },
+
+          {
+            path: "informacion",
+            element: <PublishStep3 />,
+          },
+          {
+            path: "comercializacion",
+            element: <PublishStep4 />,
+          },
+          {
+            path: "revision",
+            element: <PublishStep5 />,
+          },
+        ],
+      },
+    ],
+  },
+]);
