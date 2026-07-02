@@ -1,5 +1,7 @@
 import { FastifyInstance, FastifyRequest, RouteHandlerMethod } from "fastify";
 
+import { UPLOAD_BODY_LIMIT } from "@/config/body-limits";
+
 import {
   authMiddleware,
   optionalAuthMiddleware,
@@ -161,6 +163,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
     "/:id/images",
 
     {
+      bodyLimit: UPLOAD_BODY_LIMIT,
       preHandler: requirePropertyManager,
     },
 
@@ -253,6 +256,7 @@ export async function propertiesRoutes(app: FastifyInstance) {
   app.post(
     "/:propertyId/videos",
     {
+      bodyLimit: UPLOAD_BODY_LIMIT,
       preHandler: requirePropertyManager,
     },
     uploadPropertyVideosController as RouteHandlerMethod,

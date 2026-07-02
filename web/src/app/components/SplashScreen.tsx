@@ -2,12 +2,36 @@
 
 import { motion } from "motion/react";
 
-import { PROPIE_LOGO_SRC } from "./PropieLogo";
-
 const BRAND = "rgb(68, 23, 230)";
 const EXIT_MS = 750;
-/** Bar fill duration — keep in sync with AppStartup SPLASH_MIN_MS */
-export const LOADER_MS = 2000;
+/** Brief progress bar — no artificial multi-second hold */
+export const LOADER_MS = 400;
+
+function SplashLogo() {
+  return (
+    <svg
+      viewBox="0 0 200 72"
+      width={200}
+      height={72}
+      role="img"
+      aria-label="Propie"
+      className="block h-auto w-[min(52vw,200px)] max-w-[200px]"
+    >
+      <text
+        x="100"
+        y="50"
+        textAnchor="middle"
+        fill={BRAND}
+        fontFamily="'Montserrat', 'Inter', system-ui, sans-serif"
+        fontSize="40"
+        fontWeight="800"
+        letterSpacing="-0.02em"
+      >
+        Propie
+      </text>
+    </svg>
+  );
+}
 
 export default function SplashScreen() {
   return (
@@ -28,16 +52,9 @@ export default function SplashScreen() {
         className="relative z-10 flex items-center justify-center"
         initial={{ opacity: 0, scale: 0.94 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       >
-        <img
-          src={PROPIE_LOGO_SRC}
-          alt="Propie"
-          width={200}
-          height={72}
-          decoding="async"
-          className="block h-auto w-[min(52vw,200px)] max-w-[200px] object-contain"
-        />
+        <SplashLogo />
       </motion.div>
 
       <div
@@ -50,10 +67,6 @@ export default function SplashScreen() {
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
           transition={{ duration: LOADER_MS / 1000, ease: [0.4, 0, 0.2, 1] }}
-        />
-        <div
-          className="absolute inset-0 animate-[splash-shimmer_1.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/50 to-transparent"
-          style={{ width: "55%" }}
         />
       </div>
     </motion.div>

@@ -1,5 +1,9 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 
+import {
+  applyOptionalAuthDetailCache,
+  applyOptionalAuthPublicCache,
+} from "@/lib/http/cache-headers";
 import { isAgentDiscoveryAudience } from "../utils/discovery-audience";
 import { findPropertyByIdService } from "../services/find-property-by-id.service";
 import { getMapPropertiesService } from "../services/get-map-properties.service";
@@ -19,6 +23,7 @@ export async function getPropertiesController(
     forAgentDiscovery: isAgentDiscoveryAudience(request),
   });
 
+  applyOptionalAuthPublicCache(request, reply);
   return reply.send(properties);
 }
 
@@ -32,6 +37,7 @@ export async function getMapPropertiesController(
     forAgentDiscovery: isAgentDiscoveryAudience(request),
   });
 
+  applyOptionalAuthPublicCache(request, reply);
   return reply.send({
     items,
   });
@@ -47,6 +53,7 @@ export async function getNearbyPropertiesController(
     forAgentDiscovery: isAgentDiscoveryAudience(request),
   });
 
+  applyOptionalAuthPublicCache(request, reply);
   return reply.send({
     items,
     limit: query.limit,
@@ -84,5 +91,6 @@ export async function findPropertyByIdController(
     });
   }
 
+  applyOptionalAuthDetailCache(request, reply);
   return reply.send(property);
 }

@@ -3,6 +3,7 @@ import {
   FastifyRequest,
 } from "fastify";
 
+import { applyPublicReadCache } from "@/lib/http/cache-headers";
 import {
   SearchAddressQuerySchema,
 } from "../schemas/geocoding.schema";
@@ -26,6 +27,7 @@ export async function searchAddressController(
       query.limit
     );
 
+  applyPublicReadCache(reply, 600);
   return reply.send({
     items,
   });

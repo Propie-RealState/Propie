@@ -1,7 +1,6 @@
 import type { FastifyInstance, RouteHandlerMethod } from "fastify";
 
 import { USER_ROLES } from "@/constants/roles";
-import { authMiddleware } from "@/middlewares/auth.middleware";
 import { requireRoles } from "@/middlewares/require-roles.middleware";
 import {
   archiveConversationController,
@@ -29,10 +28,7 @@ export async function propertyConversationsRoutes(
   app.post(
     "/",
     {
-      preHandler: [
-        authMiddleware,
-        requireRoles([USER_ROLES.CLIENT]),
-      ],
+      preHandler: requireRoles([USER_ROLES.CLIENT]),
     },
     startConversationController as RouteHandlerMethod,
   );
@@ -40,10 +36,7 @@ export async function propertyConversationsRoutes(
   app.post(
     "/internal",
     {
-      preHandler: [
-        authMiddleware,
-        requireRoles([USER_ROLES.OWNER, USER_ROLES.AGENT]),
-      ],
+      preHandler: requireRoles([USER_ROLES.OWNER, USER_ROLES.AGENT]),
     },
     startInternalConversationController as RouteHandlerMethod,
   );
@@ -51,7 +44,7 @@ export async function propertyConversationsRoutes(
   app.get(
     "/",
     {
-      preHandler: [authMiddleware, requireAuthenticated],
+      preHandler: requireAuthenticated,
     },
     listConversationsController as RouteHandlerMethod,
   );
@@ -59,10 +52,7 @@ export async function propertyConversationsRoutes(
   app.get(
     "/historical",
     {
-      preHandler: [
-        authMiddleware,
-        requireRoles([USER_ROLES.AGENT]),
-      ],
+      preHandler: requireRoles([USER_ROLES.AGENT]),
     },
     listHistoricalConversationsController as RouteHandlerMethod,
   );
@@ -70,7 +60,7 @@ export async function propertyConversationsRoutes(
   app.get(
     "/:id",
     {
-      preHandler: [authMiddleware, requireAuthenticated],
+      preHandler: requireAuthenticated,
     },
     getConversationController as RouteHandlerMethod,
   );
@@ -78,7 +68,7 @@ export async function propertyConversationsRoutes(
   app.get(
     "/:id/messages",
     {
-      preHandler: [authMiddleware, requireAuthenticated],
+      preHandler: requireAuthenticated,
     },
     listMessagesController as RouteHandlerMethod,
   );
@@ -86,7 +76,7 @@ export async function propertyConversationsRoutes(
   app.post(
     "/:id/messages",
     {
-      preHandler: [authMiddleware, requireAuthenticated],
+      preHandler: requireAuthenticated,
     },
     sendMessageController as RouteHandlerMethod,
   );
@@ -94,7 +84,7 @@ export async function propertyConversationsRoutes(
   app.post(
     "/:id/read",
     {
-      preHandler: [authMiddleware, requireAuthenticated],
+      preHandler: requireAuthenticated,
     },
     markReadController as RouteHandlerMethod,
   );
@@ -107,7 +97,7 @@ export async function propertyConversationsRoutes(
   app.post(
     "/:id/archive",
     {
-      preHandler: [authMiddleware, requireConversationManager],
+      preHandler: requireConversationManager,
     },
     archiveConversationController as RouteHandlerMethod,
   );
@@ -115,7 +105,7 @@ export async function propertyConversationsRoutes(
   app.post(
     "/:id/close",
     {
-      preHandler: [authMiddleware, requireConversationManager],
+      preHandler: requireConversationManager,
     },
     closeConversationController as RouteHandlerMethod,
   );
@@ -123,7 +113,7 @@ export async function propertyConversationsRoutes(
   app.post(
     "/:id/reopen",
     {
-      preHandler: [authMiddleware, requireConversationManager],
+      preHandler: requireConversationManager,
     },
     reopenConversationController as RouteHandlerMethod,
   );

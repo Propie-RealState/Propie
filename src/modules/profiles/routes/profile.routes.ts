@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 
+import { UPLOAD_BODY_LIMIT } from "@/config/body-limits";
 import { authMiddleware }
 from "../../../middlewares/auth.middleware";
 
@@ -15,7 +16,10 @@ export async function profileRoutes(
 
   app.post(
     "/me/avatar",
-    { preHandler: authMiddleware },
+    {
+      bodyLimit: UPLOAD_BODY_LIMIT,
+      preHandler: authMiddleware,
+    },
     uploadAvatarController,
   );
 
