@@ -1,40 +1,36 @@
-const BRAND = "rgb(68, 23, 230)";
+/** Splash / light backgrounds */
+export const PROPIE_LOGO_SRC = "/logo.png";
+
+/** White wordmark for hero headers (register, publish, login) */
+export const PROPIE_LOGO_HERO_SRC = "/LOGO%20B.png";
 
 export type PropieLogoProps = {
   size?: number;
   /**
-   * `onHero`: white wordmark on gradient/dark backgrounds.
+   * `onHero`: white wordmark on gradient/dark backgrounds (no pill).
    * `inline`: colored mark for light backgrounds.
    */
   variant?: "onHero" | "inline";
 };
 
 export function PropieLogo({ size = 46, variant = "onHero" }: PropieLogoProps) {
-  const fill = variant === "onHero" ? "#ffffff" : BRAND;
-  const height = Math.max(28, size * 0.72);
-  const width = Math.min(260, size * 4);
+  const src = variant === "onHero" ? PROPIE_LOGO_HERO_SRC : PROPIE_LOGO_SRC;
 
   return (
-    <svg
-      viewBox="0 0 200 72"
-      width={width}
-      height={height}
-      role="img"
-      aria-label="Propie"
-      style={{ display: "block", height, width: "auto", maxWidth: width }}
-    >
-      <text
-        x="100"
-        y="50"
-        textAnchor="middle"
-        fill={fill}
-        fontFamily="'Montserrat', 'Inter', system-ui, sans-serif"
-        fontSize="40"
-        fontWeight="800"
-        letterSpacing="-0.02em"
-      >
-        Propie
-      </text>
-    </svg>
+    <img
+      src={src}
+      alt="Propie"
+      width={200}
+      height={72}
+      decoding="async"
+      style={{
+        height: Math.max(28, size * 0.72),
+        width: "auto",
+        maxWidth: Math.min(260, size * 4),
+        display: "block",
+        objectFit: "contain",
+        objectPosition: "center",
+      }}
+    />
   );
 }

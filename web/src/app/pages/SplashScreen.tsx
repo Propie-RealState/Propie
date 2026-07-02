@@ -7,8 +7,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import SplashScreen, { LOADER_MS } from "../components/SplashScreen";
 
-/** Logo + bar entrance — no artificial multi-second delay */
-const SPLASH_MIN_MS = LOADER_MS + 80;
+/** Wait for loader to reach 100% + brief hold */
+const SPLASH_MIN_MS = LOADER_MS + 200;
 const EXIT_UNMOUNT_MS = 850;
 const EXPLORE_PATH = "/explorar";
 
