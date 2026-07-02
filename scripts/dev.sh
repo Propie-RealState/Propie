@@ -164,7 +164,7 @@ start_frontend () {
 
   cd web
 
-  npm run dev &
+  pnpm run dev &
 
   FRONT_PID=$!
 
