@@ -1,15 +1,33 @@
 import { FastifyReply, FastifyRequest } from "fastify";
+import { z } from "zod";
 
 import {
   applyOptionalAuthDetailCache,
   applyOptionalAuthPublicCache,
 } from "@/lib/http/cache-headers";
+import { decodeCursor } from "@/database/shared/cursor";
+
+// Explore listing pagination query.
+//   - No params            → full array (legacy, current default).
+//   - `offset` present      → legacy LIMIT/OFFSET array (deprecated, temporary).
+//   - `cursor` and/or `limit` (no offset) → keyset envelope (preferred).
+const ExplorePaginationSchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+  cursor: z.string().min(1).optional(),
+});
+
+const DEFAULT_KEYSET_LIMIT = 20;
+
 import { isAgentDiscoveryAudience } from "../utils/discovery-audience";
 import { findPropertyByIdService } from "../services/find-property-by-id.service";
 import { getMapPropertiesService } from "../services/get-map-properties.service";
 import { getMyPropertiesService } from "../services/get-my-properties.service";
 import { getNearbyPropertiesService } from "../services/get-nearby-properties.service";
-import { getPropertiesService } from "../services/get-properties.service";
+import {
+  getPropertiesKeysetService,
+  getPropertiesService,
+} from "../services/get-properties.service";
 import {
   NearbyPropertiesQuerySchema,
   PropertyMapQuerySchema,
@@ -19,9 +37,51 @@ export async function getPropertiesController(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const properties = await getPropertiesService({
-    forAgentDiscovery: isAgentDiscoveryAudience(request),
-  });
+  const { limit, offset, cursor } = ExplorePaginationSchema.parse(
+    request.query,
+  );
+  const forAgentDiscovery = isAgentDiscoveryAudience(request);
+
+  // Legacy OFFSET mode: only when the client explicitly sends `offset`.
+  // Kept temporarily for backward compatibility; returns a bare array.
+  if (offset !== undefined) {
+    const properties = await getPropertiesService({
+      forAgentDiscovery,
+      limit,
+      offset,
+    });
+
+    applyOptionalAuthPublicCache(request, reply);
+    return reply.send(properties);
+  }
+
+  // Keyset (cursor) mode — the preferred mechanism. Triggered by a `cursor`
+  // or a `limit`. Returns { items, nextCursor, hasMore }.
+  if (cursor !== undefined || limit !== undefined) {
+    let decodedCursor = null;
+
+    if (cursor !== undefined) {
+      decodedCursor = decodeCursor(cursor);
+
+      if (!decodedCursor) {
+        return reply.status(400).send({
+          message: "Invalid pagination cursor",
+        });
+      }
+    }
+
+    const page = await getPropertiesKeysetService({
+      forAgentDiscovery,
+      limit: limit ?? DEFAULT_KEYSET_LIMIT,
+      cursor: decodedCursor,
+    });
+
+    applyOptionalAuthPublicCache(request, reply);
+    return reply.send(page);
+  }
+
+  // Legacy default: no pagination params → full array (unchanged contract).
+  const properties = await getPropertiesService({ forAgentDiscovery });
 
   applyOptionalAuthPublicCache(request, reply);
   return reply.send(properties);

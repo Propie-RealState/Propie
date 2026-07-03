@@ -23,6 +23,7 @@ import {
   import { PROPERTY_EVENT_TYPES } from "../constants/property-status.constants";
   import { insertPropertyEventRepository } from "../repositories/property-events.repository";
   import type { PublisherType } from "../constants/property-status.constants";
+  import { runInBackground } from "@/lib/async/run-in-background";
   
   type Input = {
     userId: string;
@@ -91,13 +92,9 @@ import {
     }
   
     // =====================================================
-    // PUBLISH
+    // PUBLISH (critical path)
     // =====================================================
 
-    await geocodePropertyLocationService(
-      input.propertyId
-    );
-  
     const publishedProperty = await publishPropertyRepository({
       propertyId: input.propertyId,
       publisherId: input.userId,
@@ -113,11 +110,23 @@ import {
       },
     });
 
-    try {
-      await notifyPropertyPublished(input.propertyId);
-    } catch (error) {
-      console.error("Failed to dispatch publish notifications", error);
-    }
-  
+    // =====================================================
+    // SIDE EFFECTS (off the critical path)
+    // -----------------------------------------------------
+    // Geocoding hits an external, rate-limited provider and
+    // notifications fan out to many users. Neither affects the
+    // publish result the client is waiting on, so we defer them.
+    // Coordinates are backfilled shortly after and picked up by
+    // the next map/detail fetch — identical end-state, faster
+    // response.
+    // =====================================================
+    runInBackground("publish:geocode", () =>
+      geocodePropertyLocationService(input.propertyId),
+    );
+
+    runInBackground("publish:notify", () =>
+      notifyPropertyPublished(input.propertyId),
+    );
+
     return publishedProperty;
   }

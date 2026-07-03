@@ -14,14 +14,35 @@ type DiscoveryQueryOptions = {
   forAgentDiscovery?: boolean;
 };
 
+type PropertiesListOptions = DiscoveryQueryOptions & {
+  // Opt-in pagination. When both are omitted the endpoint returns the
+  // full list (backward compatible with existing clients).
+  limit?: number;
+  offset?: number;
+};
+
 export async function getPropertiesRepository(
-  options: DiscoveryQueryOptions = {},
+  options: PropertiesListOptions = {},
 ) {
   const agentDiscoveryFilter = options.forAgentDiscovery
     ? `AND ${acceptsAgentParticipationSql("pc")}`
     : "";
 
-  const result = await db.query(`
+  const params: unknown[] = [];
+  let paginationSql = "";
+
+  if (options.limit !== undefined) {
+    params.push(options.limit);
+    paginationSql += ` LIMIT $${params.length}`;
+  }
+
+  if (options.offset !== undefined) {
+    params.push(options.offset);
+    paginationSql += ` OFFSET $${params.length}`;
+  }
+
+  const result = await db.query(
+    `
     SELECT *
     FROM (
       SELECT DISTINCT ON (p.id)
@@ -49,8 +70,96 @@ export async function getPropertiesRepository(
         ${agentDiscoveryFilter}
       ORDER BY p.id, p.created_at DESC
     ) published
-    ORDER BY created_at DESC
-  `);
+    -- id tiebreaker guarantees a stable order across pages when
+    -- multiple rows share the same created_at timestamp.
+    ORDER BY created_at DESC, id DESC
+    ${paginationSql}
+  `,
+    params,
+  );
+
+  return result.rows;
+}
+
+type PropertiesKeysetOptions = DiscoveryQueryOptions & {
+  // Rows to return. The repository fetches limit + 1 internally so the
+  // caller can derive hasMore without a COUNT.
+  limit: number;
+  cursor?: {
+    createdAt: string;
+    id: string;
+  } | null;
+};
+
+/**
+ * Keyset (cursor) variant of the explore listing. Uses a row-value
+ * comparison on (created_at, id) instead of OFFSET, so page cost stays
+ * constant regardless of how deep the client scrolls and concurrent
+ * inserts/deletes never shift rows across page boundaries.
+ *
+ * Returns limit + 1 rows; the service slices to `limit` and builds the
+ * opaque nextCursor from the last kept row.
+ */
+export async function getPropertiesKeysetRepository(
+  options: PropertiesKeysetOptions,
+) {
+  const agentDiscoveryFilter = options.forAgentDiscovery
+    ? `AND ${acceptsAgentParticipationSql("pc")}`
+    : "";
+
+  const params: unknown[] = [];
+  let cursorClause = "";
+
+  if (options.cursor) {
+    params.push(options.cursor.createdAt);
+    const createdAtParam = `$${params.length}`;
+    params.push(options.cursor.id);
+    const idParam = `$${params.length}`;
+
+    // Row-value comparison matches ORDER BY (created_at DESC, id DESC):
+    // fetch everything strictly "after" the cursor row in that order.
+    cursorClause = `WHERE (published.created_at, published.id) < (${createdAtParam}::timestamptz, ${idParam}::uuid)`;
+  }
+
+  // limit + 1 sentinel row → lets the caller know a next page exists.
+  params.push(options.limit + 1);
+  const limitParam = `$${params.length}`;
+
+  const result = await db.query(
+    `
+    SELECT *
+    FROM (
+      SELECT DISTINCT ON (p.id)
+        p.id,
+        p.title,
+        p.price,
+        p.currency,
+        p.property_type,
+        p.operation_type,
+        p.bedrooms,
+        p.bathrooms,
+        p.area_m2,
+        p.created_at,
+        l.city,
+        l.province,
+        COALESCE(pi.thumb_url, pi.image_url) AS cover_image
+      FROM properties p
+      LEFT JOIN property_locations l
+        ON l.property_id = p.id
+      LEFT JOIN property_images pi
+        ON pi.property_id = p.id
+        AND pi.is_cover = true
+      ${propertyCommercializationJoin("p", "pc")}
+      WHERE ${exploreVisibilitySql("p")}
+        ${agentDiscoveryFilter}
+      ORDER BY p.id, p.created_at DESC
+    ) published
+    ${cursorClause}
+    ORDER BY published.created_at DESC, published.id DESC
+    LIMIT ${limitParam}
+  `,
+    params,
+  );
 
   return result.rows;
 }
@@ -63,6 +172,36 @@ export async function getPropertyByIdRepository(propertyId: string) {
         WHERE id = $1
         LIMIT 1
       `,
+    [propertyId],
+  );
+
+  return result.rows[0] ?? null;
+}
+
+export type PropertyAccessRow = {
+  id: string;
+  status: string;
+  owner_id: string;
+  publisher_id: string | null;
+  published_at: string | null;
+};
+
+/**
+ * Minimal projection used purely for authorization decisions
+ * (media access, view gating). Avoids the full property-detail
+ * graph (media aggregation, owner/agent subqueries) when the
+ * caller only needs to know "can this viewer see it?".
+ */
+export async function getPropertyAccessRowRepository(
+  propertyId: string,
+): Promise<PropertyAccessRow | null> {
+  const result = await db.query<PropertyAccessRow>(
+    `
+      SELECT id, status, owner_id, publisher_id, published_at
+      FROM properties
+      WHERE id = $1
+      LIMIT 1
+    `,
     [propertyId],
   );
 
@@ -84,33 +223,39 @@ export async function findPropertyByIdRepository(propertyId: string) {
         pl.longitude,
 
         COALESCE(
-          json_agg(
-            DISTINCT jsonb_build_object(
-              'id', pi.id,
-              'type', 'image',
-              'image_url', pi.image_url,
-              'thumb_url', pi.thumb_url,
-              'is_cover', pi.is_cover,
-              'display_order', pi.display_order,
-              'created_at', pi.created_at
+          (
+            SELECT json_agg(
+              jsonb_build_object(
+                'id', pi.id,
+                'type', 'image',
+                'image_url', pi.image_url,
+                'thumb_url', pi.thumb_url,
+                'is_cover', pi.is_cover,
+                'display_order', pi.display_order,
+                'created_at', pi.created_at
+              )
+              ORDER BY pi.display_order ASC, pi.created_at ASC
             )
-          ) FILTER (
-            WHERE pi.id IS NOT NULL
+            FROM property_images pi
+            WHERE pi.property_id = p.id
           ),
           '[]'
         ) AS images,
 
         COALESCE(
-          json_agg(
-            DISTINCT jsonb_build_object(
-              'id', pv.id,
-              'type', 'video',
-              'video_url', pv.video_url,
-              'display_order', pv.display_order,
-              'created_at', pv.created_at
+          (
+            SELECT json_agg(
+              jsonb_build_object(
+                'id', pv.id,
+                'type', 'video',
+                'video_url', pv.video_url,
+                'display_order', pv.display_order,
+                'created_at', pv.created_at
+              )
+              ORDER BY pv.display_order ASC, pv.created_at ASC
             )
-          ) FILTER (
-            WHERE pv.id IS NOT NULL
+            FROM property_videos pv
+            WHERE pv.property_id = p.id
           ),
           '[]'
         ) AS videos,
@@ -213,26 +358,10 @@ export async function findPropertyByIdRepository(propertyId: string) {
 
       FROM properties p
 
-      LEFT JOIN property_images pi
-        ON pi.property_id = p.id
-
-      LEFT JOIN property_videos pv
-        ON pv.property_id = p.id
-
       LEFT JOIN property_locations pl
         ON pl.property_id = p.id
 
       WHERE p.id = $1
-
-      GROUP BY
-        p.id,
-        pl.country,
-        pl.province,
-        pl.city,
-        pl.neighborhood,
-        pl.address,
-        pl.latitude,
-        pl.longitude
 
       LIMIT 1
     `,
