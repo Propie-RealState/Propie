@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Building2, Heart, MapPin } from "lucide-react";
 import type { Property } from "../../modules/explore/types/property.types";
 import { formatPrice } from "../../modules/explore/utils/formatPrice";
@@ -8,17 +8,20 @@ import {
   formatPropertyType,
 } from "../../modules/map/utils/map-format";
 import { useAppTheme } from "../../../theme/useAppTheme";
+import { CARD_IMAGE_SIZES } from "../../../lib/media/responsive-media";
 import "./property-presentation.css";
 
 interface PropertyCompactCardProps {
   property: Property;
   isFav: boolean;
-  onToggleFav: () => void;
+  // Receives the property id so callers can pass one stable handler for the
+  // whole list (enables React.memo to skip untouched cards on favorite toggle).
+  onToggleFav: (id: string) => void;
   showFavorite?: boolean;
   backTo?: string;
 }
 
-export function PropertyCompactCard({
+function PropertyCompactCardComponent({
   property,
   isFav,
   onToggleFav,
@@ -70,6 +73,7 @@ export function PropertyCompactCard({
           <img
             src={property.coverImage!}
             alt=""
+            sizes={CARD_IMAGE_SIZES}
             loading="lazy"
             decoding="async"
             onError={() => setImageError(true)}
@@ -120,7 +124,7 @@ export function PropertyCompactCard({
             type="button"
             onClick={(event) => {
               event.stopPropagation();
-              onToggleFav();
+              onToggleFav(property.id);
             }}
             aria-label={isFav ? "Quitar de favoritos" : "Agregar a favoritos"}
             style={{
@@ -226,3 +230,6 @@ export function PropertyCompactCard({
     </article>
   );
 }
+
+// Memoised: list re-renders (e.g. toggling one favorite) skip untouched cards.
+export const PropertyCompactCard = memo(PropertyCompactCardComponent);

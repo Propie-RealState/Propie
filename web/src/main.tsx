@@ -13,8 +13,6 @@ import { initAnalytics } from "./lib/analytics";
 
 import "./styles/index.css";
 
-initAnalytics();
-
 ReactDOM.createRoot(
   document.getElementById("root")!
 ).render(
@@ -29,3 +27,14 @@ ReactDOM.createRoot(
     </QueryClientProvider>
   </React.StrictMode>,
 );
+
+// Analytics is initialised after the app is interactive so posthog-js never
+// blocks first render or competes for the main thread during startup.
+const startAnalytics = () => initAnalytics();
+if (typeof window !== "undefined") {
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(startAnalytics, { timeout: 3000 });
+  } else {
+    window.setTimeout(startAnalytics, 2000);
+  }
+}

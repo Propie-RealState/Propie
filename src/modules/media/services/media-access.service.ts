@@ -5,6 +5,11 @@ import { getPropertyByIdRepository } from "@/modules/properties/repositories/pro
 import { findPropertyByIdService } from "@/modules/properties/services/find-property-by-id.service";
 import { isAdmin } from "@/utils/authorization";
 import { parseStorageReference } from "@/lib/storage/storage-reference";
+import { isPropertyMediaPubliclyVisible } from "../repositories/media-visibility.repository";
+import {
+  getCachedMediaAuth,
+  setCachedMediaAuth,
+} from "./media-auth-cache";
 
 type MediaAccessInput = {
   storagePath: string;
@@ -29,6 +34,12 @@ async function canAccessPropertyMedia(input: {
   viewerUserId?: string;
   viewerRole?: string;
 }): Promise<boolean> {
+  if (!input.viewerUserId && !input.viewerRole) {
+    if (await isPropertyMediaPubliclyVisible(input.propertyId)) {
+      return true;
+    }
+  }
+
   if (input.viewerRole && isAdmin(input.viewerRole)) {
     const property = await getPropertyByIdRepository(input.propertyId);
     return property != null;
@@ -45,33 +56,45 @@ async function canAccessPropertyMedia(input: {
 export async function authorizeMediaAccess(
   input: MediaAccessInput,
 ): Promise<boolean> {
-  const { storagePath } = input;
+  const { storagePath, viewerUserId, viewerRole } = input;
+
+  const cached = getCachedMediaAuth(storagePath, viewerUserId, viewerRole);
+
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  let allowed = false;
 
   if (storagePath.startsWith("legacy/")) {
-    return authorizeLegacyUploadAccess(
+    allowed = await authorizeLegacyUploadAccess(
       storagePath,
-      input.viewerUserId,
-      input.viewerRole,
+      viewerUserId,
+      viewerRole,
     );
+  } else {
+    const avatarUserId = extractAvatarUserId(storagePath);
+
+    if (avatarUserId) {
+      allowed = true;
+    } else {
+      const propertyId = extractPropertyId(storagePath);
+
+      if (!propertyId) {
+        allowed = false;
+      } else {
+        allowed = await canAccessPropertyMedia({
+          propertyId,
+          viewerUserId,
+          viewerRole,
+        });
+      }
+    }
   }
 
-  const avatarUserId = extractAvatarUserId(storagePath);
+  setCachedMediaAuth(storagePath, allowed, viewerUserId, viewerRole);
 
-  if (avatarUserId) {
-    return true;
-  }
-
-  const propertyId = extractPropertyId(storagePath);
-
-  if (!propertyId) {
-    return false;
-  }
-
-  return canAccessPropertyMedia({
-    propertyId,
-    viewerUserId: input.viewerUserId,
-    viewerRole: input.viewerRole,
-  });
+  return allowed;
 }
 
 async function authorizeLegacyUploadAccess(

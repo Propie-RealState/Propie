@@ -10,6 +10,11 @@ import {
 import { ChevronLeft, ChevronRight, ImageIcon, X } from "lucide-react";
 
 import "./property-image-gallery.css";
+import {
+  buildImageSrcSet,
+  GALLERY_IMAGE_SIZES,
+  pickDisplaySrc,
+} from "../../../../lib/media/responsive-media";
 
 export type PropertyGalleryImage = {
   id: string;
@@ -378,13 +383,25 @@ function GalleryCarousel({
                 src={
                   deferFullResolution
                     ? pickThumb(image)
-                    : slideImageSrc(image, slideIndex, index)
+                    : pickDisplaySrc(
+                        slideImageSrc(image, slideIndex, index),
+                        pickThumb(image),
+                      )
                 }
+                srcSet={
+                  deferFullResolution
+                    ? undefined
+                    : buildImageSrcSet(
+                        slideImageSrc(image, slideIndex, index),
+                        pickThumb(image),
+                      )
+                }
+                sizes={deferFullResolution ? undefined : GALLERY_IMAGE_SIZES}
                 alt={`${title} — foto ${slideIndex + 1}`}
                 width={GALLERY_IMAGE_RATIO.width}
                 height={GALLERY_IMAGE_RATIO.height}
                 loading={deferFullResolution ? "lazy" : slideLoading(slideIndex, index)}
-                fetchPriority={
+                fetchpriority={
                   !deferFullResolution && slideIndex === 0 ? "high" : "auto"
                 }
                 decoding="async"
@@ -498,7 +515,7 @@ function GalleryMosaic({
               width={GALLERY_IMAGE_RATIO.width}
               height={GALLERY_IMAGE_RATIO.height}
               loading="eager"
-              fetchPriority="high"
+              fetchpriority="high"
               decoding="async"
               draggable={false}
             />
@@ -614,7 +631,7 @@ function GalleryLightbox({
             src={images[index]?.url}
             alt={`${title} — foto ${index + 1}`}
             loading="eager"
-            fetchPriority="high"
+            fetchpriority="high"
             decoding="async"
             draggable={false}
           />

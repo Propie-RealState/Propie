@@ -55,74 +55,28 @@ export default defineConfig({
           },
         ],
       },
-      workbox: {
-        // Pre-cache JS, CSS, HTML, fonts, images and SVGs
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
-        // Increase size limit for large JS bundles (maplibre-gl is heavy)
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        runtimeCaching: [
-          // API calls: NetworkFirst — always try the network, fall back to cache when offline
-          {
-            urlPattern: /^https:\/\/propie-api\.onrender\.com\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              networkTimeoutSeconds: 10,
-              expiration: {
-                maxEntries: 200,
-                maxAgeSeconds: 60 * 60 * 24, // 24 h
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-          // Authorized media proxy (signed URL redirect)
-          {
-            urlPattern: /^https:\/\/propie-api\.onrender\.com\/media\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'media-cache',
-              expiration: {
-                maxEntries: 300,
-                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-          // Map tiles: StaleWhileRevalidate — fast load, background refresh
-          {
-            urlPattern: /^https:\/\/.*\.tile\..*/i,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'map-tiles-cache',
-              expiration: {
-                maxEntries: 500,
-                maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-          // Google Fonts / Roboto
-          {
-            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
+      // NOTE: strategies === 'injectManifest', so precache config MUST live under
+      // `injectManifest` (the `workbox` key is only read by the generateSW
+      // strategy and was previously silently ignored). Runtime caching now lives
+      // in src/sw.ts via registerRoute.
+      injectManifest: {
+        // Precache the application shell only: HTML + the always-needed entry,
+        // vendor and page-transition chunks. Everything else (lazy routes) is
+        // cached on demand at runtime, keeping the precache small.
+        globPatterns: [
+          'index.html',
+          'assets/index-*.js',
+          'assets/index-*.css',
+          'assets/react-vendor-*.js',
+          'assets/motion-*.js',
         ],
+        // Belt-and-suspenders: never precache heavy/optional vendor chunks.
+        globIgnores: [
+          '**/maplibre-*.{js,css}',
+          '**/recharts-*.js',
+          '**/posthog-*.js',
+        ],
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
       },
       devOptions: {
         // Enable the SW in dev so you can test install without a full build
@@ -132,6 +86,35 @@ export default defineConfig({
   ],
   build: {
     outDir: 'dist',
+    // Raise the warning threshold: the isolated maplibre chunk is inherently
+    // large but is only fetched on the /mapa route, never on initial load.
+    chunkSizeWarningLimit: 1200,
+    rollupOptions: {
+      output: {
+        // Only *eagerly-loaded* vendors get a manual chunk. Heavy/optional
+        // libraries (maplibre, recharts, posthog, dnd-kit) are reachable ONLY
+        // through lazy routes / dynamic import, so Rollup already emits them as
+        // separate async chunks that stay out of the initial bundle.
+        //
+        // IMPORTANT: do NOT manually chunk those dynamic-only libraries — doing
+        // so makes Rollup hoist the shared Vite preload helper into that chunk,
+        // which forces it to be statically imported (and eagerly downloaded) by
+        // the entry. Keeping the manual chunks limited to eager vendors keeps the
+        // helper in an already-eager chunk and maplibre off the initial path.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return
+          if (id.includes('/motion/') || id.includes('framer-motion')) return 'motion'
+          if (
+            id.includes('/react-dom/') ||
+            id.includes('/react/') ||
+            id.includes('/react-router') ||
+            id.includes('/scheduler/') ||
+            id.includes('/zustand/')
+          )
+            return 'react-vendor'
+        },
+      },
+    },
   },
   resolve: {
     alias: {

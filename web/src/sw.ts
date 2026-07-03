@@ -1,11 +1,37 @@
 /// <reference lib="webworker" />
 
 import { cleanupOutdatedCaches, precacheAndRoute } from "workbox-precaching";
+import { registerRoute } from "workbox-routing";
+import { StaleWhileRevalidate } from "workbox-strategies";
+import { ExpirationPlugin } from "workbox-expiration";
+import { CacheableResponsePlugin } from "workbox-cacheable-response";
 
 declare const self: ServiceWorkerGlobalScope;
 
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
+
+// Lazy-loaded route chunks, their CSS and local images are intentionally kept
+// out of the precache manifest (see vite.config injectManifest). Cache them on
+// first use so previously visited routes keep working offline, without bloating
+// the install-time precache with heavy optional code (maplibre, recharts, …).
+registerRoute(
+  ({ request, sameOrigin }) =>
+    sameOrigin &&
+    (request.destination === "script" ||
+      request.destination === "style" ||
+      request.destination === "image"),
+  new StaleWhileRevalidate({
+    cacheName: "app-assets",
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
+      new ExpirationPlugin({
+        maxEntries: 80,
+        maxAgeSeconds: 60 * 60 * 24 * 30,
+      }),
+    ],
+  }),
+);
 
 type PushPayload = {
   title?: string;

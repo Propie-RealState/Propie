@@ -7,6 +7,8 @@ export const API_URL =
 
 const UNRESOLVABLE_MEDIA_HOSTS = new Set(["example.com", "www.example.com"]);
 
+const resolvedUrlCache = new Map<string, string | null>();
+
 const STORAGE_PATH_PATTERN =
   /^(avatars|images|videos)\/[a-zA-Z0-9/_\-.]+$/;
 
@@ -25,9 +27,21 @@ export function resolveMediaUrl(url?: string | null) {
     return null;
   }
 
-  if (url.startsWith("data:")) {
+  if (url.startsWith("data:") || url.startsWith("blob:")) {
     return url;
   }
+
+  if (resolvedUrlCache.has(url)) {
+    return resolvedUrlCache.get(url) ?? null;
+  }
+
+  const resolved = resolveMediaUrlUncached(url);
+  resolvedUrlCache.set(url, resolved);
+
+  return resolved;
+}
+
+function resolveMediaUrlUncached(url: string) {
 
   if (url.startsWith("/media/")) {
     return `${API_URL}${url}`;

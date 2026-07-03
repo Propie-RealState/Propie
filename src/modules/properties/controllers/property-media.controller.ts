@@ -1,20 +1,20 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { randomUUID } from "node:crypto";
 
-import { uploadToStorage } from "@/lib/supabase";
-import { FileValidationError, validateImageUpload } from "@/lib/storage/file-validation";
+import { FileValidationError } from "@/lib/storage/file-validation";
 import {
   countPropertyImagesRepository,
-  createPropertyImageRepository,
 } from "../repositories/property-media.repository";
 import { deletePropertyImageService } from "../services/delete-property-image.service";
 import { deletePropertyVideoService } from "../services/delete-property-video.service";
-import { processPropertyImage } from "../services/process-property-image.service";
 import { updatePropertyImageCoverService } from "../services/update-property-image-cover.service";
 import { updatePropertyImagesOrderService } from "../services/update-property-images-order.service";
 import { updatePropertyMediaOrderService } from "../services/update-property-media-order.service";
-import { savePropertyVideoFromMultipart } from "../services/upload-property-videos.service";
+import { uploadPropertyImagesService } from "../services/upload-property-images.service";
+import { uploadPropertyVideoService } from "../services/upload-property-videos.service";
 import { assertCanManageProperty } from "../utils/assert-can-manage-property";
+import {
+  toVideoMediaDescriptor,
+} from "../utils/media-descriptor";
 
 export async function uploadPropertyImagesController(
   request: FastifyRequest<{
@@ -27,61 +27,33 @@ export async function uploadPropertyImagesController(
   await assertCanManageProperty(request.user.id, request.params.id);
 
   const propertyId = request.params.id;
-  const parts = request.files();
-
   const existingImagesCount =
     await countPropertyImagesRepository(propertyId);
 
-  const uploadedImages = [];
-
-  for await (const file of parts) {
-    const rawBuffer = await file.toBuffer();
-
-    try {
-      validateImageUpload({
-        mimetype: file.mimetype,
-        size: rawBuffer.length,
-        filename: file.filename,
-      });
-    } catch (error) {
-      if (error instanceof FileValidationError) {
-        return reply.status(400).send({
-          success: false,
-          error: {
-            code: error.code,
-            message: error.message,
-          },
-        });
-      }
-
-      throw error;
-    }
-
-    const uuid = randomUUID();
-    const fullPath = `images/${propertyId}/${uuid}.webp`;
-    const thumbPath = `images/${propertyId}/${uuid}_thumb.webp`;
-
-    const { fullBuffer, thumbBuffer } = await processPropertyImage(rawBuffer);
-
-    const [imagePath, thumbPathStored] = await Promise.all([
-      uploadToStorage(fullPath, fullBuffer, "image/webp"),
-      uploadToStorage(thumbPath, thumbBuffer, "image/webp"),
-    ]);
-
-    const image = await createPropertyImageRepository({
+  try {
+    const uploadedImages = await uploadPropertyImagesService({
       propertyId,
-      imageUrl: imagePath,
-      thumbUrl: thumbPathStored,
-      isCover: existingImagesCount === 0 && uploadedImages.length === 0,
+      files: request.files(),
+      existingImagesCount,
     });
 
-    uploadedImages.push(image);
-  }
+    return reply.send({
+      success: true,
+      images: uploadedImages,
+    });
+  } catch (error) {
+    if (error instanceof FileValidationError) {
+      return reply.status(400).send({
+        success: false,
+        error: {
+          code: error.code,
+          message: error.message,
+        },
+      });
+    }
 
-  return reply.send({
-    success: true,
-    images: uploadedImages,
-  });
+    throw error;
+  }
 }
 
 export async function deletePropertyImageController(
@@ -123,9 +95,9 @@ export async function uploadPropertyVideosController(
     const uploadedVideos = [];
 
     for await (const file of request.files()) {
-      const video = await savePropertyVideoFromMultipart(propertyId, file);
+      const video = await uploadPropertyVideoService(propertyId, file);
 
-      uploadedVideos.push(video);
+      uploadedVideos.push(toVideoMediaDescriptor(video));
     }
 
     if (uploadedVideos.length === 0) {
@@ -134,7 +106,10 @@ export async function uploadPropertyVideosController(
       });
     }
 
-    return reply.status(201).send({ videos: uploadedVideos });
+    return reply.status(201).send({
+      success: true,
+      videos: uploadedVideos,
+    });
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === "FORBIDDEN") {

@@ -20,6 +20,7 @@ interface CreatePropertyImageInput {
   imageUrl: string;
   thumbUrl?: string | null;
   isCover?: boolean;
+  contentHash?: string | null;
 }
 
 export async function createPropertyImageRepository({
@@ -27,6 +28,7 @@ export async function createPropertyImageRepository({
   imageUrl,
   thumbUrl = null,
   isCover = false,
+  contentHash = null,
 }: CreatePropertyImageInput) {
   const orderResult = await db.query(
     `
@@ -59,7 +61,8 @@ export async function createPropertyImageRepository({
           image_url,
           thumb_url,
           is_cover,
-          display_order
+          display_order,
+          content_hash
         )
 
         VALUES (
@@ -67,15 +70,34 @@ export async function createPropertyImageRepository({
           $2,
           $3,
           $4,
-          $5
+          $5,
+          $6
         )
 
         RETURNING *
       `,
-    [propertyId, imageUrl, thumbUrl, isCover, nextOrder],
+    [propertyId, imageUrl, thumbUrl, isCover, nextOrder, contentHash],
   );
 
   return result.rows[0];
+}
+
+export async function findPropertyImageByContentHashRepository(
+  propertyId: string,
+  contentHash: string,
+) {
+  const result = await db.query(
+    `
+      SELECT *
+      FROM property_images
+      WHERE property_id = $1
+        AND content_hash = $2
+      LIMIT 1
+    `,
+    [propertyId, contentHash],
+  );
+
+  return result.rows[0] ?? null;
 }
 
 export async function deletePropertyImageRepository({
@@ -367,9 +389,11 @@ export async function deletePropertyVideoRepository({
 export async function createPropertyVideoRepository({
   propertyId,
   videoUrl,
+  contentHash = null,
 }: {
   propertyId: string;
   videoUrl: string;
+  contentHash?: string | null;
 }) {
   const orderResult = await db.query(
     `
@@ -400,19 +424,39 @@ export async function createPropertyVideoRepository({
       INSERT INTO property_videos (
         property_id,
         video_url,
-        display_order
+        display_order,
+        content_hash
       )
 
       VALUES (
         $1,
         $2,
-        $3
+        $3,
+        $4
       )
 
       RETURNING *
     `,
-    [propertyId, videoUrl, nextOrder],
+    [propertyId, videoUrl, nextOrder, contentHash],
   );
 
   return result.rows[0];
+}
+
+export async function findPropertyVideoByContentHashRepository(
+  propertyId: string,
+  contentHash: string,
+) {
+  const result = await db.query(
+    `
+      SELECT *
+      FROM property_videos
+      WHERE property_id = $1
+        AND content_hash = $2
+      LIMIT 1
+    `,
+    [propertyId, contentHash],
+  );
+
+  return result.rows[0] ?? null;
 }

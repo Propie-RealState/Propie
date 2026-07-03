@@ -2,69 +2,28 @@ import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { usePropertyPublish } from "../../publish/context/PropertyPublishContext";
-
-import { getPropertyById  } from "../services/property-details.service";
-import React from "react";
-import { ListingType, PropertyType } from "../../publish/types/property-publish.types";
+import { findPropertyById } from "../../publish/services/find-property-by-id";
+import { mapApiPropertyToPublishData } from "../mappers/map-property-to-publish-data";
 
 export default function EditProperty() {
   const { id } = useParams();
-
   const navigate = useNavigate();
-
-  const { reset, updateData } =
-    usePropertyPublish();
+  const { reset, updateData } = usePropertyPublish();
 
   useEffect(() => {
     async function loadProperty() {
-      if (!id) return;
+      if (!id) {
+        return;
+      }
 
       try {
-        const property =
-          await getPropertyById (id);
+        const property = await findPropertyById(id);
 
         reset();
 
         updateData({
+          ...mapApiPropertyToPublishData(property),
           publishMode: "edit",
-          propertyId: property.id,
-
-          propertyType: property.propertyType as PropertyType,
-
-          listingType: property.operationType as ListingType,
-
-          title: property.title,
-
-          description:
-            property.description,
-
-          country:
-            property.location.country,
-
-          province:
-            property.location.province,
-
-          city: property.location.city,
-
-          neighborhood:
-            property.location.neighborhood,
-
-          address:
-            property.location.address,
-
-          bedrooms:
-            property.bedrooms,
-
-          bathrooms:
-            property.bathrooms,
-
-          areaM2: property.areaM2,
-
-          price: property.price,
-
-          currency: property.currency === "ARS" ? "ARS" : "USD",
-
-          images: property.images.map((image: { url: string }) => image.url),
         });
 
         navigate("/publicar");

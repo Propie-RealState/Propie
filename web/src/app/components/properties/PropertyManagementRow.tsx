@@ -8,6 +8,8 @@ import {
 } from "../../modules/my-properties/utils/property-status-display";
 import { formatPrice } from "../../modules/explore/utils/formatPrice";
 import { resolveMediaUrl } from "../../../lib/api-base";
+import { resolveOwnerMediaUrl } from "../../../lib/media/media-url";
+import { useOwnerMediaToken } from "../../../lib/media/use-owner-media-token";
 import type { AppTheme } from "../../../theme/app-theme";
 import "./property-presentation.css";
 
@@ -59,6 +61,7 @@ export function PropertyManagementRow({
   onNavigate,
   colors,
 }: PropertyManagementRowProps) {
+  const ownerMediaToken = useOwnerMediaToken();
   const statusStyle = getPropertyStatusStyle(property.status);
   const publishedLabel = formatPublishedLabel(property.published_at);
   const location = [property.city, property.province].filter(Boolean).join(", ");
@@ -94,7 +97,11 @@ export function PropertyManagementRow({
       }}
     >
       <img
-        src={resolveMediaUrl(property.cover_image) ?? ""}
+        src={
+          resolveOwnerMediaUrl(property.cover_image, ownerMediaToken) ??
+          resolveMediaUrl(property.cover_image) ??
+          ""
+        }
         alt=""
         loading="lazy"
         decoding="async"
