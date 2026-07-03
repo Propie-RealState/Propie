@@ -489,16 +489,6 @@ export default function Explore() {
           <span style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>
             {filtered.length} propiedades cerca tuyo
           </span>
-          <button style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontSize: 13,
-            color: theme.primary,
-            fontWeight: 600,
-          }}>
-            Ordenar ↕
-          </button>
         </div>
 
         {filtered.length === 0 ? (

@@ -3,6 +3,7 @@ import { AuthHeroHeader } from "../components/AuthHeroHeader";
 import React from "react";
 import { useRegister } from "../../context/RegisterContext";
 import { AccountCreationForm } from "../../features/register/components/AccountCreationForm";
+import { isSocialAuthEnabled } from "../../lib/feature-flags";
 
 type RegisterPropieProps = {
   registrationKind?: "owner" | "client";
@@ -95,6 +96,8 @@ export default function RegisterPropie({
         }}
       >
         <div style={{ width: "100%", maxWidth: 420 }}>
+          {isSocialAuthEnabled() && (
+            <>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <button
               onClick={() => handleSocialLogin("Google")}
@@ -145,6 +148,8 @@ export default function RegisterPropie({
             <span style={{ fontSize: 13, color: "#9a9aa0", fontWeight: 500 }}>o</span>
             <div style={{ flex: 1, height: 1, background: "#e5e5ea" }} />
           </div>
+            </>
+          )}
 
           <AccountCreationForm
             data={data}

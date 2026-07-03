@@ -6,7 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 import React from "react";
 import { apiFetch } from "../../lib/api";
 import { showToast } from "../../lib/toast";
-import { isPublicRegistrationEnabled } from "../../lib/feature-flags";
+import { isPublicRegistrationEnabled, isSocialAuthEnabled } from "../../lib/feature-flags";
 import { pageScrollStyle, pageShellStyle } from "../components/layout/layout-styles";
 export default function Login() {
   const navigate = useNavigate();
@@ -196,6 +196,8 @@ export default function Login() {
         <div style={{ width: "100%", maxWidth: 420 }}>
           {!show2FA ? (
             <>
+              {isSocialAuthEnabled() && (
+                <>
               {/* Social buttons */}
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <button
@@ -288,6 +290,8 @@ export default function Login() {
                 <span style={{ fontSize: 13, color: "#9a9aa0", fontWeight: 500 }}>o</span>
                 <div style={{ flex: 1, height: 1, background: "#e5e5ea" }} />
               </div>
+                </>
+              )}
             </>
           ) : (
             <div style={{ marginBottom: 24 }}>

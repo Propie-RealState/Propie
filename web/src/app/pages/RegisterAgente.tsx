@@ -4,6 +4,7 @@ import { AuthHeroHeader } from "../components/AuthHeroHeader";
 import { useRegister } from "../../context/RegisterContext";
 import { AGENT_THEME, syncUserTypeFromRole } from "../../theme/app-theme";
 import { AccountCreationForm } from "../../features/register/components/AccountCreationForm";
+import { isSocialAuthEnabled } from "../../lib/feature-flags";
 
 const theme = AGENT_THEME;
 
@@ -83,20 +84,24 @@ export default function RegisterAgente() {
         }}
       >
         <div style={{ width: "100%", maxWidth: 420 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <button onClick={() => handleSocialLogin("Google")} type="button" style={{ width: "100%", background: "white", border: "1.5px solid #e5e5ea", borderRadius: 16, padding: "14px 18px", cursor: "pointer", fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>
-              Continuar con Google
-            </button>
-            <button onClick={() => handleSocialLogin("Apple")} type="button" style={{ width: "100%", background: "#000", border: "1.5px solid #000", borderRadius: 16, padding: "14px 18px", cursor: "pointer", fontSize: 15, fontWeight: 600, color: "white" }}>
-              Continuar con Apple
-            </button>
-          </div>
+          {isSocialAuthEnabled() && (
+            <>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <button onClick={() => handleSocialLogin("Google")} type="button" style={{ width: "100%", background: "white", border: "1.5px solid #e5e5ea", borderRadius: 16, padding: "14px 18px", cursor: "pointer", fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>
+                  Continuar con Google
+                </button>
+                <button onClick={() => handleSocialLogin("Apple")} type="button" style={{ width: "100%", background: "#000", border: "1.5px solid #000", borderRadius: 16, padding: "14px 18px", cursor: "pointer", fontSize: 15, fontWeight: 600, color: "white" }}>
+                  Continuar con Apple
+                </button>
+              </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "28px 0" }}>
-            <div style={{ flex: 1, height: 1, background: "#e5e5ea" }} />
-            <span style={{ fontSize: 13, color: "#9a9aa0", fontWeight: 500 }}>o</span>
-            <div style={{ flex: 1, height: 1, background: "#e5e5ea" }} />
-          </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "28px 0" }}>
+                <div style={{ flex: 1, height: 1, background: "#e5e5ea" }} />
+                <span style={{ fontSize: 13, color: "#9a9aa0", fontWeight: 500 }}>o</span>
+                <div style={{ flex: 1, height: 1, background: "#e5e5ea" }} />
+              </div>
+            </>
+          )}
 
           <AccountCreationForm
             data={data}
