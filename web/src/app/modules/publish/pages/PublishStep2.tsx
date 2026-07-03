@@ -49,11 +49,13 @@ type MediaItem = MediaAsset;
 function SortableMediaCard({
   item,
   primaryColor,
+  disabled = false,
   onRemove,
   onSetCover,
 }: {
   item: MediaItem;
   primaryColor: string;
+  disabled?: boolean;
   onRemove: (id: string) => void;
   onSetCover: (id: string) => void;
 }) {
@@ -64,7 +66,7 @@ function SortableMediaCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: item.id! });
+  } = useSortable({ id: item.id!, disabled });
 
   const style: React.CSSProperties = {
     position: "relative",
@@ -163,13 +165,15 @@ function SortableMediaCard({
       >
         <button
           onClick={() => onRemove(item.id!)}
+          disabled={disabled}
           style={{
             width: 28,
             height: 28,
             borderRadius: 8,
             background: "rgba(0,0,0,0.6)",
             border: "none",
-            cursor: "pointer",
+            cursor: disabled ? "not-allowed" : "pointer",
+            opacity: disabled ? 0.5 : 1,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -192,12 +196,14 @@ function SortableMediaCard({
         {!item.isCover && item.type === "image" && (
           <button
             onClick={() => onSetCover(item.id!)}
+            disabled={disabled}
             style={{
               padding: "6px 10px",
               borderRadius: 8,
               background: "rgba(0,0,0,0.6)",
               border: "none",
-              cursor: "pointer",
+              cursor: disabled ? "not-allowed" : "pointer",
+              opacity: disabled ? 0.5 : 1,
               display: "flex",
               alignItems: "center",
               gap: 4,
@@ -225,7 +231,8 @@ function SortableMediaCard({
           borderRadius: 8,
           background: "rgba(0,0,0,0.6)",
           border: "none",
-          cursor: isDragging ? "grabbing" : "grab",
+          cursor: disabled ? "not-allowed" : isDragging ? "grabbing" : "grab",
+          opacity: disabled ? 0.5 : 1,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -288,6 +295,10 @@ export default function PublishStep2() {
   };
 
   const handleRemove = async (id: string) => {
+    if (isUploading) {
+      return;
+    }
+
     const itemToRemove = mediaItems.find((item) => item.id === id);
 
     if (!itemToRemove || !data.propertyId) {
@@ -295,6 +306,10 @@ export default function PublishStep2() {
     }
 
     const previousItems = mediaItems;
+    const updatedItems = mediaItems.filter((item) => item.id !== id);
+
+    // Optimistically remove; revert only if the server rejects the delete.
+    setMediaItems(updatedItems);
 
     try {
       if (itemToRemove.type === "image") {
@@ -303,35 +318,21 @@ export default function PublishStep2() {
         await deletePropertyVideo(data.propertyId, id);
       }
 
-      let updatedItems = mediaItems.filter((item) => item.id !== id);
-
+      // Deleting keeps the remaining display_order values (with a harmless gap),
+      // so no full re-order request is needed here — only cover reassignment.
       if (itemToRemove.isCover && itemToRemove.type === "image") {
         const nextCover = updatedItems.find((item) => item.type === "image");
 
         if (nextCover?.id) {
           await updatePropertyImageCover(data.propertyId, nextCover.id);
 
-          updatedItems = updatedItems.map((item) => ({
-            ...item,
-            isCover: item.id === nextCover.id,
-          }));
+          setMediaItems((prev) =>
+            prev.map((item) => ({
+              ...item,
+              isCover: item.id === nextCover.id,
+            })),
+          );
         }
-      }
-
-      setMediaItems(updatedItems);
-
-      const persistedMedia = updatedItems
-        .filter((item) => item.id)
-        .map((item) => ({
-          id: item.id!,
-          type: item.type,
-        }));
-
-      if (persistedMedia.length > 0) {
-        await updatePropertyMediaOrder(
-          data.propertyId,
-          persistedMedia,
-        );
       }
     } catch (error) {
       console.error("Remove media failed", error);
@@ -351,7 +352,7 @@ export default function PublishStep2() {
     navigate("/publicar/informacion");
   };
   const handleSetCover = async (imageId: string) => {
-    if (!data.propertyId) {
+    if (isUploading || !data.propertyId) {
       return;
     }
 
@@ -373,6 +374,10 @@ export default function PublishStep2() {
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
+    if (isUploading) {
+      return;
+    }
+
     const { active, over } = event;
 
     if (!over || active.id === over.id) {
@@ -425,13 +430,12 @@ export default function PublishStep2() {
 
   const uploadsBusy = isUploading || isLoading;
 
-  const continueHint =
-    showValidation && !isFormValid
-      ? isUploading
-        ? "Esperá a que terminen de subirse los archivos."
-        : pendingUploads.some((item) => item.status === "error")
-          ? "Resolvé los archivos con error antes de continuar."
-          : "Agregá al menos una foto o video para continuar."
+  const continueHint = isUploading
+    ? "Esperá a que terminen de subirse los archivos."
+    : showValidation && !isFormValid
+      ? pendingUploads.some((item) => item.status === "error")
+        ? "Resolvé los archivos con error antes de continuar."
+        : "Agregá al menos una foto o video para continuar."
       : undefined;
 
   const handleContinueAttempt = () => {
@@ -450,6 +454,7 @@ export default function PublishStep2() {
         <PublishWizardCTA
           label="Continuar"
           onClick={handleContinueAttempt}
+          disabled={uploadsBusy}
           hint={continueHint}
         />
       }
@@ -662,6 +667,7 @@ export default function PublishStep2() {
                         key={item.id}
                         item={item}
                         primaryColor={theme.primary}
+                        disabled={uploadsBusy}
                         onRemove={handleRemove}
                         onSetCover={handleSetCover}
                       />
