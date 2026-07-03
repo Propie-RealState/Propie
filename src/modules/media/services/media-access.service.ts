@@ -1,8 +1,8 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 
-import { getPropertyByIdRepository } from "@/modules/properties/repositories/property-read.repository";
-import { findPropertyByIdService } from "@/modules/properties/services/find-property-by-id.service";
+import { getPropertyAccessRowRepository } from "@/modules/properties/repositories/property-read.repository";
+import { canViewPropertyById } from "@/modules/properties/services/can-view-property";
 import { isAdmin } from "@/utils/authorization";
 import { parseStorageReference } from "@/lib/storage/storage-reference";
 import { isPropertyMediaPubliclyVisible } from "../repositories/media-visibility.repository";
@@ -41,16 +41,14 @@ async function canAccessPropertyMedia(input: {
   }
 
   if (input.viewerRole && isAdmin(input.viewerRole)) {
-    const property = await getPropertyByIdRepository(input.propertyId);
+    const property = await getPropertyAccessRowRepository(input.propertyId);
     return property != null;
   }
 
-  const property = await findPropertyByIdService({
+  return canViewPropertyById({
     propertyId: input.propertyId,
     viewerUserId: input.viewerUserId,
   });
-
-  return property != null;
 }
 
 export async function authorizeMediaAccess(

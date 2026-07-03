@@ -51,12 +51,48 @@ const databaseConfig: PoolConfig = databaseUrl
         process.env.DB_PASSWORD,
     };
 
+// ============================================================
+// POOL SIZING (Phase 3)
+// ------------------------------------------------------------
+// A single Node process is single-threaded, so a very large pool
+// only adds contention on Postgres (and Supabase caps total
+// connections). We keep a small, explicit pool and let it be
+// tuned per environment via DB_POOL_MAX.
+//
+//   max      : hard ceiling of concurrent connections.
+//   min      : keep 0 idle by default so we release connections
+//              back to Postgres/Supabase when traffic is low.
+//   maxUses  : recycle a connection after N uses to bound the
+//              impact of any per-connection memory growth / a
+//              backend that drifts (e.g. server-side state).
+//   maxLifetimeSeconds : hard cap on how long a physical
+//              connection lives, so pooled clients don't outlive
+//              Supabase/pgBouncer-side connection resets.
+// ============================================================
+const DEFAULT_POOL_MAX = 10;
+
+const poolMax = Number(process.env.DB_POOL_MAX) || DEFAULT_POOL_MAX;
+
 export const db = new Pool({
   ...databaseConfig,
+
+  max: poolMax,
+
+  min: 0,
 
   idleTimeoutMillis: 30000,
 
   connectionTimeoutMillis: 5000,
+
+  maxUses: 7500,
+
+  maxLifetimeSeconds: 1800,
+});
+
+// Never let a pool-level error crash the process (e.g. an idle
+// backend dropped by the DB). pg emits these on the pool itself.
+db.on('error', (error) => {
+  console.error('unexpected idle database client error', error);
 });
 
 export async function testDatabaseConnection() {

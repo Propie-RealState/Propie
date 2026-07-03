@@ -12,6 +12,7 @@ import {
   PropertyStatusTransitionError,
 } from "../utils/property-status-transitions";
 import { notifyPropertyActiveAgain } from "@/modules/notifications/services/notification-dispatch.service";
+import { runInBackground } from "@/lib/async/run-in-background";
 
 type Input = {
   userId: string;
@@ -59,11 +60,9 @@ export async function updatePropertyStatusService(input: Input) {
     previousStatus === PROPERTY_STATUSES.PAUSED &&
     input.status === PROPERTY_STATUSES.ACTIVE
   ) {
-    try {
-      await notifyPropertyActiveAgain(input.propertyId);
-    } catch (error) {
-      console.error("Failed to notify property active again", error);
-    }
+    runInBackground("status:notify-active-again", () =>
+      notifyPropertyActiveAgain(input.propertyId),
+    );
   }
 
   return updated;

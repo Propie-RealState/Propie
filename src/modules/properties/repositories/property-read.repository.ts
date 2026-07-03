@@ -14,14 +14,35 @@ type DiscoveryQueryOptions = {
   forAgentDiscovery?: boolean;
 };
 
+type PropertiesListOptions = DiscoveryQueryOptions & {
+  // Opt-in pagination. When both are omitted the endpoint returns the
+  // full list (backward compatible with existing clients).
+  limit?: number;
+  offset?: number;
+};
+
 export async function getPropertiesRepository(
-  options: DiscoveryQueryOptions = {},
+  options: PropertiesListOptions = {},
 ) {
   const agentDiscoveryFilter = options.forAgentDiscovery
     ? `AND ${acceptsAgentParticipationSql("pc")}`
     : "";
 
-  const result = await db.query(`
+  const params: unknown[] = [];
+  let paginationSql = "";
+
+  if (options.limit !== undefined) {
+    params.push(options.limit);
+    paginationSql += ` LIMIT $${params.length}`;
+  }
+
+  if (options.offset !== undefined) {
+    params.push(options.offset);
+    paginationSql += ` OFFSET $${params.length}`;
+  }
+
+  const result = await db.query(
+    `
     SELECT *
     FROM (
       SELECT DISTINCT ON (p.id)
@@ -49,8 +70,13 @@ export async function getPropertiesRepository(
         ${agentDiscoveryFilter}
       ORDER BY p.id, p.created_at DESC
     ) published
-    ORDER BY created_at DESC
-  `);
+    -- id tiebreaker guarantees a stable order across pages when
+    -- multiple rows share the same created_at timestamp.
+    ORDER BY created_at DESC, id DESC
+    ${paginationSql}
+  `,
+    params,
+  );
 
   return result.rows;
 }
@@ -63,6 +89,36 @@ export async function getPropertyByIdRepository(propertyId: string) {
         WHERE id = $1
         LIMIT 1
       `,
+    [propertyId],
+  );
+
+  return result.rows[0] ?? null;
+}
+
+export type PropertyAccessRow = {
+  id: string;
+  status: string;
+  owner_id: string;
+  publisher_id: string | null;
+  published_at: string | null;
+};
+
+/**
+ * Minimal projection used purely for authorization decisions
+ * (media access, view gating). Avoids the full property-detail
+ * graph (media aggregation, owner/agent subqueries) when the
+ * caller only needs to know "can this viewer see it?".
+ */
+export async function getPropertyAccessRowRepository(
+  propertyId: string,
+): Promise<PropertyAccessRow | null> {
+  const result = await db.query<PropertyAccessRow>(
+    `
+      SELECT id, status, owner_id, publisher_id, published_at
+      FROM properties
+      WHERE id = $1
+      LIMIT 1
+    `,
     [propertyId],
   );
 
@@ -84,33 +140,39 @@ export async function findPropertyByIdRepository(propertyId: string) {
         pl.longitude,
 
         COALESCE(
-          json_agg(
-            DISTINCT jsonb_build_object(
-              'id', pi.id,
-              'type', 'image',
-              'image_url', pi.image_url,
-              'thumb_url', pi.thumb_url,
-              'is_cover', pi.is_cover,
-              'display_order', pi.display_order,
-              'created_at', pi.created_at
+          (
+            SELECT json_agg(
+              jsonb_build_object(
+                'id', pi.id,
+                'type', 'image',
+                'image_url', pi.image_url,
+                'thumb_url', pi.thumb_url,
+                'is_cover', pi.is_cover,
+                'display_order', pi.display_order,
+                'created_at', pi.created_at
+              )
+              ORDER BY pi.display_order ASC, pi.created_at ASC
             )
-          ) FILTER (
-            WHERE pi.id IS NOT NULL
+            FROM property_images pi
+            WHERE pi.property_id = p.id
           ),
           '[]'
         ) AS images,
 
         COALESCE(
-          json_agg(
-            DISTINCT jsonb_build_object(
-              'id', pv.id,
-              'type', 'video',
-              'video_url', pv.video_url,
-              'display_order', pv.display_order,
-              'created_at', pv.created_at
+          (
+            SELECT json_agg(
+              jsonb_build_object(
+                'id', pv.id,
+                'type', 'video',
+                'video_url', pv.video_url,
+                'display_order', pv.display_order,
+                'created_at', pv.created_at
+              )
+              ORDER BY pv.display_order ASC, pv.created_at ASC
             )
-          ) FILTER (
-            WHERE pv.id IS NOT NULL
+            FROM property_videos pv
+            WHERE pv.property_id = p.id
           ),
           '[]'
         ) AS videos,
@@ -213,26 +275,10 @@ export async function findPropertyByIdRepository(propertyId: string) {
 
       FROM properties p
 
-      LEFT JOIN property_images pi
-        ON pi.property_id = p.id
-
-      LEFT JOIN property_videos pv
-        ON pv.property_id = p.id
-
       LEFT JOIN property_locations pl
         ON pl.property_id = p.id
 
       WHERE p.id = $1
-
-      GROUP BY
-        p.id,
-        pl.country,
-        pl.province,
-        pl.city,
-        pl.neighborhood,
-        pl.address,
-        pl.latitude,
-        pl.longitude
 
       LIMIT 1
     `,
