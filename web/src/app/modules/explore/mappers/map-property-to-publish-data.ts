@@ -52,6 +52,3 @@ export function mapApiPropertyToPublishData(
     images: [],
   };
 }
-
-/** @deprecated Use mapApiPropertyToPublishData — kept for import sites during migration. */
-export const mapPropertyToPublishData = mapApiPropertyToPublishData;

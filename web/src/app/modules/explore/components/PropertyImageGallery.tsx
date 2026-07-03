@@ -401,7 +401,7 @@ function GalleryCarousel({
                 width={GALLERY_IMAGE_RATIO.width}
                 height={GALLERY_IMAGE_RATIO.height}
                 loading={deferFullResolution ? "lazy" : slideLoading(slideIndex, index)}
-                fetchPriority={
+                fetchpriority={
                   !deferFullResolution && slideIndex === 0 ? "high" : "auto"
                 }
                 decoding="async"
@@ -515,7 +515,7 @@ function GalleryMosaic({
               width={GALLERY_IMAGE_RATIO.width}
               height={GALLERY_IMAGE_RATIO.height}
               loading="eager"
-              fetchPriority="high"
+              fetchpriority="high"
               decoding="async"
               draggable={false}
             />
@@ -631,7 +631,7 @@ function GalleryLightbox({
             src={images[index]?.url}
             alt={`${title} — foto ${index + 1}`}
             loading="eager"
-            fetchPriority="high"
+            fetchpriority="high"
             decoding="async"
             draggable={false}
           />

@@ -126,4 +126,28 @@ describe("media capability tokens", () => {
 
     expect(response.statusCode).not.toBe(403);
   });
+
+  it("sends Referrer-Policy: no-referrer on media responses", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: `/media/${storagePath}`,
+    });
+
+    expect(response.headers["referrer-policy"]).toBe("no-referrer");
+  });
+
+  it("caps redirect max-age within the signed URL lifetime", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: `/media/${storagePath}`,
+      headers: { authorization: `Bearer ${owner.accessToken}` },
+    });
+
+    if (response.statusCode === 302) {
+      const cacheControl = String(response.headers["cache-control"] ?? "");
+      const maxAge = Number(/max-age=(\d+)/.exec(cacheControl)?.[1] ?? "0");
+      expect(cacheControl).not.toContain("stale-while-revalidate");
+      expect(maxAge).toBeLessThanOrEqual(3600);
+    }
+  });
 });

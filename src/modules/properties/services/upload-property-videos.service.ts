@@ -87,11 +87,3 @@ export async function uploadPropertyVideoService(
     throw error;
   }
 }
-
-/** @deprecated Use uploadPropertyVideoService */
-export async function savePropertyVideoFromMultipart(
-  propertyId: string,
-  file: MultipartFile,
-) {
-  return uploadPropertyVideoService(propertyId, file);
-}

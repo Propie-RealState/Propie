@@ -12,6 +12,14 @@ import {
 } from "../services/media-access.service";
 
 export async function mediaRoutes(app: FastifyInstance) {
+  // Media URLs may carry a `?ct=` capability token. `no-referrer` stops the
+  // full URL (token included) from leaking to third parties via the Referer
+  // header — the primary mitigation for capability-token exposure. Scoped to
+  // this plugin, so only /media/* responses are affected.
+  app.addHook("onSend", async (_request, reply) => {
+    reply.header("Referrer-Policy", "no-referrer");
+  });
+
   // ── Capability token ──────────────────────────────────────────────
   // Browser <img>/<video> cannot attach an Authorization header, so an
   // authenticated caller exchanges its session here for a short-lived,
@@ -103,25 +111,25 @@ export async function mediaRoutes(app: FastifyInstance) {
           .send(buffer);
       }
 
-      const signedUrl = await getCachedSignedStorageUrl(storagePath, () =>
-        createSignedStorageUrl(storagePath),
+      const { url: signedUrl, maxAgeSeconds } = await getCachedSignedStorageUrl(
+        storagePath,
+        () => createSignedStorageUrl(storagePath),
       );
 
       const hasCapabilityToken = Boolean(
         (request.query as { ct?: string } | undefined)?.ct,
       );
-      const isThumbnail = storagePath.includes("_thumb.");
       const isAuthenticatedViewer = Boolean(viewer);
+      const scope =
+        hasCapabilityToken || isAuthenticatedViewer ? "private" : "public";
 
-      let cacheControl: string;
-
-      if (hasCapabilityToken || isAuthenticatedViewer) {
-        cacheControl = "private, max-age=600, stale-while-revalidate=300";
-      } else if (isThumbnail) {
-        cacheControl = "public, max-age=86400, stale-while-revalidate=604800";
-      } else {
-        cacheControl = "public, max-age=3600, stale-while-revalidate=86400";
-      }
+      // The 302 points at a signed URL that expires with the object's signed
+      // TTL. The browser caches this redirect, so its max-age MUST NOT exceed
+      // the signed URL's remaining life — otherwise a replayed cached redirect
+      // hits an expired token and Supabase returns 400. No stale-while-
+      // revalidate: serving a stale redirect would reintroduce the same
+      // expired-token failure.
+      const cacheControl = `${scope}, max-age=${maxAgeSeconds}`;
 
       return reply.header("Cache-Control", cacheControl).redirect(signedUrl, 302);
     },
