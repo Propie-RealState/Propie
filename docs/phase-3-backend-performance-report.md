@@ -217,6 +217,73 @@ scale-ready to ~10k users; the gap to 9.5+ is durable background processing and 
 
 ---
 
+## 12b. Keyset (Cursor) Pagination — Final Optimization
+
+### Why cursor pagination was adopted
+`LIMIT/OFFSET` must scan and discard every row before the offset, so page cost
+grows linearly with depth (`OFFSET 10000` reads 10,000 rows to return 20). Worse,
+with a live feed ordered by `created_at DESC`, any insert/delete between requests
+shifts every subsequent row — clients see **duplicated or skipped** records while
+scrolling. Keyset (cursor) pagination fixes both.
+
+### Advantages over OFFSET
+| | OFFSET | Keyset cursor |
+|---|--------|---------------|
+| Deep-page cost | O(offset) — scans skipped rows | O(log n) index seek, constant per page |
+| Concurrent insert/delete | duplicates / skips rows | stable — rows never shift across pages |
+| Index usage | sort + discard | direct row-value seek on `(created_at, id)` |
+| Correctness on duplicate timestamps | position-based, fragile | total order via `(created_at, id)` tiebreaker |
+
+### Design
+- **Ordering:** unchanged — `ORDER BY created_at DESC, id DESC`.
+- **Predicate:** row-value comparison `(created_at, id) < (cursorCreatedAt, cursorId)`
+  — never `created_at` alone, so timestamp ties can't skip/duplicate.
+- **Cursor:** opaque, base64url-encoded `{c: created_at, i: id}` (`src/database/shared/cursor.ts`).
+  Clients treat it as a black box. Malformed/tampered cursors are rejected with **400**.
+- **Fetch limit + 1** internally to derive `hasMore` without a `COUNT`.
+- **Response envelope:** `{ items, nextCursor, hasMore }`.
+
+### API modes (`GET /properties`) — backward compatible
+| Request | Mode | Response shape |
+|---------|------|----------------|
+| no params | legacy default | bare array (unchanged — current frontend) |
+| `offset` present | legacy OFFSET (deprecated, temporary) | bare array |
+| `limit` and/or `cursor` (no `offset`) | **keyset (preferred)** | `{ items, nextCursor, hasMore }` |
+
+First keyset page: `GET /properties?limit=20` → returns `nextCursor`.
+Next page: `GET /properties?limit=20&cursor=<nextCursor>`. Repeat until `hasMore=false`.
+
+### Migration path
+1. **Now:** existing clients keep working untouched (no params → full array).
+2. **Adopt:** new/updated clients call with `limit` (+ echo `nextCursor`) and read the
+   envelope. No coordinated deploy required.
+3. **Deprecate:** once no client sends `offset`, remove the legacy OFFSET branch
+   (`getPropertiesRepository` limit/offset path) in a later release.
+
+### Database verification (`EXPLAIN ANALYZE`)
+- Added `idx_properties_explore_keyset` — partial `(created_at DESC, id DESC)
+  WHERE published_at IS NOT NULL AND status IN (...)` (migration `043`).
+- With the planner allowed to prefer indexes, the keyset query runs entirely on
+  **index scans** (`properties_pkey` for the DISTINCT ON, `idx_property_images_cover`,
+  `property_locations_pkey`) — **no sequential scans**. At the current 38-row size
+  Postgres correctly still prefers a seq scan (cheaper for tiny tables); the index is
+  in place for scale.
+- Note: the explore feed's `DISTINCT ON (p.id)` dedupe means the outer keyset order
+  is a bounded top-N heapsort over the deduped set rather than a pure index walk —
+  acceptable and far cheaper than OFFSET at depth.
+
+### Validation results (live HTTP + SQL)
+- **First / middle / last page:** paged all 24 rows in 5 pages (5,5,5,5,4);
+  `hasMore` true until the final page.
+- **No duplicates / no skips:** 24 unique ids == legacy full-array count.
+- **Duplicate timestamps:** controlled 4-way tie paged as 4→3→2→1→5 with zero
+  dupes/skips across the tie boundary.
+- **Deleted records:** when the cursor's own row is deleted, paging continues
+  correctly (value comparison is position-independent).
+- **Concurrent inserts:** a newer row (higher `created_at`) only appears at the head
+  and never shifts already-returned pages — the core keyset guarantee.
+- **Malformed cursor → 400.** Legacy `offset` mode still returns a bare array.
+
 ## 13. Files Changed
 
 - `src/database/client/pool.ts` — explicit pool sizing + lifecycle + error guard.
@@ -231,3 +298,11 @@ scale-ready to ~10k users; the gap to 9.5+ is durable background processing and 
 - `src/modules/properties/services/get-properties.service.ts` +
   `controllers/property-discovery.controller.ts` — pagination plumbing.
 - `src/database/schemas/042-phase3-scalability-indexes.sql` — targeted indexes (new).
+- `src/database/shared/cursor.ts` — opaque keyset cursor codec + page builder (new).
+- `src/database/schemas/043-explore-keyset-index.sql` — keyset ordering index (new).
+- `src/modules/properties/repositories/property-read.repository.ts` —
+  `getPropertiesKeysetRepository` (keyset variant).
+- `src/modules/properties/services/get-properties.service.ts` —
+  `getPropertiesKeysetService`.
+- `src/modules/properties/controllers/property-discovery.controller.ts` — mode
+  selection (legacy array / offset / keyset envelope) + cursor validation.

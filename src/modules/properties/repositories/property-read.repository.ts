@@ -81,6 +81,89 @@ export async function getPropertiesRepository(
   return result.rows;
 }
 
+type PropertiesKeysetOptions = DiscoveryQueryOptions & {
+  // Rows to return. The repository fetches limit + 1 internally so the
+  // caller can derive hasMore without a COUNT.
+  limit: number;
+  cursor?: {
+    createdAt: string;
+    id: string;
+  } | null;
+};
+
+/**
+ * Keyset (cursor) variant of the explore listing. Uses a row-value
+ * comparison on (created_at, id) instead of OFFSET, so page cost stays
+ * constant regardless of how deep the client scrolls and concurrent
+ * inserts/deletes never shift rows across page boundaries.
+ *
+ * Returns limit + 1 rows; the service slices to `limit` and builds the
+ * opaque nextCursor from the last kept row.
+ */
+export async function getPropertiesKeysetRepository(
+  options: PropertiesKeysetOptions,
+) {
+  const agentDiscoveryFilter = options.forAgentDiscovery
+    ? `AND ${acceptsAgentParticipationSql("pc")}`
+    : "";
+
+  const params: unknown[] = [];
+  let cursorClause = "";
+
+  if (options.cursor) {
+    params.push(options.cursor.createdAt);
+    const createdAtParam = `$${params.length}`;
+    params.push(options.cursor.id);
+    const idParam = `$${params.length}`;
+
+    // Row-value comparison matches ORDER BY (created_at DESC, id DESC):
+    // fetch everything strictly "after" the cursor row in that order.
+    cursorClause = `WHERE (published.created_at, published.id) < (${createdAtParam}::timestamptz, ${idParam}::uuid)`;
+  }
+
+  // limit + 1 sentinel row → lets the caller know a next page exists.
+  params.push(options.limit + 1);
+  const limitParam = `$${params.length}`;
+
+  const result = await db.query(
+    `
+    SELECT *
+    FROM (
+      SELECT DISTINCT ON (p.id)
+        p.id,
+        p.title,
+        p.price,
+        p.currency,
+        p.property_type,
+        p.operation_type,
+        p.bedrooms,
+        p.bathrooms,
+        p.area_m2,
+        p.created_at,
+        l.city,
+        l.province,
+        COALESCE(pi.thumb_url, pi.image_url) AS cover_image
+      FROM properties p
+      LEFT JOIN property_locations l
+        ON l.property_id = p.id
+      LEFT JOIN property_images pi
+        ON pi.property_id = p.id
+        AND pi.is_cover = true
+      ${propertyCommercializationJoin("p", "pc")}
+      WHERE ${exploreVisibilitySql("p")}
+        ${agentDiscoveryFilter}
+      ORDER BY p.id, p.created_at DESC
+    ) published
+    ${cursorClause}
+    ORDER BY published.created_at DESC, published.id DESC
+    LIMIT ${limitParam}
+  `,
+    params,
+  );
+
+  return result.rows;
+}
+
 export async function getPropertyByIdRepository(propertyId: string) {
   const result = await db.query(
     `
