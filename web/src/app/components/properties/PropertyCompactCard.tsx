@@ -8,6 +8,7 @@ import {
   formatPropertyType,
 } from "../../modules/map/utils/map-format";
 import { useAppTheme } from "../../../theme/useAppTheme";
+import { CARD_IMAGE_SIZES } from "../../../lib/media/responsive-media";
 import "./property-presentation.css";
 
 interface PropertyCompactCardProps {
@@ -72,6 +73,7 @@ function PropertyCompactCardComponent({
           <img
             src={property.coverImage!}
             alt=""
+            sizes={CARD_IMAGE_SIZES}
             loading="lazy"
             decoding="async"
             onError={() => setImageError(true)}

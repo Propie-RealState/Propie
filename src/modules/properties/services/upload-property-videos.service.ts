@@ -3,9 +3,14 @@ import path from "node:path";
 
 import type { MultipartFile } from "@fastify/multipart";
 
-import { createPropertyVideoRepository } from "../repositories/property-media.repository";
-import { uploadToStorage } from "@/lib/supabase";
+import { hashFileContent } from "@/lib/storage/content-hash";
 import { FileValidationError, validateVideoUpload } from "@/lib/storage/file-validation";
+import { StorageUploadTracker } from "@/lib/storage/storage-upload-tracker";
+import { uploadToStorage } from "@/lib/supabase";
+import {
+  createPropertyVideoRepository,
+  findPropertyVideoByContentHashRepository,
+} from "../repositories/property-media.repository";
 
 const ALLOWED_VIDEO_EXTENSIONS = new Set([
   ".mp4",
@@ -14,7 +19,10 @@ const ALLOWED_VIDEO_EXTENSIONS = new Set([
   ".m4v",
 ]);
 
-export async function savePropertyVideoFromMultipart(
+/**
+ * Uploads a single property video with per-file atomicity and idempotency.
+ */
+export async function uploadPropertyVideoService(
   propertyId: string,
   file: MultipartFile,
 ) {
@@ -43,16 +51,47 @@ export async function savePropertyVideoFromMultipart(
     throw new Error("INVALID_VIDEO_FORMAT");
   }
 
-  const storagePath = `videos/${propertyId}/${randomUUID()}${extension}`;
-
-  const videoPath = await uploadToStorage(
-    storagePath,
-    buffer,
-    file.mimetype,
+  const contentHash = hashFileContent(buffer);
+  const existing = await findPropertyVideoByContentHashRepository(
+    propertyId,
+    contentHash,
   );
 
-  return createPropertyVideoRepository({
-    propertyId,
-    videoUrl: videoPath,
-  });
+  if (existing) {
+    return existing;
+  }
+
+  const storagePath = `videos/${propertyId}/${randomUUID()}${extension}`;
+  const tracker = new StorageUploadTracker();
+
+  try {
+    const videoPath = await uploadToStorage(
+      storagePath,
+      buffer,
+      file.mimetype,
+    );
+
+    tracker.track(videoPath);
+
+    const video = await createPropertyVideoRepository({
+      propertyId,
+      videoUrl: videoPath,
+      contentHash,
+    });
+
+    tracker.release();
+
+    return video;
+  } catch (error) {
+    await tracker.rollback();
+    throw error;
+  }
+}
+
+/** @deprecated Use uploadPropertyVideoService */
+export async function savePropertyVideoFromMultipart(
+  propertyId: string,
+  file: MultipartFile,
+) {
+  return uploadPropertyVideoService(propertyId, file);
 }

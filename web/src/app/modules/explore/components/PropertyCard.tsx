@@ -5,6 +5,8 @@ import { formatPrice } from "../utils/formatPrice";
 import React from "react";
 import { Heart, MapPin, Bed, Bath, Maximize2 } from "lucide-react";
 import { useAppTheme } from "../../../../theme/useAppTheme";
+import { ResponsiveImage } from "../../../../lib/media/ResponsiveImage";
+import { HERO_CARD_IMAGE_SIZES } from "../../../../lib/media/responsive-media";
 
 interface PropertyCardProps {
   property: Property;
@@ -43,11 +45,11 @@ export default function PropertyCard({
           overflow: "hidden",
         }}
       >
-        <img
+        <ResponsiveImage
           src={property.coverImage || ""}
+          sizes={HERO_CARD_IMAGE_SIZES}
           alt={property.title}
           loading="lazy"
-          decoding="async"
           style={{
             width: "100%",
             height: "100%",

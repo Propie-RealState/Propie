@@ -12,6 +12,7 @@ import {
 import { AUTH_SESSION_READY_EVENT } from "../lib/location-preferences";
 import { identifyUser, resetUser, trackEvent } from "../lib/analytics";
 import { AnalyticsEvents } from "../lib/analytics-events";
+import { clearMediaToken } from "../lib/media/media-token";
 
 
 
@@ -275,6 +276,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
+      clearMediaToken();
 
       setAccessToken(null);
       setRefreshToken(null);

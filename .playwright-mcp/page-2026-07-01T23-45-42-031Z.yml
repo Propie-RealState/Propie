@@ -1,0 +1,37 @@
+- generic [active] [ref=f8e1]:
+  - generic [ref=f8e6]:
+    - generic [ref=f8e7]:
+      - generic [ref=f8e8]:
+        - button "Volver" [ref=f8e10] [cursor=pointer]:
+          - img [ref=f8e11]
+        - img "Propie" [ref=f8e14]:
+          - generic [ref=f8e15]: Propie
+      - heading "Iniciar sesión" [level=1] [ref=f8e17]
+    - generic [ref=f8e19]:
+      - generic [ref=f8e20]:
+        - button "Continuar con Google" [ref=f8e21] [cursor=pointer]:
+          - img [ref=f8e22]
+          - text: Continuar con Google
+        - button "Continuar con Apple" [ref=f8e27] [cursor=pointer]:
+          - img [ref=f8e28]
+          - text: Continuar con Apple
+      - generic [ref=f8e32]: o
+      - generic [ref=f8e34]:
+        - generic [ref=f8e35]:
+          - generic [ref=f8e36]: Email
+          - textbox "Email" [ref=f8e38]:
+            - /placeholder: tu@email.com
+        - generic [ref=f8e39]:
+          - generic [ref=f8e40]: Contraseña
+          - generic [ref=f8e41]:
+            - textbox "Contraseña" [ref=f8e42]:
+              - /placeholder: Tu contraseña
+            - button [ref=f8e44] [cursor=pointer]:
+              - img [ref=f8e45]
+        - generic [ref=f8e48] [cursor=pointer]:
+          - checkbox "Mantener sesión iniciada" [ref=f8e49]
+          - generic [ref=f8e50]: Mantener sesión iniciada
+        - button "¿Olvidaste tu contraseña?" [ref=f8e52] [cursor=pointer]
+        - button "Iniciar sesión" [disabled] [ref=f8e53]
+  - img "Propie" [ref=f8e56]:
+    - generic [ref=f8e57]: Propie

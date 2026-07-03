@@ -10,6 +10,11 @@ import {
 import { ChevronLeft, ChevronRight, ImageIcon, X } from "lucide-react";
 
 import "./property-image-gallery.css";
+import {
+  buildImageSrcSet,
+  GALLERY_IMAGE_SIZES,
+  pickDisplaySrc,
+} from "../../../../lib/media/responsive-media";
 
 export type PropertyGalleryImage = {
   id: string;
@@ -378,8 +383,20 @@ function GalleryCarousel({
                 src={
                   deferFullResolution
                     ? pickThumb(image)
-                    : slideImageSrc(image, slideIndex, index)
+                    : pickDisplaySrc(
+                        slideImageSrc(image, slideIndex, index),
+                        pickThumb(image),
+                      )
                 }
+                srcSet={
+                  deferFullResolution
+                    ? undefined
+                    : buildImageSrcSet(
+                        slideImageSrc(image, slideIndex, index),
+                        pickThumb(image),
+                      )
+                }
+                sizes={deferFullResolution ? undefined : GALLERY_IMAGE_SIZES}
                 alt={`${title} — foto ${slideIndex + 1}`}
                 width={GALLERY_IMAGE_RATIO.width}
                 height={GALLERY_IMAGE_RATIO.height}

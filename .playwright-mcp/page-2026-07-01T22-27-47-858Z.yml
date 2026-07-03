@@ -1,0 +1,31 @@
+- generic [active] [ref=f1e1]:
+  - main [ref=f1e6]:
+    - generic [ref=f1e7]:
+      - region "Map" [ref=f1e8]
+      - generic:
+        - generic:
+          - button "Find my location" [ref=f1e10] [cursor=pointer]
+          - generic [ref=f1e12]:
+            - button "Zoom in" [ref=f1e13] [cursor=pointer]
+            - button "Zoom out" [ref=f1e15] [cursor=pointer]
+    - generic:
+      - button "Volver a explorar" [ref=f1e18] [cursor=pointer]:
+        - img [ref=f1e19]
+      - generic [ref=f1e21]:
+        - button "Todos" [ref=f1e22] [cursor=pointer]
+        - button "Alquiler" [ref=f1e23] [cursor=pointer]
+        - button "Venta" [ref=f1e24] [cursor=pointer]
+        - button "Casa" [ref=f1e26] [cursor=pointer]
+        - button "Depto" [ref=f1e27] [cursor=pointer]
+        - button "Terreno" [ref=f1e28] [cursor=pointer]
+        - button "Comercial" [ref=f1e29] [cursor=pointer]
+        - spinbutton "Precio minimo" [ref=f1e30]
+        - spinbutton "Precio maximo" [ref=f1e31]
+        - button "Limpiar" [ref=f1e32] [cursor=pointer]
+    - button "Ubicando" [disabled] [ref=f1e33] [cursor=pointer]:
+      - img [ref=f1e34]
+      - text: Ubicando
+    - generic [ref=f1e37]:
+      - button "Cambiar altura de resultados" [ref=f1e38]
+      - strong [ref=f1e40]: No hay propiedades visibles
+  - img "Propie" [ref=f1e44]

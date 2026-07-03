@@ -35,7 +35,7 @@ import {
 
 import { findPropertyById } from "../../publish/services/find-property-by-id";
 
-import { mapPropertyToPublishData } from "../mappers/map-property-to-publish-data";
+import { mapApiPropertyToPublishData } from "../mappers/map-property-to-publish-data";
 
 import { usePropertyPublish } from "../../publish/context/PropertyPublishContext";
 import {
@@ -558,7 +558,7 @@ export default function PropertyDetails() {
         await findPropertyById(property.id);
   
       const mappedProperty =
-        mapPropertyToPublishData(
+        mapApiPropertyToPublishData(
           propertyData
         );
   

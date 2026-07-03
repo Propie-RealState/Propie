@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { PublishWizardCTA } from "../components/PublishWizardCTA";
 import { PublishWizardLayout } from "../components/PublishWizardLayout";
@@ -15,12 +15,15 @@ import React from "react";
 import { usePropertyPublish } from "../context/PropertyPublishContext";
 import { uploadPropertyImages } from "../services/upload-property-images";
 import { uploadPropertyVideos } from "../services/upload-property-videos";
-import { findPropertyById } from "../services/find-property-by-id";
 import { updatePropertyImageCover } from "../services/update-property-image-cover";
 import { updatePropertyMediaOrder } from "../services/update-property-media-order";
 import { deletePropertyImage } from "../services/delete-property-image";
 import { deletePropertyVideo } from "../services/delete-property-video";
-import { resolveMediaUrl } from "../../../../lib/api-base";
+import type { MediaAsset } from "../../../../lib/media/media-asset";
+import { usePropertyMediaAssets } from "../../../../lib/media/use-property-media-assets";
+import { useMediaUploadQueue } from "../../../../lib/media/use-media-upload-queue";
+import { PublishMediaGridSkeleton } from "../components/PublishMediaGridSkeleton";
+import { PublishPendingMediaCard } from "../components/PublishPendingMediaCard";
 import {
   DndContext,
   closestCenter,
@@ -39,65 +42,9 @@ import {
 
 import { CSS } from "@dnd-kit/utilities";
 import { useAppTheme } from "../../../../theme/useAppTheme";
+import { ResponsiveImage } from "../../../../lib/media/ResponsiveImage";
 
-interface MediaItem {
-  id?: string;
-
-  type: "image" | "video";
-
-  url: string;
-
-  file?: File;
-
-  isCover: boolean;
-
-  isExisting?: boolean;
-}
-
-type PropertyMediaRow = {
-  id: string;
-  type: "image" | "video";
-  image_url?: string;
-  video_url?: string;
-  is_cover?: boolean;
-  display_order?: number;
-};
-
-function mapPropertyMediaToItems(
-  property: {
-    media?: PropertyMediaRow[];
-    images?: PropertyMediaRow[];
-    videos?: PropertyMediaRow[];
-  },
-): MediaItem[] {
-  const rows: PropertyMediaRow[] =
-    property.media?.length
-      ? [...property.media].sort(
-          (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0),
-        )
-      : [
-          ...(property.images ?? []).map((image) => ({
-            ...image,
-            type: "image" as const,
-          })),
-          ...(property.videos ?? []).map((video) => ({
-            ...video,
-            type: "video" as const,
-          })),
-        ].sort(
-          (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0),
-        );
-
-  return rows.map((row) => ({
-    id: row.id,
-    type: row.type,
-    url: resolveMediaUrl(
-      row.type === "image" ? row.image_url : row.video_url,
-    ) ?? "",
-    isCover: row.type === "image" ? Boolean(row.is_cover) : false,
-    isExisting: true,
-  }));
-}
+type MediaItem = MediaAsset;
 
 function SortableMediaCard({
   item,
@@ -138,11 +85,12 @@ function SortableMediaCard({
   return (
     <div ref={setNodeRef} style={style}>
       {item.type === "image" ? (
-        <img
+        <ResponsiveImage
           src={item.url}
+          thumbSrc={item.thumbUrl}
+          sizes={item.srcSet ? "(max-width: 768px) 50vw, 240px" : undefined}
           alt="Preview"
           loading="lazy"
-          decoding="async"
           style={{
             width: "100%",
             height: "100%",
@@ -297,89 +245,45 @@ export default function PublishStep2() {
   const { data } = usePropertyPublish();
 
   const navigate = useNavigate();
-  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  const {
+    media: mediaItems,
+    setMedia: setMediaItems,
+    appendFromUpload,
+    isLoading,
+  } = usePropertyMediaAssets(data.propertyId);
+
+  const {
+    pending: pendingUploads,
+    isUploading,
+    enqueueFiles,
+    retryUpload,
+    dismissFailed,
+  } = useMediaUploadQueue({
+    propertyId: data.propertyId,
+    onUploaded: appendFromUpload,
+    uploadImages: uploadPropertyImages,
+    uploadVideos: uploadPropertyVideos,
+  });
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const [showValidation, setShowValidation] = useState(false);
 
-  useEffect(() => {
-    async function loadProperty() {
-      if (!data.propertyId) {
-        return;
-      }
-
-      try {
-        const property = await findPropertyById(data.propertyId);
-
-        setMediaItems(mapPropertyMediaToItems(property));
-      } catch (error) {
-        console.error("Load property failed", error);
-      }
-    }
-
-    loadProperty();
-  }, [data.propertyId]);
-
-  const handleFileSelect = async (
+  const handleFileSelect = (
     files: FileList | null,
     type: "image" | "video",
   ) => {
-    if (!files) return;
-
-    if (!data.propertyId) {
+    if (!files || !data.propertyId) {
       return;
     }
 
-    try {
-      // ============================================
-      // IMAGES
-      // ============================================
+    enqueueFiles(Array.from(files), type);
 
-      if (type === "image") {
-        const uploaded = await uploadPropertyImages(
-          data.propertyId,
-          Array.from(files),
-        );
-
-        const newItems: MediaItem[] = uploaded.images.map(
-          (image: any, index: number) => ({
-            id: image.id,
-
-            type: "image",
-
-            url: resolveMediaUrl(image.image_url) ?? "",
-
-            isCover: image.is_cover,
-
-            isExisting: true,
-          }),
-        );
-
-        setMediaItems((prev) => [...prev, ...newItems]);
-        return;
-      }
-
-      if (type === "video") {
-        const uploaded = await uploadPropertyVideos(
-          data.propertyId,
-          Array.from(files),
-        );
-
-        const newItems: MediaItem[] = uploaded.videos.map(
-          (video: { id: string; video_url: string }) => ({
-            id: video.id,
-            type: "video",
-            url: resolveMediaUrl(video.video_url) ?? "",
-            isCover: false,
-            isExisting: true,
-          }),
-        );
-
-        setMediaItems((prev) => [...prev, ...newItems]);
-      }
-    } catch (error) {
-      console.error("Upload failed", error);
+    if (type === "image") {
+      if (cameraInputRef.current) cameraInputRef.current.value = "";
+      if (galleryInputRef.current) galleryInputRef.current.value = "";
+    } else if (videoInputRef.current) {
+      videoInputRef.current.value = "";
     }
   };
 
@@ -393,12 +297,10 @@ export default function PublishStep2() {
     const previousItems = mediaItems;
 
     try {
-      if (itemToRemove.isExisting) {
-        if (itemToRemove.type === "image") {
-          await deletePropertyImage(data.propertyId, id);
-        } else {
-          await deletePropertyVideo(data.propertyId, id);
-        }
+      if (itemToRemove.type === "image") {
+        await deletePropertyImage(data.propertyId, id);
+      } else {
+        await deletePropertyVideo(data.propertyId, id);
       }
 
       let updatedItems = mediaItems.filter((item) => item.id !== id);
@@ -453,18 +355,20 @@ export default function PublishStep2() {
       return;
     }
 
+    const previousItems = mediaItems;
+
+    setMediaItems((prev) =>
+      prev.map((item) => ({
+        ...item,
+        isCover: item.id === imageId,
+      })),
+    );
+
     try {
       await updatePropertyImageCover(data.propertyId, imageId);
-
-      setMediaItems((prev) =>
-        prev.map((item) => ({
-          ...item,
-
-          isCover: item.id === imageId,
-        })),
-      );
     } catch (error) {
       console.error("Update cover failed", error);
+      setMediaItems(previousItems);
     }
   };
 
@@ -514,11 +418,20 @@ export default function PublishStep2() {
     }
   };
 
-  const isFormValid = mediaItems.length > 0;
+  const isFormValid =
+    mediaItems.length > 0 &&
+    !isUploading &&
+    pendingUploads.every((item) => item.status !== "error");
+
+  const uploadsBusy = isUploading || isLoading;
 
   const continueHint =
     showValidation && !isFormValid
-      ? "Agregá al menos una foto o video para continuar."
+      ? isUploading
+        ? "Esperá a que terminen de subirse los archivos."
+        : pendingUploads.some((item) => item.status === "error")
+          ? "Resolvé los archivos con error antes de continuar."
+          : "Agregá al menos una foto o video para continuar."
       : undefined;
 
   const handleContinueAttempt = () => {
@@ -555,13 +468,15 @@ export default function PublishStep2() {
             />
             <button
               onClick={() => cameraInputRef.current?.click()}
+              disabled={uploadsBusy}
               style={{
                 flex: 1,
                 background: "white",
                 border: "1.5px solid #e5e5ea",
                 borderRadius: 16,
                 padding: "16px 12px",
-                cursor: "pointer",
+                cursor: uploadsBusy ? "not-allowed" : "pointer",
+                opacity: uploadsBusy ? 0.6 : 1,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -599,13 +514,15 @@ export default function PublishStep2() {
             />
             <button
               onClick={() => galleryInputRef.current?.click()}
+              disabled={uploadsBusy}
               style={{
                 flex: 1,
                 background: "white",
                 border: "1.5px solid #e5e5ea",
                 borderRadius: 16,
                 padding: "16px 12px",
-                cursor: "pointer",
+                cursor: uploadsBusy ? "not-allowed" : "pointer",
+                opacity: uploadsBusy ? 0.6 : 1,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -643,13 +560,15 @@ export default function PublishStep2() {
             />
             <button
               onClick={() => videoInputRef.current?.click()}
+              disabled={uploadsBusy}
               style={{
                 flex: 1,
                 background: "white",
                 border: "1.5px solid #e5e5ea",
                 borderRadius: 16,
                 padding: "16px 12px",
-                cursor: "pointer",
+                cursor: uploadsBusy ? "not-allowed" : "pointer",
+                opacity: uploadsBusy ? 0.6 : 1,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -677,8 +596,36 @@ export default function PublishStep2() {
             </button>
           </div>
 
+          {isUploading && (
+            <div
+              role="status"
+              aria-live="polite"
+              style={{
+                height: 4,
+                borderRadius: 999,
+                background: "#ececf0",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  height: "100%",
+                  width: "40%",
+                  borderRadius: 999,
+                  background: theme.primary,
+                  animation: "propie-upload-progress 1.1s ease-in-out infinite",
+                }}
+              />
+              <style>
+                {"@keyframes propie-upload-progress{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}"}
+              </style>
+            </div>
+          )}
+
           {/* Media grid */}
-          {mediaItems.length > 0 ? (
+          {isLoading ? (
+            <PublishMediaGridSkeleton />
+          ) : mediaItems.length > 0 || pendingUploads.length > 0 ? (
             <div>
               <h3
                 style={{
@@ -688,8 +635,11 @@ export default function PublishStep2() {
                   color: "#1a1a1a",
                 }}
               >
-                {mediaItems.length}{" "}
-                {mediaItems.length === 1 ? "archivo" : "archivos"} subidos
+                {mediaItems.length + pendingUploads.length}{" "}
+                {mediaItems.length + pendingUploads.length === 1
+                  ? "archivo"
+                  : "archivos"}{" "}
+                {isUploading ? "subiendo…" : "subidos"}
               </h3>
               <DndContext
                 sensors={sensors}
@@ -714,6 +664,14 @@ export default function PublishStep2() {
                         primaryColor={theme.primary}
                         onRemove={handleRemove}
                         onSetCover={handleSetCover}
+                      />
+                    ))}
+                    {pendingUploads.map((item) => (
+                      <PublishPendingMediaCard
+                        key={item.localId}
+                        item={item}
+                        onRetry={retryUpload}
+                        onDismiss={dismissFailed}
                       />
                     ))}
                   </div>
@@ -752,7 +710,7 @@ export default function PublishStep2() {
           )}
 
           {/* Info */}
-          {mediaItems.length > 0 && (
+          {mediaItems.length > 0 && !isUploading && (
             <div
               style={{
                 background: "linear-gradient(135deg, #f0eeff 0%, #e4deff 100%)",
