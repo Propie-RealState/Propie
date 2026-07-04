@@ -18,8 +18,8 @@
   "scripts": {
     "db:setup": "bash scripts/setup-db.sh",
     "dev": "tsx watch src/server.ts",
-    "build": "tsc -p tsconfig.json",
-    "start": "node -r tsconfig-paths/register dist/server.js",
+    "build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
+    "start": "node dist/server.js",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
     "db:logs": "docker compose logs -f postgres",
@@ -58,6 +58,7 @@
     "@types/react-dom": "^19.2.3",
     "@types/sharp": "^0.32.0",
     "@types/web-push": "^3.6.4",
+    "tsc-alias": "^1.8.17",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.8"
