@@ -43,6 +43,7 @@ import { adminRoutes } from "./modules/admin/routes/admin.routes";
 import { mediaRoutes } from "./modules/media/routes/media.routes";
 
 import { healthRoute } from "./routes/health.route";
+import { rootRoute } from "./routes/root.route";
 import { DEFAULT_BODY_LIMIT } from "./config/body-limits";
 
 // ========================================================
@@ -139,6 +140,8 @@ export async function buildApp() {
   // ======================================================
   // ROUTES
   // ======================================================
+
+  await app.register(rootRoute);
 
   await app.register(healthRoute);
 
