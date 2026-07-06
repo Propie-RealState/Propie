@@ -9,6 +9,11 @@ import type { E2eSeedData } from "./test-data";
 const OWNER_EMAIL = "e2e-owner@propie.test";
 const CLIENT_EMAIL = "e2e-client@propie.test";
 const CONTACT_PROPERTY_TITLE = "E2E Smoke Contact Property";
+const CONTACT_PROPERTY_ADDRESS = "Av. Colon 100, Cordoba";
+const SHARE_PROPERTY_ALPHA_TITLE = "E2E Share Property Alpha";
+const SHARE_PROPERTY_ALPHA_ADDRESS = "Calle Alpha 100, Cordoba";
+const SHARE_PROPERTY_BETA_TITLE = "E2E Share Property Beta";
+const SHARE_PROPERTY_BETA_ADDRESS = "Calle Beta 200, Cordoba";
 const SEED_PASSWORD = process.env.E2E_PASSWORD ?? "E2eTestPass1!";
 
 async function upsertUser(
@@ -85,13 +90,19 @@ async function upsertUser(
   return userId;
 }
 
-async function ensureContactProperty(
+async function ensurePublishedProperty(
   pool: ReturnType<typeof createE2ePool>,
   ownerId: string,
+  input: {
+    title: string;
+    description: string;
+    address: string;
+    imageLabel: string;
+  },
 ) {
   const existing = await pool.query<{ id: string }>(
     `SELECT id FROM properties WHERE title = $1 LIMIT 1`,
-    [CONTACT_PROPERTY_TITLE],
+    [input.title],
   );
 
   if (existing.rows[0]) {
@@ -121,8 +132,8 @@ async function ensureContactProperty(
     `,
     [
       ownerId,
-      CONTACT_PROPERTY_TITLE,
-      "Propiedad de prueba para smoke tests E2E.",
+      input.title,
+      input.description,
       "HOUSE",
       "SALE",
       150000,
@@ -166,7 +177,7 @@ async function ensureContactProperty(
       VALUES ($1, 'Argentina', 'Cordoba', 'Cordoba', 'Centro', $2, $3, $4)
       ON CONFLICT (property_id) DO NOTHING
     `,
-    [propertyId, "Av. Colon 100, Cordoba", -31.4201, -64.1888],
+    [propertyId, input.address, -31.4201, -64.1888],
   );
 
   await pool.query(
@@ -182,11 +193,23 @@ async function ensureContactProperty(
     `,
     [
       propertyId,
-      "https://placehold.co/600x400/png?text=E2E",
+      `https://placehold.co/600x400/png?text=${encodeURIComponent(input.imageLabel)}`,
     ],
   );
 
   return propertyId;
+}
+
+async function ensureContactProperty(
+  pool: ReturnType<typeof createE2ePool>,
+  ownerId: string,
+) {
+  return ensurePublishedProperty(pool, ownerId, {
+    title: CONTACT_PROPERTY_TITLE,
+    description: "Propiedad de prueba para smoke tests E2E.",
+    address: CONTACT_PROPERTY_ADDRESS,
+    imageLabel: "E2E",
+  });
 }
 
 async function ensureVisitConversation(
@@ -280,6 +303,18 @@ export async function seedE2eData(): Promise<E2eSeedData> {
     });
 
     const contactPropertyId = await ensureContactProperty(pool, ownerId);
+    const shareAlphaId = await ensurePublishedProperty(pool, ownerId, {
+      title: SHARE_PROPERTY_ALPHA_TITLE,
+      description: "Propiedad E2E para validar preview de compartir.",
+      address: SHARE_PROPERTY_ALPHA_ADDRESS,
+      imageLabel: "Alpha",
+    });
+    const shareBetaId = await ensurePublishedProperty(pool, ownerId, {
+      title: SHARE_PROPERTY_BETA_TITLE,
+      description: "Segunda propiedad E2E para validar preview de compartir.",
+      address: SHARE_PROPERTY_BETA_ADDRESS,
+      imageLabel: "Beta",
+    });
     const visitConversationId = await ensureVisitConversation(
       pool,
       contactPropertyId,
@@ -287,14 +322,30 @@ export async function seedE2eData(): Promise<E2eSeedData> {
       clientId,
     );
 
+    const shareProperties = [
+      {
+        id: contactPropertyId,
+        title: CONTACT_PROPERTY_TITLE,
+        address: CONTACT_PROPERTY_ADDRESS,
+      },
+      {
+        id: shareAlphaId,
+        title: SHARE_PROPERTY_ALPHA_TITLE,
+        address: SHARE_PROPERTY_ALPHA_ADDRESS,
+      },
+      {
+        id: shareBetaId,
+        title: SHARE_PROPERTY_BETA_TITLE,
+        address: SHARE_PROPERTY_BETA_ADDRESS,
+      },
+    ];
+
     const seedData: E2eSeedData = {
       password: SEED_PASSWORD,
       owner: { id: ownerId, email: OWNER_EMAIL },
       client: { id: clientId, email: CLIENT_EMAIL },
-      contactProperty: {
-        id: contactPropertyId,
-        title: CONTACT_PROPERTY_TITLE,
-      },
+      contactProperty: shareProperties[0],
+      shareProperties,
       visitConversation: { id: visitConversationId },
     };
 

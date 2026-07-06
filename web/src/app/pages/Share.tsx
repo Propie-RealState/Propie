@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Copy, Check } from "lucide-react";
 import React from "react";
 import { pageScrollStyle, pageShellStyle } from "../components/layout/layout-styles";
+import { getPropertyById } from "../modules/explore/services/property-details.service";
+import { formatPrice } from "../modules/explore/utils/formatPrice";
 
 // Import social media icons
 const WhatsAppIcon = () => (
@@ -30,28 +32,79 @@ const SMSIcon = () => (
   </svg>
 );
 
-// Mock property data - en producción esto vendría de props o estado global
-const mockProperty = {
-  id: "1",
-  title: "Hermoso departamento en Palermo",
-  price: "USD 285,000",
-  address: "Av. Córdoba 3456, Palermo, CABA",
-  photo: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800",
-};
+type MappedProperty = Awaited<ReturnType<typeof getPropertyById>>;
+
+function formatPropertyAddress(property: MappedProperty) {
+  return [
+    property.location.address,
+    property.location.neighborhood,
+    property.location.city,
+    property.location.province,
+  ]
+    .filter(Boolean)
+    .join(", ");
+}
 
 export default function Share() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const [property, setProperty] = useState<MappedProperty | null>(null);
+  const [loading, setLoading] = useState(true);
   const [customMessage, setCustomMessage] = useState("");
   const [copied, setCopied] = useState(false);
 
-  // Generar URL completa de la propiedad
-  const propertyUrl = `${window.location.origin}/propiedad/${id || mockProperty.id}`;
+  useEffect(() => {
+    if (!id) {
+      setProperty(null);
+      setLoading(false);
+      return;
+    }
 
-  // Mensaje base para compartir
-  const baseMessage = `${mockProperty.title} - ${mockProperty.price}\n${mockProperty.address}`;
+    let cancelled = false;
+
+    async function loadProperty() {
+      setLoading(true);
+      try {
+        const data = await getPropertyById(id);
+        if (!cancelled) {
+          setProperty(data);
+        }
+      } catch (error) {
+        console.error("Error loading property for share:", error);
+        if (!cancelled) {
+          setProperty(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadProperty();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  useEffect(() => {
+    setCustomMessage("");
+    setCopied(false);
+  }, [id]);
+
+  const propertyUrl = `${window.location.origin}/propiedad/${id ?? ""}`;
+  const formattedPrice = property
+    ? formatPrice(property.price, property.currency)
+    : "";
+  const address = property ? formatPropertyAddress(property) : "";
+  const baseMessage = property
+    ? `${property.title} - ${formattedPrice}\n${address}`
+    : "";
 
   const handleShare = (platform: string) => {
+    if (!property) return;
+
     const message = customMessage ? `${customMessage}\n\n${baseMessage}` : baseMessage;
     const encodedMessage = encodeURIComponent(message);
     const encodedUrl = encodeURIComponent(propertyUrl);
@@ -66,7 +119,7 @@ export default function Share() {
         shareUrl = `https://t.me/share/url?url=${encodedUrl}&text=${encodedMessage}`;
         break;
       case "email":
-        shareUrl = `mailto:?subject=${encodeURIComponent(mockProperty.title)}&body=${encodedMessage}%0A%0A${encodedUrl}`;
+        shareUrl = `mailto:?subject=${encodeURIComponent(property.title)}&body=${encodedMessage}%0A%0A${encodedUrl}`;
         break;
       case "sms":
         shareUrl = `sms:?body=${encodedMessage}%0A${encodedUrl}`;
@@ -87,6 +140,26 @@ export default function Share() {
       console.error("Error al copiar:", err);
     }
   };
+
+  if (loading) {
+    return (
+      <div style={pageShellStyle}>
+        <div style={{ padding: 24, textAlign: "center", color: "#6e6e73" }}>
+          Cargando...
+        </div>
+      </div>
+    );
+  }
+
+  if (!property || !id) {
+    return (
+      <div style={pageShellStyle}>
+        <div style={{ padding: 24, textAlign: "center", color: "#6e6e73" }}>
+          Propiedad no encontrada
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={pageShellStyle}>
@@ -152,6 +225,7 @@ export default function Share() {
         <div style={{ width: "100%", maxWidth: 640, display: "flex", flexDirection: "column", gap: 20 }}>
           {/* Property Preview Card */}
           <div
+            data-testid="share-property-preview"
             style={{
               background: "white",
               borderRadius: 16,
@@ -161,17 +235,29 @@ export default function Share() {
               gap: 16,
             }}
           >
-            <img
-              src={mockProperty.photo}
-              alt={mockProperty.title}
-              style={{
-                width: 100,
-                height: 100,
-                borderRadius: 12,
-                objectFit: "cover",
-                flexShrink: 0,
-              }}
-            />
+            {property.coverImage ? (
+              <img
+                src={property.coverImage}
+                alt={property.title}
+                style={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: 12,
+                  objectFit: "cover",
+                  flexShrink: 0,
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: 12,
+                  background: "#f5f5f7",
+                  flexShrink: 0,
+                }}
+              />
+            )}
             <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
               <div
                 style={{
@@ -182,7 +268,7 @@ export default function Share() {
                   fontFamily: "'Sora', sans-serif",
                 }}
               >
-                {mockProperty.price}
+                {formattedPrice}
               </div>
               <div
                 style={{
@@ -192,7 +278,7 @@ export default function Share() {
                   marginBottom: 4,
                 }}
               >
-                {mockProperty.title}
+                {property.title}
               </div>
               <div
                 style={{
@@ -201,7 +287,7 @@ export default function Share() {
                   lineHeight: 1.4,
                 }}
               >
-                {mockProperty.address}
+                {address}
               </div>
             </div>
           </div>
@@ -442,6 +528,7 @@ export default function Share() {
               Copiar enlace
             </h2>
             <div
+              data-testid="share-property-url"
               style={{
                 background: "#f5f5f7",
                 borderRadius: 12,
