@@ -5,7 +5,8 @@ export type E2eSeedData = {
   password: string;
   owner: { id: string; email: string };
   client: { id: string; email: string };
-  contactProperty: { id: string; title: string };
+  contactProperty: { id: string; title: string; address: string };
+  shareProperties: Array<{ id: string; title: string; address: string }>;
   visitConversation: { id: string };
 };
 

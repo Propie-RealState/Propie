@@ -680,6 +680,7 @@ export default function PropertyDetails() {
           )}
           <button
             className="property-details-header__icon-btn"
+            aria-label="Compartir"
             onClick={handleShare}
             style={{
               background: "#f0f0f0",
