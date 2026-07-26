@@ -8,8 +8,14 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import {
+  emptyRegistrationProgress,
+  normalizeRegistrationProgress,
+  type RegistrationProgress,
+} from "../features/register/registrationProgress";
 
 export type RegisterRole = "OWNER" | "AGENT" | "CLIENT";
+export type { RegistrationProgress };
 
 export type RegisterData = {
   role: RegisterRole | null;
@@ -50,6 +56,9 @@ export type RegisterData = {
   | "PUBLISH"
   | "EXPLORE"
   | null;
+
+  /** Non-secret wizard progress for route guards (sessionStorage-safe). */
+  registrationProgress: RegistrationProgress;
 };
 
 type RegisterContextType = {
@@ -93,6 +102,8 @@ const initialData: RegisterData = {
 
   bio: "",
   mainGoal: null,
+
+  registrationProgress: emptyRegistrationProgress(),
 };
 
 const REGISTER_STORAGE_KEY =
@@ -162,6 +173,9 @@ function stripSecretsFromDraft(
   const merged: RegisterData = {
     ...initialData,
     ...draft,
+    registrationProgress: normalizeRegistrationProgress(
+      draft.registrationProgress,
+    ),
   };
 
   for (const key of REGISTER_SECRET_KEYS) {

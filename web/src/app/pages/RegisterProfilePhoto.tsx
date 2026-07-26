@@ -1,4 +1,5 @@
 import { useCallback, useState, useRef } from "react";
+import { flushSync } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { AuthHeroHeader } from "../components/AuthHeroHeader";
 import { Upload, Camera, User } from "lucide-react";
@@ -12,6 +13,7 @@ import {
   validateProfilePhotoFile,
   useRegisterRedirectErrors,
 } from "../../features/register/validation";
+import { advanceRegistrationProgress } from "../../features/register/registrationProgress";
 
 export default function RegisterProfilePhoto() {
   const { data, updateData } = useRegister();
@@ -50,6 +52,14 @@ export default function RegisterProfilePhoto() {
   };
 
   const handleContinue = () => {
+    flushSync(() => {
+      updateData({
+        registrationProgress: advanceRegistrationProgress(
+          data.registrationProgress,
+          "role",
+        ),
+      });
+    });
     if (data.role === "AGENT") {
       navigate("/registro/agent-info");
     } else if (data.role === "CLIENT") {

@@ -1,9 +1,11 @@
 import { useEffect } from "react";
+import { flushSync } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { AuthHeroHeader } from "../components/AuthHeroHeader";
 import { useRegister } from "../../context/RegisterContext";
 import { AGENT_THEME, syncUserTypeFromRole } from "../../theme/app-theme";
 import { AccountCreationForm } from "../../features/register/components/AccountCreationForm";
+import { advanceRegistrationProgress } from "../../features/register/registrationProgress";
 import { isSocialAuthEnabled } from "../../lib/feature-flags";
 
 const theme = AGENT_THEME;
@@ -20,13 +22,29 @@ export default function RegisterAgente() {
   }, [data.role, updateData]);
 
   const handleValidSubmit = () => {
-    updateData({ role: "AGENT" });
+    flushSync(() => {
+      updateData({
+        role: "AGENT",
+        registrationProgress: advanceRegistrationProgress(
+          data.registrationProgress,
+          "account",
+        ),
+      });
+    });
     syncUserTypeFromRole("AGENT");
     navigate("/registro/personal-data");
   };
 
   const handleSocialLogin = (provider: string) => {
-    updateData({ role: "AGENT" });
+    flushSync(() => {
+      updateData({
+        role: "AGENT",
+        registrationProgress: advanceRegistrationProgress(
+          data.registrationProgress,
+          "account",
+        ),
+      });
+    });
     syncUserTypeFromRole("AGENT");
     console.log(`Login con ${provider}`);
     navigate("/registro/personal-data");

@@ -1,3 +1,4 @@
+import { flushSync } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { AuthHeroHeader } from "../components/AuthHeroHeader";
 import { Check, Shield, Fingerprint, Lock, Mail, Smartphone } from "lucide-react";
@@ -14,6 +15,7 @@ import {
   normalizeEmail,
   useRegisterRedirectErrors,
 } from "../../features/register/validation";
+import { advanceRegistrationProgress } from "../../features/register/registrationProgress";
 
 export default function RegisterSecurity() {
   const { data, updateData } = useRegister();
@@ -28,6 +30,14 @@ export default function RegisterSecurity() {
     e.preventDefault();
     const result = validation.handleSubmit();
     if (!result.valid) return;
+    flushSync(() => {
+      updateData({
+        registrationProgress: advanceRegistrationProgress(
+          data.registrationProgress,
+          "security",
+        ),
+      });
+    });
     navigate("/registro/profile-photo");
   };
 

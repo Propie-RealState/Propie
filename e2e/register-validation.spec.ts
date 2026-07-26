@@ -91,9 +91,14 @@ test.describe("registration validation", () => {
     await advancePastAccount(page);
     await advanceToSecurity(page);
 
-    await page.getByTestId("register-field-pinEnabled").check({ force: true });
-    await page.getByPlaceholder("Ingresá tu PIN de 4 dígitos").fill("12");
-    await page.getByPlaceholder("Ingresá tu PIN de 4 dígitos").blur();
+    await page
+      .locator('[data-testid="register-field-pinEnabled"]')
+      .locator("xpath=ancestor::label[1]")
+      .click();
+    const pinInput = page.getByPlaceholder("Ingresá tu PIN de 4 dígitos");
+    await expect(pinInput).toBeVisible();
+    await pinInput.fill("12");
+    await pinInput.blur();
     await expect(page.getByText("El PIN debe tener exactamente 4 dígitos")).toBeVisible();
     await expect(page.getByTestId("register-continue")).toBeDisabled();
   });

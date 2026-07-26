@@ -1,4 +1,5 @@
 import { useState, useRef, useMemo } from "react";
+import { flushSync } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { AuthHeroHeader } from "../components/AuthHeroHeader";
 import { Check, Upload, Camera } from "lucide-react";
@@ -14,6 +15,7 @@ import {
   validatePersonalDataStep,
   useRegisterRedirectErrors,
 } from "../../features/register/validation";
+import { advanceRegistrationProgress } from "../../features/register/registrationProgress";
 
 export default function RegisterPersonalData() {
   const { data, updateData } = useRegister();
@@ -83,13 +85,19 @@ export default function RegisterPersonalData() {
     validation.handleSubmit();
     if (!stepResult.valid) return;
 
-    updateData({
-      dni: draft.dni,
-      birthDate: draft.birthDate,
-      nationality: draft.nationality,
-      cuitCuil: draft.cuitCuil,
-      address: draft.address,
-      location: draft.location || draft.address,
+    flushSync(() => {
+      updateData({
+        dni: draft.dni,
+        birthDate: draft.birthDate,
+        nationality: draft.nationality,
+        cuitCuil: draft.cuitCuil,
+        address: draft.address,
+        location: draft.location || draft.address,
+        registrationProgress: advanceRegistrationProgress(
+          dataRef.current.registrationProgress,
+          "personal",
+        ),
+      });
     });
     navigate("/registro/security");
   };

@@ -1,8 +1,10 @@
 import { useNavigate } from "react-router-dom";
+import { flushSync } from "react-dom";
 import { AuthHeroHeader } from "../components/AuthHeroHeader";
 import React from "react";
 import { useRegister } from "../../context/RegisterContext";
 import { AccountCreationForm } from "../../features/register/components/AccountCreationForm";
+import { advanceRegistrationProgress } from "../../features/register/registrationProgress";
 import { isSocialAuthEnabled } from "../../lib/feature-flags";
 
 type RegisterPropieProps = {
@@ -22,24 +24,36 @@ export default function RegisterPropie({
   const isClientRegistration = registrationKind === "client";
 
   const handleValidSubmit = () => {
-    if (isClientRegistration) {
-      updateData({ role: "CLIENT", mainGoal: "EXPLORE" });
-      sessionStorage.removeItem("userType");
-    } else {
-      updateData({ role: "OWNER" });
-      sessionStorage.setItem("userType", "propie");
-    }
+    const registrationProgress = advanceRegistrationProgress(
+      data.registrationProgress,
+      "account",
+    );
+    flushSync(() => {
+      if (isClientRegistration) {
+        updateData({ role: "CLIENT", mainGoal: "EXPLORE", registrationProgress });
+        sessionStorage.removeItem("userType");
+      } else {
+        updateData({ role: "OWNER", registrationProgress });
+        sessionStorage.setItem("userType", "propie");
+      }
+    });
     navigate("/registro/personal-data");
   };
 
   const handleSocialLogin = (provider: string) => {
-    if (isClientRegistration) {
-      updateData({ role: "CLIENT", mainGoal: "EXPLORE" });
-      sessionStorage.removeItem("userType");
-    } else {
-      updateData({ role: "OWNER" });
-      sessionStorage.setItem("userType", "propie");
-    }
+    const registrationProgress = advanceRegistrationProgress(
+      data.registrationProgress,
+      "account",
+    );
+    flushSync(() => {
+      if (isClientRegistration) {
+        updateData({ role: "CLIENT", mainGoal: "EXPLORE", registrationProgress });
+        sessionStorage.removeItem("userType");
+      } else {
+        updateData({ role: "OWNER", registrationProgress });
+        sessionStorage.setItem("userType", "propie");
+      }
+    });
     console.log(`Login con ${provider}`, provider);
     navigate("/registro/personal-data");
   };
