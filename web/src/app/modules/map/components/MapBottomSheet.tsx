@@ -2,6 +2,7 @@ import React, { memo, useMemo, useState } from "react";
 
 import { MapPropertyCardMedia } from "./MapPropertyCardMedia";
 import type { PropertyPin } from "../types/map.types";
+import { getMapBottomSheetLabel } from "../utils/map-bottom-sheet-label";
 import {
   formatMapPrice,
   formatOperationType,
@@ -15,6 +16,8 @@ type SnapPoint =
 
 type Props = {
   properties: PropertyPin[];
+  /** Viewport property count (unclustered list, or map clusters as fallback). */
+  visibleCount: number;
   selectedPropertyId?: string;
   loading: boolean;
   onSelectProperty: (property: PropertyPin) => void;
@@ -34,6 +37,7 @@ const snapClass:
 export const MapBottomSheet = memo(
   function MapBottomSheet({
     properties,
+    visibleCount,
     selectedPropertyId,
     loading,
     onSelectProperty,
@@ -44,18 +48,15 @@ export const MapBottomSheet = memo(
     const [dragStart, setDragStart] =
       useState<number | null>(null);
 
-    const label =
-      useMemo(() => {
-        if (loading) {
-          return "Actualizando mapa...";
-        }
-
-        if (properties.length === 0) {
-          return "No hay propiedades visibles";
-        }
-
-        return `${properties.length} propiedades visibles`;
-      }, [loading, properties.length]);
+    const label = useMemo(
+      () =>
+        getMapBottomSheetLabel({
+          loading,
+          visibleCount,
+          listedCount: properties.length,
+        }),
+      [loading, properties.length, visibleCount],
+    );
 
     return (
       <section

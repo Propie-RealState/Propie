@@ -101,6 +101,7 @@ export default function PropertyMap() {
   const {
     items,
     properties,
+    visibleCount,
     loading,
     error,
     reload,
@@ -467,6 +468,7 @@ export default function PropertyMap() {
         onSelectProperty={handlePropertyClick}
         properties={properties}
         selectedPropertyId={selectedPropertyId}
+        visibleCount={visibleCount}
       />
     </main>
   );
