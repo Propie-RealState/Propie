@@ -12,6 +12,7 @@ import {
   fieldAriaProps,
   getFieldBorder,
   normalizeEmail,
+  useRegisterRedirectErrors,
 } from "../../features/register/validation";
 
 export default function RegisterSecurity() {
@@ -19,6 +20,9 @@ export default function RegisterSecurity() {
   const navigate = useNavigate();
   const theme = getAppTheme(data.role === "AGENT");
   const { validation, showSuccess, successMessage } = useSecurityValidation(data);
+  const { formError, showFinalSubmitNotice } = useRegisterRedirectErrors(
+    validation.seedFieldErrors,
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +49,23 @@ export default function RegisterSecurity() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 24px 40px" }}>
         <div style={{ width: "100%", maxWidth: 420 }}>
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }} noValidate>
+            {showFinalSubmitNotice && (
+              <div
+                role="status"
+                style={{
+                  background: "linear-gradient(135deg, #fff4f4 0%, #ffe8e8 100%)",
+                  border: "1.5px solid #f5c2c7",
+                  borderRadius: 14,
+                  padding: "14px 16px",
+                  fontSize: 14,
+                  color: "#8b1e1e",
+                  lineHeight: 1.5,
+                }}
+              >
+                Revisá los datos marcados para poder crear tu cuenta.
+              </div>
+            )}
+            {formError && <ValidationSummary errors={[formError]} />}
             {validation.submitted && validation.errorList.length > 0 && <ValidationSummary errors={validation.errorList} />}
             <SecuritySuccessBanner visible={showSuccess} message={successMessage} />
 

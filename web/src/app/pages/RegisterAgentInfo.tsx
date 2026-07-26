@@ -16,13 +16,16 @@ import { AnalyticsEvents } from "../../lib/analytics-events";
 import {
   FieldError,
   CharCounter,
+  ValidationSummary,
   validateAgentCertification,
   validateAgentEducation,
   validateAgentExperience,
   validateBio,
   buildRegistrationContext,
   ensureRegistrationReady,
+  getRegisterSubmitErrorMessage,
   handleRegisterValidationFailure,
+  navigateWithRegisterErrors,
 } from "../../features/register/validation";
 import { continueRegistrationAfterSignup } from "../../features/register/continue-registration-after-signup";
 
@@ -68,6 +71,7 @@ export default function RegisterAgentInfo() {
   const [newCertification, setNewCertification] = useState({ name: "", issuer: "", year: "" });
   const [newExperience, setNewExperience] = useState({ title: "", company: "", years: "" });
   const [formErrors, setFormErrors] = useState<Record<string, string | undefined>>({});
+  const [submitError, setSubmitError] = useState<string | undefined>();
 
   const handleFinalizar = async () => {
     if (isSubmitting) {
@@ -75,6 +79,7 @@ export default function RegisterAgentInfo() {
     }
 
     setIsSubmitting(true);
+    setSubmitError(undefined);
 
     try {
       const registrationContext = buildRegistrationContext(data, {
@@ -82,8 +87,8 @@ export default function RegisterAgentInfo() {
       });
       const readiness = ensureRegistrationReady(data, registrationContext);
       if (!readiness.valid) {
-        navigate(readiness.route, {
-          state: { registerFieldErrors: readiness.errors, fromFinalSubmit: true },
+        navigateWithRegisterErrors(navigate, readiness.route, {
+          registerFieldErrors: readiness.errors,
         });
         return;
       }
@@ -118,7 +123,7 @@ export default function RegisterAgentInfo() {
       });
     } catch (error) {
       if (!handleRegisterValidationFailure(error, data, navigate)) {
-        console.error(error);
+        setSubmitError(getRegisterSubmitErrorMessage(error));
       }
     } finally {
       setIsSubmitting(false);
@@ -255,6 +260,7 @@ export default function RegisterAgentInfo() {
         }}
       >
         <div style={{ width: "100%", maxWidth: 420, display: "flex", flexDirection: "column", gap: 24 }}>
+          {submitError && <ValidationSummary errors={[submitError]} />}
           {/* Bio section */}
           <div>
             <label htmlFor="bio" style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>

@@ -1,5 +1,5 @@
-import { useState, useRef, useMemo, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useState, useRef, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { AuthHeroHeader } from "../components/AuthHeroHeader";
 import { Check, Upload, Camera } from "lucide-react";
 import { useRegister } from "../../context/RegisterContext";
@@ -12,19 +12,17 @@ import {
   getFieldBorder,
   validateImageFile,
   validatePersonalDataStep,
-  type RegisterRedirectState,
+  useRegisterRedirectErrors,
 } from "../../features/register/validation";
 
 export default function RegisterPersonalData() {
   const { data, updateData } = useRegister();
   const isAgent = data.role === "AGENT";
   const navigate = useNavigate();
-  const location = useLocation();
   const [dniFront, setDniFront] = useState<File | null>(null);
   const [dniBack, setDniBack] = useState<File | null>(null);
   const [selfie, setSelfie] = useState<File | null>(null);
   const [fileErrors, setFileErrors] = useState<Record<string, string | undefined>>({});
-  const [showFinalSubmitNotice, setShowFinalSubmitNotice] = useState(false);
 
   const colors = {
     gradient: isAgent
@@ -46,18 +44,11 @@ export default function RegisterPersonalData() {
   );
 
   const validation = usePersonalDataValidation(data, personalContext);
+  const { formError, showFinalSubmitNotice } = useRegisterRedirectErrors(
+    validation.seedFieldErrors,
+  );
   const dataRef = useRef(data);
   dataRef.current = data;
-
-  useEffect(() => {
-    const state = location.state as RegisterRedirectState | null;
-    const redirectErrors = state?.registerFieldErrors;
-    if (!redirectErrors || Object.keys(redirectErrors).length === 0) return;
-    validation.seedFieldErrors(redirectErrors);
-    setShowFinalSubmitNotice(Boolean(state?.fromFinalSubmit));
-    navigate(location.pathname, { replace: true, state: null });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- seed once from router state
-  }, [location.state]);
 
   const handleFileChange = (
     field: "dniFrontImage" | "dniBackImage" | "biometricSelfie",
@@ -145,6 +136,7 @@ export default function RegisterPersonalData() {
                 Faltan datos para crear tu cuenta. Completá los campos marcados y volvé a finalizar.
               </div>
             )}
+            {formError && <ValidationSummary errors={[formError]} />}
             {validation.submitted && validation.errorList.length > 0 && (
               <ValidationSummary errors={validation.errorList} />
             )}

@@ -11,7 +11,17 @@ import { buildRegisterPayload } from '../../lib/buildRegisterPayload';
 import { useAuth } from '../../context/AuthContext';
 import { getPendingAvatarFile, clearPendingAvatarFile } from '../../lib/pending-avatar';
 import { uploadAvatar } from '../modules/profile/services/upload-avatar.service';
-import { CharCounter, FieldError, validateBio, buildRegistrationContext, ensureRegistrationReady, handleRegisterValidationFailure } from '../../features/register/validation';
+import {
+  CharCounter,
+  FieldError,
+  ValidationSummary,
+  validateBio,
+  buildRegistrationContext,
+  ensureRegistrationReady,
+  getRegisterSubmitErrorMessage,
+  handleRegisterValidationFailure,
+  navigateWithRegisterErrors,
+} from '../../features/register/validation';
 import { continueRegistrationAfterSignup } from '../../features/register/continue-registration-after-signup';
 import { trackEvent } from '../../lib/analytics';
 import { AnalyticsEvents } from '../../lib/analytics-events';
@@ -22,6 +32,7 @@ export default function RegisterClientInfo() {
   const { data, updateData, reset } = useRegister();
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | undefined>();
 
   const theme = REGISTER_COMPLETION.OWNER;
 
@@ -31,6 +42,7 @@ export default function RegisterClientInfo() {
     }
 
     setIsSubmitting(true);
+    setSubmitError(undefined);
 
     try {
       const registrationContext = buildRegistrationContext(data, {
@@ -38,8 +50,8 @@ export default function RegisterClientInfo() {
       });
       const readiness = ensureRegistrationReady(data, registrationContext);
       if (!readiness.valid) {
-        navigate(readiness.route, {
-          state: { registerFieldErrors: readiness.errors, fromFinalSubmit: true },
+        navigateWithRegisterErrors(navigate, readiness.route, {
+          registerFieldErrors: readiness.errors,
         });
         return;
       }
@@ -74,7 +86,7 @@ export default function RegisterClientInfo() {
       });
     } catch (error) {
       if (!handleRegisterValidationFailure(error, data, navigate)) {
-        console.error(error);
+        setSubmitError(getRegisterSubmitErrorMessage(error));
       }
     } finally {
       setIsSubmitting(false);
@@ -140,6 +152,11 @@ export default function RegisterClientInfo() {
       </div>
 
       <div style={{ flex: 1, padding: '8px 24px 32px', maxWidth: 420, margin: '0 auto', width: '100%' }}>
+        {submitError && (
+          <div style={{ marginBottom: 16 }}>
+            <ValidationSummary errors={[submitError]} />
+          </div>
+        )}
         <label
           htmlFor="client-bio"
           style={{ fontSize: 13, fontWeight: 600, color: '#3a3a3c' }}

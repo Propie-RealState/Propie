@@ -9,6 +9,7 @@ import {
   ValidationSummary,
   fieldAriaProps,
   getFieldBorder,
+  useRegisterRedirectErrors,
 } from "../validation";
 
 type ThemeColors = {
@@ -34,6 +35,9 @@ export function AccountCreationForm({
   const [showPassword, setShowPassword] = useState(false);
   const { validation, passwordStrength, normalizeEmail } =
     useAccountCreationValidation(data);
+  const { formError, showFinalSubmitNotice } = useRegisterRedirectErrors(
+    validation.seedFieldErrors,
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +57,23 @@ export function AccountCreationForm({
 
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }} noValidate>
+      {showFinalSubmitNotice && (
+        <div
+          role="status"
+          style={{
+            background: "linear-gradient(135deg, #fff4f4 0%, #ffe8e8 100%)",
+            border: "1.5px solid #f5c2c7",
+            borderRadius: 14,
+            padding: "14px 16px",
+            fontSize: 14,
+            color: "#8b1e1e",
+            lineHeight: 1.5,
+          }}
+        >
+          Revisá los datos marcados para poder crear tu cuenta.
+        </div>
+      )}
+      {formError && <ValidationSummary errors={[formError]} />}
       {validation.submitted && validation.errorList.length > 0 && (
         <ValidationSummary errors={validation.errorList} />
       )}

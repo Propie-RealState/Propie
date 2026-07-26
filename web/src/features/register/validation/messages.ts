@@ -12,6 +12,11 @@ export const validationMessages = {
   },
   email: {
     format: "Ingresá un email válido",
+    alreadyExists: "Este email ya está registrado.",
+  },
+  submit: {
+    generic: "No pudimos crear tu cuenta. Intentá de nuevo.",
+    registrationDisabled: "El registro no está disponible en este momento.",
   },
   password: {
     min: "La contraseña debe tener al menos 8 caracteres",
