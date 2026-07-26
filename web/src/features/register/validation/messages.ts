@@ -12,6 +12,7 @@ export const validationMessages = {
   },
   email: {
     format: "Ingresá un email válido",
+    max: "El email no puede superar 255 caracteres",
     alreadyExists: "Este email ya está registrado.",
   },
   submit: {
@@ -37,6 +38,7 @@ export const validationMessages = {
   },
   nationality: {
     min: "La nacionalidad debe tener al menos 2 caracteres",
+    max: "La nacionalidad no puede superar 100 caracteres",
   },
   cuitCuil: {
     format: "El CUIT/CUIL debe tener exactamente 11 dígitos",
@@ -54,6 +56,7 @@ export const validationMessages = {
   },
   recoveryPhone: {
     format: "El teléfono debe tener al menos 10 dígitos numéricos",
+    max: "El teléfono no puede superar 20 dígitos",
   },
   pin: {
     format: "El PIN debe tener exactamente 4 dígitos numéricos",

@@ -8,7 +8,10 @@ export type ValidationResult = {
 export type PasswordStrength = "empty" | "weak" | "medium" | "strong";
 
 const NAME_PATTERN = /^[\p{L}\s\u00C0-\u024F'-]+$/u;
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+/** Closer to Zod/HTML email than the previous loose pattern; rejects spaces and consecutive dots. */
+const EMAIL_PATTERN =
+  /^(?!\.)(?!.*\.\.)([a-zA-Z0-9_'+.-]*)[a-zA-Z0-9_+-]@([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
+const MAX_EMAIL_LENGTH = 255;
 const DIGITS_ONLY = /^\d+$/;
 
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -52,11 +55,21 @@ export function normalizeEmail(value: string): string {
   return value.trim().toLowerCase();
 }
 
-export function validateEmail(value: string): ValidationResult {
+function validateEmailFormat(
+  value: string,
+  formatMessage: string,
+): ValidationResult {
   const normalized = normalizeEmail(value);
   if (!normalized) return invalidResult(validationMessages.required);
-  if (!EMAIL_PATTERN.test(normalized)) return invalidResult(validationMessages.email.format);
+  if (normalized.length > MAX_EMAIL_LENGTH) {
+    return invalidResult(validationMessages.email.max);
+  }
+  if (!EMAIL_PATTERN.test(normalized)) return invalidResult(formatMessage);
   return validResult();
+}
+
+export function validateEmail(value: string): ValidationResult {
+  return validateEmailFormat(value, validationMessages.email.format);
 }
 
 export function getPasswordStrength(value: string): PasswordStrength {
@@ -126,6 +139,7 @@ export function validateNationality(value: string): ValidationResult {
   const trimmed = value.trim();
   if (!trimmed) return invalidResult(validationMessages.required);
   if (trimmed.length < 2) return invalidResult(validationMessages.nationality.min);
+  if (trimmed.length > 100) return invalidResult(validationMessages.nationality.max);
   return validResult();
 }
 
@@ -176,18 +190,16 @@ export function validateProfilePhotoFile(file: File | null | undefined): Validat
 }
 
 export function validateRecoveryEmail(value: string): ValidationResult {
-  const normalized = normalizeEmail(value);
-  if (!normalized) return invalidResult(validationMessages.required);
-  if (!EMAIL_PATTERN.test(normalized)) {
-    return invalidResult(validationMessages.recoveryEmail.format);
-  }
-  return validResult();
+  return validateEmailFormat(value, validationMessages.recoveryEmail.format);
 }
 
 export function validateRecoveryPhone(value: string): ValidationResult {
   if (!value) return invalidResult(validationMessages.required);
   if (!DIGITS_ONLY.test(value) || value.length < 10) {
     return invalidResult(validationMessages.recoveryPhone.format);
+  }
+  if (value.length > 20) {
+    return invalidResult(validationMessages.recoveryPhone.max);
   }
   return validResult();
 }

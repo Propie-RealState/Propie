@@ -98,6 +98,79 @@ const initialData: RegisterData = {
 const REGISTER_STORAGE_KEY =
   "propie.registerDraft";
 
+/** Never written to sessionStorage (auth secrets / recovery). */
+const REGISTER_SECRET_KEYS = [
+  "password",
+  "pin",
+  "recoveryEmail",
+  "recoveryPhone",
+] as const satisfies ReadonlyArray<keyof RegisterData>;
+
+type RegisterSecrets = Pick<
+  RegisterData,
+  (typeof REGISTER_SECRET_KEYS)[number]
+>;
+
+function emptySecrets(): RegisterSecrets {
+  return {
+    password: "",
+    pin: "",
+    recoveryEmail: "",
+    recoveryPhone: "",
+  };
+}
+
+/**
+ * Page-lifetime secret memory (cleared on full reload).
+ * Keeps password/PIN/recovery available across RegisterProvider remounts
+ * without writing them to sessionStorage.
+ */
+let memorySecrets: RegisterSecrets = emptySecrets();
+
+function captureSecrets(data: RegisterData) {
+  memorySecrets = {
+    password: data.password,
+    pin: data.pin,
+    recoveryEmail: data.recoveryEmail,
+    recoveryPhone: data.recoveryPhone,
+  };
+}
+
+function applyMemorySecrets(data: RegisterData): RegisterData {
+  return {
+    ...data,
+    ...memorySecrets,
+  };
+}
+
+function toPersistedRegisterData(
+  data: RegisterData,
+): Omit<RegisterData, (typeof REGISTER_SECRET_KEYS)[number]> {
+  const {
+    password: _password,
+    pin: _pin,
+    recoveryEmail: _recoveryEmail,
+    recoveryPhone: _recoveryPhone,
+    ...persisted
+  } = data;
+  return persisted;
+}
+
+function stripSecretsFromDraft(
+  draft: Partial<RegisterData>,
+): RegisterData {
+  const merged: RegisterData = {
+    ...initialData,
+    ...draft,
+  };
+
+  for (const key of REGISTER_SECRET_KEYS) {
+    merged[key] = initialData[key];
+  }
+
+  return merged;
+}
+
 function readStoredRegisterData() {
   if (typeof window === "undefined") {
     return initialData;
@@ -110,15 +183,21 @@ function readStoredRegisterData() {
       );
 
     if (!stored) {
-      return initialData;
+      // No draft ⇒ treat as a fresh registration session.
+      // Drop page-lifetime secrets so a cleared sessionStorage cannot
+      // rehydrate credentials from a previous incomplete attempt.
+      memorySecrets = emptySecrets();
+      return { ...initialData };
     }
 
-    return {
-      ...initialData,
-      ...JSON.parse(stored),
-    } as RegisterData;
+    return applyMemorySecrets(
+      stripSecretsFromDraft(
+        JSON.parse(stored) as Partial<RegisterData>,
+      ),
+    );
   } catch {
-    return initialData;
+    memorySecrets = emptySecrets();
+    return { ...initialData };
   }
 }
 
@@ -127,9 +206,10 @@ function persistRegisterData(data: RegisterData) {
     return;
   }
 
+  captureSecrets(data);
   window.sessionStorage.setItem(
     REGISTER_STORAGE_KEY,
-    JSON.stringify(data)
+    JSON.stringify(toPersistedRegisterData(data)),
   );
 }
 
@@ -161,6 +241,7 @@ export function RegisterProvider({ children }: Props) {
   }, []);
 
   const reset = useCallback(() => {
+    memorySecrets = emptySecrets();
     setData(initialData);
 
     if (typeof window !== "undefined") {

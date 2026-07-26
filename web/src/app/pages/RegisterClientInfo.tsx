@@ -15,12 +15,14 @@ import {
   CharCounter,
   FieldError,
   ValidationSummary,
+  type FieldErrors,
   validateBio,
   buildRegistrationContext,
   ensureRegistrationReady,
   getRegisterSubmitErrorMessage,
   handleRegisterValidationFailure,
   navigateWithRegisterErrors,
+  useRegisterRedirectErrors,
 } from '../../features/register/validation';
 import { continueRegistrationAfterSignup } from '../../features/register/continue-registration-after-signup';
 import { trackEvent } from '../../lib/analytics';
@@ -33,6 +35,12 @@ export default function RegisterClientInfo() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | undefined>();
+  const [bioApiError, setBioApiError] = useState<string | undefined>();
+  const seedFieldErrors = useCallback((errors: FieldErrors) => {
+    if (errors.bio) setBioApiError(errors.bio);
+  }, []);
+  const { formError, showFinalSubmitNotice } =
+    useRegisterRedirectErrors(seedFieldErrors);
 
   const theme = REGISTER_COMPLETION.OWNER;
 
@@ -101,7 +109,8 @@ export default function RegisterClientInfo() {
 
   const charCount = data.bio.length;
   const maxChars = 300;
-  const bioError = validateBio(data.bio).error;
+  const bioError = bioApiError || validateBio(data.bio).error;
+  const visibleFormError = submitError || formError;
 
   return (
     <div
@@ -152,21 +161,41 @@ export default function RegisterClientInfo() {
       </div>
 
       <div style={{ flex: 1, padding: '8px 24px 32px', maxWidth: 420, margin: '0 auto', width: '100%' }}>
-        {submitError && (
+        {showFinalSubmitNotice && (
+          <div
+            role="status"
+            style={{
+              background: 'linear-gradient(135deg, #fff4f4 0%, #ffe8e8 100%)',
+              border: '1.5px solid #f5c2c7',
+              borderRadius: 14,
+              padding: '14px 16px',
+              marginBottom: 16,
+              fontSize: 14,
+              color: '#8b1e1e',
+              lineHeight: 1.5,
+            }}
+          >
+            Revisá los datos marcados para poder crear tu cuenta.
+          </div>
+        )}
+        {visibleFormError && (
           <div style={{ marginBottom: 16 }}>
-            <ValidationSummary errors={[submitError]} />
+            <ValidationSummary errors={[visibleFormError]} />
           </div>
         )}
         <label
-          htmlFor="client-bio"
+          htmlFor="bio"
           style={{ fontSize: 13, fontWeight: 600, color: '#3a3a3c' }}
         >
           Bio (opcional)
         </label>
         <textarea
-          id="client-bio"
+          id="bio"
           value={data.bio}
-          onChange={(event) => updateData({ bio: event.target.value })}
+          onChange={(event) => {
+            setBioApiError(undefined);
+            updateData({ bio: event.target.value });
+          }}
           maxLength={maxChars}
           placeholder="¿Qué estás buscando?"
           rows={5}

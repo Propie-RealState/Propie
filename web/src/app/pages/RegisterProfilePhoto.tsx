@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useCallback, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthHeroHeader } from "../components/AuthHeroHeader";
 import { Upload, Camera, User } from "lucide-react";
@@ -7,7 +7,10 @@ import { useRegister } from "../../context/RegisterContext";
 import { setPendingAvatarFile } from "../../lib/pending-avatar";
 import {
   FieldError,
+  ValidationSummary,
+  type FieldErrors,
   validateProfilePhotoFile,
+  useRegisterRedirectErrors,
 } from "../../features/register/validation";
 
 export default function RegisterProfilePhoto() {
@@ -19,6 +22,11 @@ export default function RegisterProfilePhoto() {
   const isAgent = data.role === "AGENT";
 
   const [uploadError, setUploadError] = useState<string | undefined>();
+  const seedFieldErrors = useCallback((errors: FieldErrors) => {
+    if (errors.profilePhoto) setUploadError(errors.profilePhoto);
+  }, []);
+  const { formError, showFinalSubmitNotice } =
+    useRegisterRedirectErrors(seedFieldErrors);
 
   const colors = {
     gradient: isAgent
@@ -107,6 +115,23 @@ export default function RegisterProfilePhoto() {
         }}
       >
         <div style={{ width: "100%", maxWidth: 420, display: "flex", flexDirection: "column", gap: 24 }}>
+          {showFinalSubmitNotice && (
+            <div
+              role="status"
+              style={{
+                background: "linear-gradient(135deg, #fff4f4 0%, #ffe8e8 100%)",
+                border: "1.5px solid #f5c2c7",
+                borderRadius: 14,
+                padding: "14px 16px",
+                fontSize: 14,
+                color: "#8b1e1e",
+                lineHeight: 1.5,
+              }}
+            >
+              Revisá los datos marcados para poder crear tu cuenta.
+            </div>
+          )}
+          {formError && <ValidationSummary errors={[formError]} />}
           {/* Photo preview */}
           <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
             <div
@@ -139,6 +164,7 @@ export default function RegisterProfilePhoto() {
                   handleFileSelect(e.target.files[0]);
                 }
               }}
+              id="profilePhoto"
               style={{ display: "none" }}
               data-testid="register-field-profilePhoto"
             />

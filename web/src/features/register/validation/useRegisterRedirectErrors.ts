@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { FieldErrors } from "./schemas";
 import type { RegisterRedirectState } from "./registerSubmit";
 import {
   clearRegisterRedirect,
+  getRegisterRedirectGeneration,
   hasRegisterRedirectContent,
   publishRegisterRedirect,
   readRegisterRedirect,
@@ -23,6 +24,10 @@ export function useRegisterRedirectErrors(seedFieldErrors: SeedFieldErrors) {
   const navigate = useNavigate();
   const [formError, setFormError] = useState<string | undefined>();
   const [showFinalSubmitNotice, setShowFinalSubmitNotice] = useState(false);
+  const seedRef = useRef(seedFieldErrors);
+  seedRef.current = seedFieldErrors;
+  /** Last generation applied in this mount (avoids re-seed on replace navigate). */
+  const consumedGenerationRef = useRef(0);
 
   useEffect(() => {
     const routerState = location.state as RegisterRedirectState | null;
@@ -33,30 +38,26 @@ export function useRegisterRedirectErrors(seedFieldErrors: SeedFieldErrors) {
     }
 
     const pending = readRegisterRedirect();
-    if (!hasRegisterRedirectContent(pending)) return;
-
-    if (
-      pending!.registerFieldErrors &&
-      Object.keys(pending!.registerFieldErrors).length > 0
-    ) {
-      seedFieldErrors(pending!.registerFieldErrors);
-      const firstField = Object.keys(pending!.registerFieldErrors).find((key) =>
-        Boolean(pending!.registerFieldErrors?.[key]),
-      );
-      if (firstField) {
-        requestAnimationFrame(() => {
-          document.getElementById(firstField)?.focus();
-        });
-      }
+    if (!hasRegisterRedirectContent(pending)) {
+      return;
     }
 
+    const generation = getRegisterRedirectGeneration();
+    if (consumedGenerationRef.current === generation) {
+      clearRegisterRedirect();
+      return;
+    }
+    consumedGenerationRef.current = generation;
+
+    if (pending!.registerFieldErrors) {
+      seedRef.current(pending!.registerFieldErrors);
+    }
     if (pending!.registerFormError) {
       setFormError(pending!.registerFormError);
     }
-
     setShowFinalSubmitNotice(Boolean(pending!.fromFinalSubmit));
 
-    // Delay clear so Strict Mode remount can re-seed from the pending store.
+    // Delay clear so Strict Mode remount (same mount cycle) can still read pending.
     const timer = window.setTimeout(() => {
       clearRegisterRedirect();
     }, 0);
@@ -64,13 +65,7 @@ export function useRegisterRedirectErrors(seedFieldErrors: SeedFieldErrors) {
     return () => {
       window.clearTimeout(timer);
     };
-  }, [
-    location.key,
-    location.pathname,
-    location.state,
-    navigate,
-    seedFieldErrors,
-  ]);
+  }, [location.key, location.pathname, location.state, navigate]);
 
   return { formError, showFinalSubmitNotice };
 }
