@@ -46,6 +46,7 @@ const EditProperty = lazy(() => import("./modules/explore/pages/EditProperty"));
 
 const Share = lazy(() => import("./pages/Share"));
 const Profile = lazy(() => import("./modules/profile/pages/Profile.tsx"));
+const Settings = lazy(() => import("./modules/profile/pages/Settings.tsx"));
 const AgentPublicProfile = lazy(() => import("./modules/agents/pages/AgentPublicProfile.tsx"));
 const UserPublicProfile = lazy(() => import("./modules/agents/pages/UserPublicProfile.tsx"));
 const MyProperties = lazy(() => import("./modules/my-properties/pages/MyProperties"));
@@ -222,6 +223,15 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        ),
+      },
+
+      {
+        path: "configuracion",
+        element: (
+          <ProtectedRoute>
+            <Settings />
           </ProtectedRoute>
         ),
       },

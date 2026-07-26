@@ -42,6 +42,7 @@ import { StarRating } from "../../../components/StarRating";
 import { useAgentReviews } from "../../agents/hooks/useAgentReviews";
 import { resolveMediaUrl } from "../../../../lib/api-base";
 import { showToast } from "../../../../lib/toast";
+import { getAppVersion } from "../../../../lib/app-version";
 
 export default function Profile() {
   const [isSaving, setIsSaving] = useState(false);
@@ -1470,7 +1471,7 @@ export default function Profile() {
               marginTop: 8,
             }}
           >
-            Versión 1.0.0
+            Versión {getAppVersion()}
           </p>
         </div>
       </div>
