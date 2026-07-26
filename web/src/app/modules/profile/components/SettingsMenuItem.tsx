@@ -50,6 +50,7 @@ export function SettingsMenuItem({
         (e.currentTarget as HTMLButtonElement).style.background = "none";
       }}
       onFocus={(e) => {
+        if (inactive) return;
         e.currentTarget.style.outline = `2px solid ${colors.primary}`;
         e.currentTarget.style.outlineOffset = "2px";
       }}
