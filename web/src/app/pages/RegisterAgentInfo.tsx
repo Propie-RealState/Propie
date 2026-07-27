@@ -16,15 +16,21 @@ import { AnalyticsEvents } from "../../lib/analytics-events";
 import {
   FieldError,
   CharCounter,
+  ValidationSummary,
+  type FieldErrors,
   validateAgentCertification,
   validateAgentEducation,
   validateAgentExperience,
   validateBio,
   buildRegistrationContext,
   ensureRegistrationReady,
+  getRegisterSubmitErrorMessage,
   handleRegisterValidationFailure,
+  navigateWithRegisterErrors,
+  useRegisterRedirectErrors,
 } from "../../features/register/validation";
 import { continueRegistrationAfterSignup } from "../../features/register/continue-registration-after-signup";
+import { registerApiLimits } from "@propie/registration-validation";
 
 type EducationEntry = {
   id: string;
@@ -68,6 +74,13 @@ export default function RegisterAgentInfo() {
   const [newCertification, setNewCertification] = useState({ name: "", issuer: "", year: "" });
   const [newExperience, setNewExperience] = useState({ title: "", company: "", years: "" });
   const [formErrors, setFormErrors] = useState<Record<string, string | undefined>>({});
+  const [submitError, setSubmitError] = useState<string | undefined>();
+  const [bioApiError, setBioApiError] = useState<string | undefined>();
+  const seedFieldErrors = useCallback((errors: FieldErrors) => {
+    if (errors.bio) setBioApiError(errors.bio);
+  }, []);
+  const { formError, showFinalSubmitNotice } =
+    useRegisterRedirectErrors(seedFieldErrors);
 
   const handleFinalizar = async () => {
     if (isSubmitting) {
@@ -75,6 +88,7 @@ export default function RegisterAgentInfo() {
     }
 
     setIsSubmitting(true);
+    setSubmitError(undefined);
 
     try {
       const registrationContext = buildRegistrationContext(data, {
@@ -82,8 +96,8 @@ export default function RegisterAgentInfo() {
       });
       const readiness = ensureRegistrationReady(data, registrationContext);
       if (!readiness.valid) {
-        navigate(readiness.route, {
-          state: { registerFieldErrors: readiness.errors, fromFinalSubmit: true },
+        navigateWithRegisterErrors(navigate, readiness.route, {
+          registerFieldErrors: readiness.errors,
         });
         return;
       }
@@ -118,7 +132,7 @@ export default function RegisterAgentInfo() {
       });
     } catch (error) {
       if (!handleRegisterValidationFailure(error, data, navigate)) {
-        console.error(error);
+        setSubmitError(getRegisterSubmitErrorMessage(error));
       }
     } finally {
       setIsSubmitting(false);
@@ -187,8 +201,9 @@ export default function RegisterAgentInfo() {
   };
 
   const charCount = data.bio.length;
-  const maxChars = 300;
-  const bioError = validateBio(data.bio).error;
+  const maxChars = registerApiLimits.bio.max;
+  const bioError = bioApiError || validateBio(data.bio).error;
+  const visibleFormError = submitError || formError;
 
   return (
     <div
@@ -255,6 +270,23 @@ export default function RegisterAgentInfo() {
         }}
       >
         <div style={{ width: "100%", maxWidth: 420, display: "flex", flexDirection: "column", gap: 24 }}>
+          {showFinalSubmitNotice && (
+            <div
+              role="status"
+              style={{
+                background: "linear-gradient(135deg, #fff4f4 0%, #ffe8e8 100%)",
+                border: "1.5px solid #f5c2c7",
+                borderRadius: 14,
+                padding: "14px 16px",
+                fontSize: 14,
+                color: "#8b1e1e",
+                lineHeight: 1.5,
+              }}
+            >
+              Revisá los datos marcados para poder crear tu cuenta.
+            </div>
+          )}
+          {visibleFormError && <ValidationSummary errors={[visibleFormError]} />}
           {/* Bio section */}
           <div>
             <label htmlFor="bio" style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>
@@ -266,6 +298,7 @@ export default function RegisterAgentInfo() {
                 value={data.bio}
                 onChange={(e) => {
                   if (e.target.value.length <= maxChars) {
+                    setBioApiError(undefined);
                     updateData({
                       bio: e.target.value,
                     });

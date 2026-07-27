@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthHeroHeader } from "../components/AuthHeroHeader";
 import { Check } from "lucide-react";
@@ -10,8 +10,21 @@ import { RegisterSuccessOverlay } from "../components/register/RegisterSuccessOv
 import { apiFetch } from "../../lib/api";
 import { buildRegisterPayload } from "../../lib/buildRegisterPayload";
 import { getPendingAvatarFile } from "../../lib/pending-avatar";
-import { CharCounter, FieldError, validateBio, buildRegistrationContext, ensureRegistrationReady, handleRegisterValidationFailure } from "../../features/register/validation";
+import {
+  CharCounter,
+  FieldError,
+  ValidationSummary,
+  type FieldErrors,
+  validateBio,
+  buildRegistrationContext,
+  ensureRegistrationReady,
+  getRegisterSubmitErrorMessage,
+  handleRegisterValidationFailure,
+  navigateWithRegisterErrors,
+  useRegisterRedirectErrors,
+} from "../../features/register/validation";
 import { continueRegistrationAfterSignup } from "../../features/register/continue-registration-after-signup";
+import { registerApiLimits } from "@propie/registration-validation";
 import { trackEvent } from "../../lib/analytics";
 import { AnalyticsEvents } from "../../lib/analytics-events";
 
@@ -21,6 +34,13 @@ export default function RegisterOwnerInfo() {
   const { data, updateData, reset } = useRegister();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | undefined>();
+  const [bioApiError, setBioApiError] = useState<string | undefined>();
+  const seedFieldErrors = useCallback((errors: FieldErrors) => {
+    if (errors.bio) setBioApiError(errors.bio);
+  }, []);
+  const { formError, showFinalSubmitNotice } =
+    useRegisterRedirectErrors(seedFieldErrors);
 
   const ownerTheme = REGISTER_COMPLETION.OWNER;
 
@@ -30,6 +50,7 @@ export default function RegisterOwnerInfo() {
     }
 
     setIsSubmitting(true);
+    setSubmitError(undefined);
 
     try {
       const registrationContext = buildRegistrationContext(data, {
@@ -37,8 +58,8 @@ export default function RegisterOwnerInfo() {
       });
       const readiness = ensureRegistrationReady(data, registrationContext);
       if (!readiness.valid) {
-        navigate(readiness.route, {
-          state: { registerFieldErrors: readiness.errors, fromFinalSubmit: true },
+        navigateWithRegisterErrors(navigate, readiness.route, {
+          registerFieldErrors: readiness.errors,
         });
         return;
       }
@@ -72,7 +93,7 @@ export default function RegisterOwnerInfo() {
       });
     } catch (error) {
       if (!handleRegisterValidationFailure(error, data, navigate)) {
-        console.error(error);
+        setSubmitError(getRegisterSubmitErrorMessage(error));
       }
     } finally {
       setIsSubmitting(false);
@@ -80,8 +101,9 @@ export default function RegisterOwnerInfo() {
   };
 
   const charCount = data.bio.length;
-  const maxChars = 300;
-  const bioError = validateBio(data.bio).error;
+  const maxChars = registerApiLimits.bio.max;
+  const bioError = bioApiError || validateBio(data.bio).error;
+  const visibleFormError = submitError || formError;
 
   return (
     <div
@@ -137,6 +159,23 @@ export default function RegisterOwnerInfo() {
         }}
       >
         <div style={{ width: "100%", maxWidth: 420, display: "flex", flexDirection: "column", gap: 24 }}>
+          {showFinalSubmitNotice && (
+            <div
+              role="status"
+              style={{
+                background: "linear-gradient(135deg, #fff4f4 0%, #ffe8e8 100%)",
+                border: "1.5px solid #f5c2c7",
+                borderRadius: 14,
+                padding: "14px 16px",
+                fontSize: 14,
+                color: "#8b1e1e",
+                lineHeight: 1.5,
+              }}
+            >
+              Revisá los datos marcados para poder crear tu cuenta.
+            </div>
+          )}
+          {visibleFormError && <ValidationSummary errors={[visibleFormError]} />}
           <div>
             <label htmlFor="bio" style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>
               Sobre mí <span style={{ color: "#9a9aa0", fontWeight: 400 }}>(opcional)</span>
@@ -147,6 +186,7 @@ export default function RegisterOwnerInfo() {
                 value={data.bio}
                 onChange={(e) => {
                   if (e.target.value.length <= maxChars) {
+                    setBioApiError(undefined);
                     updateData({
                       bio: e.target.value,
                     });

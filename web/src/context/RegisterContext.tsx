@@ -8,8 +8,14 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import {
+  emptyRegistrationProgress,
+  normalizeRegistrationProgress,
+  type RegistrationProgress,
+} from "../features/register/registrationProgress";
 
 export type RegisterRole = "OWNER" | "AGENT" | "CLIENT";
+export type { RegistrationProgress };
 
 export type RegisterData = {
   role: RegisterRole | null;
@@ -33,14 +39,7 @@ export type RegisterData = {
   address: string;
   location: string;
 
-  twoFactorEnabled: boolean;
-  biometricEnabled: boolean;
-  pinEnabled: boolean;
-
-  pin: string;
-
-  recoveryEmail: string;
-  recoveryPhone: string;
+  phone: string;
 
   profilePhoto: string | null;
 
@@ -50,6 +49,9 @@ export type RegisterData = {
   | "PUBLISH"
   | "EXPLORE"
   | null;
+
+  /** Non-secret wizard progress for route guards (sessionStorage-safe). */
+  registrationProgress: RegistrationProgress;
 };
 
 type RegisterContextType = {
@@ -82,21 +84,79 @@ const initialData: RegisterData = {
   address: "",
   location: "",
 
-  twoFactorEnabled: false,
-  biometricEnabled: false,
-  pinEnabled: false,
-  pin: "",
-  recoveryEmail: "",
-  recoveryPhone: "",
+  phone: "",
 
   profilePhoto: null,
 
   bio: "",
   mainGoal: null,
+
+  registrationProgress: emptyRegistrationProgress(),
 };
 
 const REGISTER_STORAGE_KEY =
   "propie.registerDraft";
+
+/** Never written to sessionStorage (auth secrets). */
+const REGISTER_SECRET_KEYS = ["password"] as const satisfies ReadonlyArray<
+  keyof RegisterData
+>;
+
+type RegisterSecrets = Pick<
+  RegisterData,
+  (typeof REGISTER_SECRET_KEYS)[number]
+>;
+
+function emptySecrets(): RegisterSecrets {
+  return {
+    password: "",
+  };
+}
+
+/**
+ * Page-lifetime secret memory (cleared on full reload).
+ * Keeps password available across RegisterProvider remounts
+ * without writing it to sessionStorage.
+ */
+let memorySecrets: RegisterSecrets = emptySecrets();
+
+function captureSecrets(data: RegisterData) {
+  memorySecrets = {
+    password: data.password,
+  };
+}
+
+function applyMemorySecrets(data: RegisterData): RegisterData {
+  return {
+    ...data,
+    ...memorySecrets,
+  };
+}
+
+function toPersistedRegisterData(
+  data: RegisterData,
+): Omit<RegisterData, (typeof REGISTER_SECRET_KEYS)[number]> {
+  const { password: _password, ...persisted } = data;
+  return persisted;
+}
+
+function stripSecretsFromDraft(
+  draft: Partial<RegisterData>,
+): RegisterData {
+  const merged: RegisterData = {
+    ...initialData,
+    ...draft,
+    registrationProgress: normalizeRegistrationProgress(
+      draft.registrationProgress,
+    ),
+  };
+
+  for (const key of REGISTER_SECRET_KEYS) {
+    merged[key] = initialData[key];
+  }
+
+  return merged;
+}
 
 function readStoredRegisterData() {
   if (typeof window === "undefined") {
@@ -110,15 +170,21 @@ function readStoredRegisterData() {
       );
 
     if (!stored) {
-      return initialData;
+      // No draft ⇒ treat as a fresh registration session.
+      // Drop page-lifetime secrets so a cleared sessionStorage cannot
+      // rehydrate credentials from a previous incomplete attempt.
+      memorySecrets = emptySecrets();
+      return { ...initialData };
     }
 
-    return {
-      ...initialData,
-      ...JSON.parse(stored),
-    } as RegisterData;
+    return applyMemorySecrets(
+      stripSecretsFromDraft(
+        JSON.parse(stored) as Partial<RegisterData>,
+      ),
+    );
   } catch {
-    return initialData;
+    memorySecrets = emptySecrets();
+    return { ...initialData };
   }
 }
 
@@ -127,9 +193,10 @@ function persistRegisterData(data: RegisterData) {
     return;
   }
 
+  captureSecrets(data);
   window.sessionStorage.setItem(
     REGISTER_STORAGE_KEY,
-    JSON.stringify(data)
+    JSON.stringify(toPersistedRegisterData(data)),
   );
 }
 
@@ -161,6 +228,7 @@ export function RegisterProvider({ children }: Props) {
   }, []);
 
   const reset = useCallback(() => {
+    memorySecrets = emptySecrets();
     setData(initialData);
 
     if (typeof window !== "undefined") {

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import type { RegisterData } from "../../../context/RegisterContext";
 import {
   useFormValidation,
@@ -7,24 +7,14 @@ import {
 } from "../validation";
 
 export function useSecurityValidation(data: RegisterData) {
-  const context = useMemo(
-    () => ({ pinEnabled: data.pinEnabled }),
-    [data.pinEnabled],
-  );
-
   const getValues = useCallback(
     () => ({
-      recoveryEmail: data.recoveryEmail,
-      recoveryPhone: data.recoveryPhone,
-      pin: data.pin,
+      phone: data.phone,
     }),
     [data],
   );
 
-  const validateAll = useCallback(
-    () => validateSecurityStep(data, context),
-    [data, context],
-  );
+  const validateAll = useCallback(() => validateSecurityStep(data), [data]);
 
   const validation = useFormValidation(getValues, validateAll);
 
