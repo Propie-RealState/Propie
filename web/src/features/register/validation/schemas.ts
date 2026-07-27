@@ -15,10 +15,8 @@ import {
   validateNationality,
   validatePartialGroup,
   validatePassword,
-  validatePin,
+  validatePhone,
   validateProfilePhotoFile,
-  validateRecoveryEmail,
-  validateRecoveryPhone,
   validateVerificationCodeFormat,
   validateYear,
   validateExperienceYears,
@@ -49,10 +47,6 @@ export type PersonalDataContext = {
   dniFrontImage: File | null;
   dniBackImage: File | null;
   biometricSelfie: File | null;
-};
-
-export type SecurityContext = {
-  pinEnabled: boolean;
 };
 
 export type AgentProfileContext = {
@@ -132,15 +126,8 @@ export function validatePersonalDataPersistedStep(data: RegisterData): StepValid
   ]);
 }
 
-export function validateSecurityStep(
-  data: RegisterData,
-  context: SecurityContext,
-): StepValidation {
-  return collectErrors([
-    ["recoveryEmail", validateRecoveryEmail(data.recoveryEmail)],
-    ["recoveryPhone", validateRecoveryPhone(data.recoveryPhone)],
-    ["pin", validatePin(data.pin, context.pinEnabled)],
-  ]);
+export function validateSecurityStep(data: RegisterData): StepValidation {
+  return collectErrors([["phone", validatePhone(data.phone)]]);
 }
 
 export function validateProfilePhotoStep(
@@ -158,10 +145,10 @@ export function validateAgentEducation(
 ): ValidationResult {
   return validatePartialGroup(
     fields,
-    { partial: "Completá todos los campos de estudios", institution: "", degree: "", year: "" },
+    { partial: "Complet? todos los campos de estudios", institution: "", degree: "", year: "" },
     {
-      institution: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingresá la institución" }),
-      degree: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingresá el título" }),
+      institution: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingres? la instituci?n" }),
+      degree: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingres? el t?tulo" }),
       year: validateYear,
     },
   );
@@ -172,10 +159,10 @@ export function validateAgentCertification(
 ): ValidationResult {
   return validatePartialGroup(
     fields,
-    { partial: "Completá todos los campos de certificación", name: "", issuer: "", year: "" },
+    { partial: "Complet? todos los campos de certificaci?n", name: "", issuer: "", year: "" },
     {
-      name: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingresá el nombre de la certificación" }),
-      issuer: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingresá el emisor" }),
+      name: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingres? el nombre de la certificaci?n" }),
+      issuer: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingres? el emisor" }),
       year: validateYear,
     },
   );
@@ -186,10 +173,10 @@ export function validateAgentExperience(
 ): ValidationResult {
   return validatePartialGroup(
     fields,
-    { partial: "Completá todos los campos de experiencia", position: "", company: "", years: "" },
+    { partial: "Complet? todos los campos de experiencia", position: "", company: "", years: "" },
     {
-      position: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingresá el cargo" }),
-      company: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingresá la empresa" }),
+      position: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingres? el cargo" }),
+      company: (v) => (v.trim() ? { valid: true } : { valid: false, error: "Ingres? la empresa" }),
       years: validateExperienceYears,
     },
   );
@@ -226,7 +213,6 @@ export const fieldValidators: Record<string, ValidatorFn> = {
   cuitCuil: (v) => validateCuitCuil(String(v ?? "")),
   address: (v) => validateAddress(String(v ?? "")),
   location: (v) => validateLocation(String(v ?? "")),
-  recoveryEmail: (v) => validateRecoveryEmail(String(v ?? "")),
-  recoveryPhone: (v) => validateRecoveryPhone(String(v ?? "")),
+  phone: (v) => validatePhone(String(v ?? "")),
   bio: (v) => validateBio(String(v ?? "")),
 };

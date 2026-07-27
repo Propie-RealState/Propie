@@ -21,9 +21,6 @@ async function expectNoSecretsInDraft(page: Page) {
   const draft = await readRegisterDraft(page);
   expect(draft).toBeTruthy();
   expect(draft?.password ?? "").toBe("");
-  expect(draft?.pin ?? "").toBe("");
-  expect(draft?.recoveryEmail ?? "").toBe("");
-  expect(draft?.recoveryPhone ?? "").toBe("");
 }
 
 async function seedRegisterProgress(

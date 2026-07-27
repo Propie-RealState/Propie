@@ -39,14 +39,7 @@ export type RegisterData = {
   address: string;
   location: string;
 
-  twoFactorEnabled: boolean;
-  biometricEnabled: boolean;
-  pinEnabled: boolean;
-
-  pin: string;
-
-  recoveryEmail: string;
-  recoveryPhone: string;
+  phone: string;
 
   profilePhoto: string | null;
 
@@ -91,12 +84,7 @@ const initialData: RegisterData = {
   address: "",
   location: "",
 
-  twoFactorEnabled: false,
-  biometricEnabled: false,
-  pinEnabled: false,
-  pin: "",
-  recoveryEmail: "",
-  recoveryPhone: "",
+  phone: "",
 
   profilePhoto: null,
 
@@ -109,13 +97,10 @@ const initialData: RegisterData = {
 const REGISTER_STORAGE_KEY =
   "propie.registerDraft";
 
-/** Never written to sessionStorage (auth secrets / recovery). */
-const REGISTER_SECRET_KEYS = [
-  "password",
-  "pin",
-  "recoveryEmail",
-  "recoveryPhone",
-] as const satisfies ReadonlyArray<keyof RegisterData>;
+/** Never written to sessionStorage (auth secrets). */
+const REGISTER_SECRET_KEYS = ["password"] as const satisfies ReadonlyArray<
+  keyof RegisterData
+>;
 
 type RegisterSecrets = Pick<
   RegisterData,
@@ -125,25 +110,19 @@ type RegisterSecrets = Pick<
 function emptySecrets(): RegisterSecrets {
   return {
     password: "",
-    pin: "",
-    recoveryEmail: "",
-    recoveryPhone: "",
   };
 }
 
 /**
  * Page-lifetime secret memory (cleared on full reload).
- * Keeps password/PIN/recovery available across RegisterProvider remounts
- * without writing them to sessionStorage.
+ * Keeps password available across RegisterProvider remounts
+ * without writing it to sessionStorage.
  */
 let memorySecrets: RegisterSecrets = emptySecrets();
 
 function captureSecrets(data: RegisterData) {
   memorySecrets = {
     password: data.password,
-    pin: data.pin,
-    recoveryEmail: data.recoveryEmail,
-    recoveryPhone: data.recoveryPhone,
   };
 }
 
@@ -157,13 +136,7 @@ function applyMemorySecrets(data: RegisterData): RegisterData {
 function toPersistedRegisterData(
   data: RegisterData,
 ): Omit<RegisterData, (typeof REGISTER_SECRET_KEYS)[number]> {
-  const {
-    password: _password,
-    pin: _pin,
-    recoveryEmail: _recoveryEmail,
-    recoveryPhone: _recoveryPhone,
-    ...persisted
-  } = data;
+  const { password: _password, ...persisted } = data;
   return persisted;
 }
 

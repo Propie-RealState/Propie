@@ -7,7 +7,6 @@ import {
   fieldValidators,
   type PersonalDataContext,
   type ProfilePhotoContext,
-  type SecurityContext,
   type StepValidation,
   validateAccountStep,
   validatePersonalDataPersistedStep,
@@ -23,7 +22,6 @@ export type RegisterRedirectState = {
 
 export type RegistrationCheckContext = {
   personal: PersonalDataContext;
-  security: SecurityContext;
   profilePhoto: ProfilePhotoContext;
 };
 
@@ -33,10 +31,6 @@ type ApiErrorBody = {
     fieldErrors?: Record<string, string[] | undefined>;
     formErrors?: string[];
   };
-};
-
-const API_FIELD_ALIASES: Record<string, string> = {
-  phone: "recoveryPhone",
 };
 
 const FIELD_STEP_ROUTES: Array<{
@@ -52,7 +46,7 @@ const FIELD_STEP_ROUTES: Array<{
     route: () => "/registro/personal-data",
   },
   {
-    fields: ["recoveryEmail", "recoveryPhone", "pin", "phone"],
+    fields: ["phone"],
     route: () => "/registro/security",
   },
   {
@@ -118,10 +112,7 @@ export function ensureRegistrationReady(
       "/registro/personal-data",
       validatePersonalDataPersistedStep(data),
     ),
-    collectStepFailure(
-      "/registro/security",
-      validateSecurityStep(data, context.security),
-    ),
+    collectStepFailure("/registro/security", validateSecurityStep(data)),
     collectStepFailure(
       "/registro/profile-photo",
       validateProfilePhotoStep(context.profilePhoto),
@@ -136,14 +127,13 @@ export function ensureRegistrationReady(
 }
 
 function resolveFieldError(field: string, data: RegisterData): string | undefined {
-  const mapped = API_FIELD_ALIASES[field] ?? field;
-  const validator = fieldValidators[mapped];
+  const validator = fieldValidators[field];
   if (!validator) return undefined;
 
   const value =
-    mapped === "location"
+    field === "location"
       ? data.location || data.address
-      : (data as Record<string, unknown>)[mapped];
+      : (data as Record<string, unknown>)[field];
 
   const result = validator(value);
   return result.valid ? undefined : result.error;
@@ -156,17 +146,12 @@ function firstApiMessage(
 }
 
 function routeForField(field: string, role: RegisterRole | null): string | null {
-  const mapped = API_FIELD_ALIASES[field] ?? field;
   for (const step of FIELD_STEP_ROUTES) {
-    if (step.fields.includes(mapped) || step.fields.includes(field)) {
+    if (step.fields.includes(field)) {
       return step.route(role);
     }
   }
   return null;
-}
-
-function toUiField(apiField: string): string {
-  return API_FIELD_ALIASES[apiField] ?? apiField;
 }
 
 /**
@@ -181,19 +166,17 @@ export function mapApiFieldErrors(
   if (fields.length === 0) return null;
 
   for (const step of FIELD_STEP_ROUTES) {
-    const matchingApiFields = fields.filter((apiField) => {
-      const uiField = toUiField(apiField);
-      return step.fields.includes(uiField) || step.fields.includes(apiField);
-    });
+    const matchingApiFields = fields.filter((apiField) =>
+      step.fields.includes(apiField),
+    );
 
     if (matchingApiFields.length === 0) continue;
 
     const errors: FieldErrors = {};
     for (const apiField of matchingApiFields) {
-      const uiField = toUiField(apiField);
       const backendMessage = firstApiMessage(apiFieldErrors[apiField]);
-      const frontendMessage = resolveFieldError(uiField, data);
-      errors[uiField] =
+      const frontendMessage = resolveFieldError(apiField, data);
+      errors[apiField] =
         backendMessage ||
         frontendMessage ||
         "Revisá este campo antes de continuar.";
@@ -206,14 +189,13 @@ export function mapApiFieldErrors(
   const route = routeForField(firstField, data.role);
   if (!route) return null;
 
-  const uiField = toUiField(firstField);
   const backendMessage = firstApiMessage(apiFieldErrors[firstField]);
-  const frontendMessage = resolveFieldError(uiField, data);
+  const frontendMessage = resolveFieldError(firstField, data);
 
   return {
     route,
     errors: {
-      [uiField]:
+      [firstField]:
         backendMessage ||
         frontendMessage ||
         "Revisá este campo antes de continuar.",
@@ -341,7 +323,6 @@ export function buildRegistrationContext(
       dniBackImage: options?.dniBackImage ?? null,
       biometricSelfie: options?.biometricSelfie ?? null,
     },
-    security: { pinEnabled: data.pinEnabled },
     profilePhoto: { file: options?.profilePhoto ?? null },
   };
 }

@@ -223,26 +223,13 @@ export function validateProfilePhotoFile(file: File | null | undefined): Validat
   return validResult();
 }
 
-export function validateRecoveryEmail(value: string): ValidationResult {
-  return validateEmailFormat(value, validationMessages.recoveryEmail.format);
-}
-
-export function validateRecoveryPhone(value: string): ValidationResult {
+export function validatePhone(value: string): ValidationResult {
   if (!value) return invalidResult(validationMessages.required);
-  if (!DIGITS_ONLY.test(value) || value.length < ui.recoveryPhoneMin) {
-    return invalidResult(validationMessages.recoveryPhone.format);
+  if (!DIGITS_ONLY.test(value) || value.length < ui.phoneMin) {
+    return invalidResult(validationMessages.phone.format);
   }
   if (value.length > api.phone.max) {
-    return invalidResult(validationMessages.recoveryPhone.max);
-  }
-  return validResult();
-}
-
-export function validatePin(value: string, enabled: boolean): ValidationResult {
-  if (!enabled) return validResult();
-  if (!value) return invalidResult(validationMessages.required);
-  if (!DIGITS_ONLY.test(value) || value.length !== ui.pinLength) {
-    return invalidResult(validationMessages.pin.format);
+    return invalidResult(validationMessages.phone.max);
   }
   return validResult();
 }

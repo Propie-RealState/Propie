@@ -70,36 +70,16 @@ test.describe("registration validation", () => {
     await expect(page.getByTestId("register-continue")).toBeDisabled();
   });
 
-  test("invalid recovery phone blocks security step", async ({ page }) => {
+  test("invalid phone blocks security step", async ({ page }) => {
     await startOwnerRegistration(page);
     await fillValidAccount(page, `phone-test-${Date.now()}@test.com`);
     await page.getByTestId("register-continue").click();
     await advancePastAccount(page);
     await advanceToSecurity(page);
 
-    await page.locator("#recoveryEmail").fill("recovery@test.com");
-    await page.locator("#recoveryPhone").fill("123");
-    await page.locator("#recoveryPhone").blur();
+    await page.locator("#phone").fill("123");
+    await page.locator("#phone").blur();
     await expect(page.getByText("El teléfono debe tener al menos 10 dígitos")).toBeVisible();
-    await expect(page.getByTestId("register-continue")).toBeDisabled();
-  });
-
-  test("invalid PIN when enabled blocks continue", async ({ page }) => {
-    await startOwnerRegistration(page);
-    await fillValidAccount(page, `pin-test-${Date.now()}@test.com`);
-    await page.getByTestId("register-continue").click();
-    await advancePastAccount(page);
-    await advanceToSecurity(page);
-
-    await page
-      .locator('[data-testid="register-field-pinEnabled"]')
-      .locator("xpath=ancestor::label[1]")
-      .click();
-    const pinInput = page.getByPlaceholder("Ingresá tu PIN de 4 dígitos");
-    await expect(pinInput).toBeVisible();
-    await pinInput.fill("12");
-    await pinInput.blur();
-    await expect(page.getByText("El PIN debe tener exactamente 4 dígitos")).toBeVisible();
     await expect(page.getByTestId("register-continue")).toBeDisabled();
   });
 

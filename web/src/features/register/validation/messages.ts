@@ -59,15 +59,9 @@ export const validationMessages = {
     min: `La ubicación debe tener al menos ${api.location.min} caracteres`,
     max: `La ubicación no puede superar ${api.location.max} caracteres`,
   },
-  recoveryEmail: {
-    format: "Ingresá un email de recuperación válido",
-  },
-  recoveryPhone: {
-    format: `El teléfono debe tener al menos ${ui.recoveryPhoneMin} dígitos numéricos`,
+  phone: {
+    format: `El teléfono debe tener al menos ${ui.phoneMin} dígitos numéricos`,
     max: `El teléfono no puede superar ${api.phone.max} dígitos`,
-  },
-  pin: {
-    format: `El PIN debe tener exactamente ${ui.pinLength} dígitos numéricos`,
   },
   image: {
     required: "Debés seleccionar un archivo",

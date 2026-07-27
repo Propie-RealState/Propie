@@ -121,9 +121,8 @@ export async function advanceToSecurity(page: Page) {
 
 export async function fillValidSecurity(page: Page) {
   await expect(page).toHaveURL(/\/registro\/security/);
-  await expect(page.locator("#recoveryEmail")).toBeVisible({ timeout: 15_000 });
-  await page.locator("#recoveryEmail").fill("recovery@test.com");
-  await page.locator("#recoveryPhone").fill("1123456789");
+  await expect(page.locator("#phone")).toBeVisible({ timeout: 15_000 });
+  await page.locator("#phone").fill("1123456789");
 }
 
 export async function advancePastAccount(page: Page) {
