@@ -120,6 +120,10 @@ export default defineConfig({
     alias: {
       // Alias @ to the src directory
       '@': path.resolve(__dirname, './src'),
+      '@propie/registration-validation': path.resolve(
+        __dirname,
+        '../src/shared/registration',
+      ),
     },
     dedupe: ['react', 'react-dom'],
   },

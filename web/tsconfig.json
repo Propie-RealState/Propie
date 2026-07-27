@@ -17,8 +17,10 @@
     "types": [],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@propie/registration-validation": ["../src/shared/registration/index.ts"],
+      "@propie/registration-validation/*": ["../src/shared/registration/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src", "../src/shared/registration/**/*.ts"]
 }

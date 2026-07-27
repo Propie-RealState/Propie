@@ -17,6 +17,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
+      "@propie/registration-validation": path.resolve(
+        __dirname,
+        "src/shared/registration",
+      ),
     },
   },
 });

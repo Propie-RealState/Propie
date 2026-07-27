@@ -24,6 +24,7 @@ import {
   useRegisterRedirectErrors,
 } from "../../features/register/validation";
 import { continueRegistrationAfterSignup } from "../../features/register/continue-registration-after-signup";
+import { registerApiLimits } from "@propie/registration-validation";
 import { trackEvent } from "../../lib/analytics";
 import { AnalyticsEvents } from "../../lib/analytics-events";
 
@@ -100,7 +101,7 @@ export default function RegisterOwnerInfo() {
   };
 
   const charCount = data.bio.length;
-  const maxChars = 300;
+  const maxChars = registerApiLimits.bio.max;
   const bioError = bioApiError || validateBio(data.bio).error;
   const visibleFormError = submitError || formError;
 
