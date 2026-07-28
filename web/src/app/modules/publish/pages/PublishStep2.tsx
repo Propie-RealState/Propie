@@ -41,7 +41,8 @@ import {
 } from "@dnd-kit/sortable";
 
 import { CSS } from "@dnd-kit/utilities";
-import { useAppTheme } from "../../../../theme/useAppTheme";
+import { useAppTheme, useIsAgent } from "../../../../theme/useAppTheme";
+import { getNextPublishWizardPath } from "../publish-wizard-steps";
 import { ResponsiveImage } from "../../../../lib/media/ResponsiveImage";
 
 type MediaItem = MediaAsset;
@@ -249,6 +250,8 @@ function SortableMediaCard({
 
 export default function PublishStep2() {
   const theme = useAppTheme();
+  const isAgent = useIsAgent();
+  const nextPath = getNextPublishWizardPath("fotos-videos", isAgent);
   const { data } = usePropertyPublish();
 
   const navigate = useNavigate();
@@ -349,7 +352,9 @@ export default function PublishStep2() {
   const handleContinue = () => {
     // TODO: Implementar navegación a siguiente paso
     console.log("Fotos y videos:", mediaItems);
-    navigate("/publicar/informacion");
+    if (nextPath) {
+      navigate(nextPath);
+    }
   };
   const handleSetCover = async (imageId: string) => {
     if (isUploading || !data.propertyId) {

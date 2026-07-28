@@ -7,14 +7,17 @@ import React from "react";
 import { updatePropertyAmenities } from "../services/update-property-amenities.ts";
 import { usePropertyPublish } from "../context/PropertyPublishContext";
 import { updatePropertyBasic } from "../services/updatePropertyBasic";
-import { useAppTheme } from "../../../../theme/useAppTheme";
+import { useAppTheme, useIsAgent } from "../../../../theme/useAppTheme";
 import { amenitiesMap } from "../mappers/map-amenities-to-api";
 import type { PropertyCurrency } from "../types/property-publish.types";
+import { getNextPublishWizardPath } from "../publish-wizard-steps";
   
 type AmenityType = "pileta" | "patio" | "balcon" | "mascotas" | "seguridad";
 
 export default function PublishStep3() {
   const theme = useAppTheme();
+  const isAgent = useIsAgent();
+  const nextPath = getNextPublishWizardPath("informacion", isAgent);
   const { data, updateData } = usePropertyPublish();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -136,7 +139,9 @@ export default function PublishStep3() {
         amenities,
       });
 
-      navigate("/publicar/comercializacion");
+      if (nextPath) {
+        navigate(nextPath);
+      }
     } catch (error) {
       console.error("Update property details failed", error);
     }
