@@ -22,11 +22,17 @@ export const EXPLORE_VISIBLE_STATUSES: PropertyLifecycleStatus[] = [
   PROPERTY_STATUSES.RESERVED,
 ];
 
+/** Soft-delete guard — prepend table alias e.g. `p` */
+export function notDeletedSql(alias = "p"): string {
+  return `${alias}.deleted_at IS NULL`;
+}
+
 /** SQL fragment — prepend table alias e.g. `p` */
 export function exploreVisibilitySql(alias = "p"): string {
   return `
     ${alias}.published_at IS NOT NULL
     AND ${alias}.status IN ('ACTIVE', 'PAUSED', 'RESERVED')
+    AND ${notDeletedSql(alias)}
   `;
 }
 
@@ -34,6 +40,7 @@ export function operationsAllowedSql(alias = "p"): string {
   return `
     ${alias}.published_at IS NOT NULL
     AND ${alias}.status = 'ACTIVE'
+    AND ${notDeletedSql(alias)}
   `;
 }
 

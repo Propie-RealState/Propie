@@ -13,6 +13,12 @@ import { initAnalytics } from "./lib/analytics";
 
 import "./styles/index.css";
 
+if (import.meta.env.MODE !== "production") {
+  (
+    window as Window & { __PROPIE_QUERY_CLIENT__?: typeof queryClient }
+  ).__PROPIE_QUERY_CLIENT__ = queryClient;
+}
+
 ReactDOM.createRoot(
   document.getElementById("root")!
 ).render(

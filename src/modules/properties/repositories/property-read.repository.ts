@@ -184,6 +184,7 @@ export type PropertyAccessRow = {
   owner_id: string;
   publisher_id: string | null;
   published_at: string | null;
+  deleted_at: string | null;
 };
 
 /**
@@ -197,7 +198,7 @@ export async function getPropertyAccessRowRepository(
 ): Promise<PropertyAccessRow | null> {
   const result = await db.query<PropertyAccessRow>(
     `
-      SELECT id, status, owner_id, publisher_id, published_at
+      SELECT id, status, owner_id, publisher_id, published_at, deleted_at
       FROM properties
       WHERE id = $1
       LIMIT 1
@@ -288,6 +289,7 @@ export async function findPropertyByIdRepository(propertyId: string) {
                 COUNT(*) FILTER (
                   WHERE published_at IS NOT NULL
                     AND status IN ('ACTIVE', 'PAUSED', 'RESERVED')
+                    AND deleted_at IS NULL
                 )::int AS active_count
               FROM properties
               GROUP BY owner_id
@@ -413,7 +415,7 @@ function buildFilterSql(
   options: DiscoveryQueryOptions = {},
 ) {
   const filters = [
-    "p.published_at IS NOT NULL AND p.status IN ('ACTIVE', 'PAUSED', 'RESERVED')",
+    exploreVisibilitySql("p"),
     "pl.coordinates IS NOT NULL",
   ];
 
@@ -640,7 +642,7 @@ function buildNearbyFilterSql(
   options: DiscoveryQueryOptions = {},
 ) {
   const filters = [
-    "p.published_at IS NOT NULL AND p.status IN ('ACTIVE', 'PAUSED', 'RESERVED')",
+    exploreVisibilitySql("p"),
     "pl.coordinates IS NOT NULL",
   ];
 
@@ -770,16 +772,19 @@ export async function getMyPropertiesRepository(userId: string) {
     LEFT JOIN profiles pub_pr
       ON pub_pr.user_id = p.publisher_id
 
-    WHERE p.owner_id = $1
-      OR p.publisher_id = $1
-      OR (
-        p.status <> 'FINALIZED'
-        AND EXISTS (
-          SELECT 1
-          FROM agent_applications aa
-          WHERE aa.property_id = p.id
-            AND aa.agent_id = $1
-            AND aa.status = 'ACCEPTED'
+    WHERE p.deleted_at IS NULL
+      AND (
+        p.owner_id = $1
+        OR p.publisher_id = $1
+        OR (
+          p.status <> 'FINALIZED'
+          AND EXISTS (
+            SELECT 1
+            FROM agent_applications aa
+            WHERE aa.property_id = p.id
+              AND aa.agent_id = $1
+              AND aa.status = 'ACCEPTED'
+          )
         )
       )
   

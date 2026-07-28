@@ -114,3 +114,41 @@ export async function updatePropertyStatusRepository(input: {
 
   return result.rows[0] ?? null;
 }
+
+export async function softDeletePropertyRepository(input: {
+  propertyId: string;
+  deletedBy: string;
+}): Promise<"deleted" | "already_deleted" | "not_found"> {
+  const existing = await db.query<{ deleted_at: string | null }>(
+    `
+      SELECT deleted_at
+      FROM properties
+      WHERE id = $1
+      LIMIT 1
+    `,
+    [input.propertyId],
+  );
+
+  if (!existing.rows[0]) {
+    return "not_found";
+  }
+
+  if (existing.rows[0].deleted_at != null) {
+    return "already_deleted";
+  }
+
+  await db.query(
+    `
+      UPDATE properties
+      SET
+        deleted_at = now(),
+        deleted_by = $2,
+        updated_at = now()
+      WHERE id = $1
+        AND deleted_at IS NULL
+    `,
+    [input.propertyId, input.deletedBy],
+  );
+
+  return "deleted";
+}

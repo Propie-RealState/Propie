@@ -67,6 +67,7 @@ export async function getPropertyChatGate(
       WHERE p.id = $1
         AND p.published_at IS NOT NULL
         AND p.status = 'ACTIVE'
+        AND p.deleted_at IS NULL
       LIMIT 1
     `,
     [propertyId],

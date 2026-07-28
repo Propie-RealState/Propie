@@ -27,6 +27,10 @@ export async function canViewProperty(
   property: PropertyAccessRow,
   viewerUserId?: string,
 ): Promise<boolean> {
+  if (property.deleted_at != null) {
+    return false;
+  }
+
   if (property.status === PROPERTY_STATUSES.FINALIZED) {
     if (!viewerUserId) {
       return false;

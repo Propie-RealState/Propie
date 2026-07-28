@@ -20,6 +20,7 @@ export async function findPropertyByIdService(input: Input) {
       owner_id: property.owner_id,
       publisher_id: property.publisher_id,
       published_at: property.published_at,
+      deleted_at: property.deleted_at ?? null,
     },
     input.viewerUserId,
   );

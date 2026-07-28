@@ -11,6 +11,7 @@ import {
   assertPropertyStatusTransition,
   PropertyStatusTransitionError,
 } from "../utils/property-status-transitions";
+import { PropertyDeletedError } from "../utils/assert-property-owner";
 import { notifyPropertyActiveAgain } from "@/modules/notifications/services/notification-dispatch.service";
 import { runInBackground } from "@/lib/async/run-in-background";
 
@@ -25,6 +26,10 @@ export async function updatePropertyStatusService(input: Input) {
 
   if (!property) {
     throw new Error("Property not found");
+  }
+
+  if (property.deleted_at != null) {
+    throw new PropertyDeletedError();
   }
 
   if (!property.published_at) {

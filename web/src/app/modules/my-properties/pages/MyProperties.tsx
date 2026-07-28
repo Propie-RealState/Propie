@@ -3,23 +3,28 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Building2, Plus } from "lucide-react";
 import { PropertyManagementRow } from "../../../components/properties/PropertyManagementRow";
 import "../../../components/properties/property-presentation.css";
+import { useQueryClient } from "@tanstack/react-query";
 import { useMyProperties } from "../hooks/useMyProperties";
 import { useAuth } from "../../../../context/AuthContext";
 import { updatePropertyStatus } from "../services/property-status.service";
+import { softDeleteProperty } from "../services/delete-property.service";
 import { usePropertyPublish } from "../../publish/context/PropertyPublishContext";
 import { useAppTheme, useIsAgent } from "../../../../theme/useAppTheme";
 import { PropertyListSkeleton } from "../../../components/skeletons/PageSkeletons";
 import { AppFooterNav } from "../../../components/navigation/AppFooterNav";
 import { pageShellStyle } from "../../../components/layout/layout-styles";
+import { syncCachesAfterPropertySoftDelete } from "../../properties/cache/property-query-cache";
 
 export default function MyProperties() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { startCreatePublish } = usePropertyPublish();
   const { user } = useAuth();
   const { properties, loading, error, refetch } = useMyProperties();
   const [updatingStatusId, setUpdatingStatusId] = React.useState<string | null>(
     null,
   );
+  const [deletingId, setDeletingId] = React.useState<string | null>(null);
   const colors = useAppTheme();
   const isAgent = useIsAgent();
 
@@ -219,8 +224,27 @@ export default function MyProperties() {
               property={property}
               currentUserId={user?.id}
               isUpdating={updatingStatusId === property.id}
+              isDeleting={deletingId === property.id}
               colors={colors}
               onNavigate={() => navigate(`/propiedad/${property.id}`)}
+              onDelete={
+                property.access_type === "OWNER"
+                  ? async () => {
+                      setDeletingId(property.id);
+                      try {
+                        await softDeleteProperty(property.id);
+                        await syncCachesAfterPropertySoftDelete(
+                          queryClient,
+                          property.id,
+                        );
+                      } catch (deleteError) {
+                        console.error("Property delete failed", deleteError);
+                      } finally {
+                        setDeletingId(null);
+                      }
+                    }
+                  : undefined
+              }
               onStatusChange={async (nextStatus) => {
                 setUpdatingStatusId(property.id);
                 try {

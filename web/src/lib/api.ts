@@ -25,6 +25,7 @@ export async function apiFetch(
 
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
+    cache: options?.cache ?? "no-store",
 
     headers: {
       ...(options?.body && {
