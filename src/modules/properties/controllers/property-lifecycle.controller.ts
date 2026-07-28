@@ -13,6 +13,12 @@ import { savePropertyCommercializationService } from "../services/save-property-
 import { updatePropertyBasicService } from "../services/update-property-basic.service";
 import { updatePropertyLocationService } from "../services/update-property-location.service";
 import { updatePropertyStatusService, PropertyStatusTransitionError } from "../services/update-property-status.service";
+import {
+  PropertyForbiddenError,
+  PropertyNotFoundError,
+  softDeletePropertyService,
+} from "../services/soft-delete-property.service";
+import { PropertyDeletedError } from "../utils/assert-property-owner";
 
 export async function createPropertyController(
   request: FastifyRequest<{
@@ -218,8 +224,11 @@ export async function updatePropertyStatusController(
       return reply.status(403).send({ message: "Forbidden" });
     }
 
-    if (error instanceof Error && error.message === "Property not found") {
-      return reply.status(404).send({ message: error.message });
+    if (
+      error instanceof PropertyDeletedError
+      || (error instanceof Error && error.message === "Property not found")
+    ) {
+      return reply.status(404).send({ message: "Property not found" });
     }
 
     if (
@@ -233,6 +242,34 @@ export async function updatePropertyStatusController(
           code: "INVALID_STATUS_TRANSITION",
           message: error instanceof Error ? error.message : "Invalid transition",
         },
+      });
+    }
+
+    throw error;
+  }
+}
+
+export async function softDeletePropertyController(
+  request: FastifyRequest<{
+    Params: { id: string };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    await softDeletePropertyService({
+      propertyId: request.params.id,
+      userId: request.user.id,
+    });
+
+    return reply.status(204).send();
+  } catch (error) {
+    if (error instanceof PropertyNotFoundError) {
+      return reply.status(404).send({ message: "Property not found" });
+    }
+
+    if (error instanceof PropertyForbiddenError) {
+      return reply.status(403).send({
+        message: "Only the property owner can delete this property.",
       });
     }
 

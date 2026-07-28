@@ -10,6 +10,10 @@ import {
   removeFavorite,
   syncFavorites,
 } from "../services/favorites.service";
+import {
+  PropertyDeletedError,
+  PropertyNotFoundError,
+} from "@/modules/properties/utils/assert-property-owner";
 
 const SyncFavoritesSchema = z.object({
   propertyIds: z.array(z.string().uuid()),
@@ -35,17 +39,34 @@ export async function addFavoriteController(
   }>,
   reply: FastifyReply,
 ) {
-  const propertyId = await addFavorite({
-    userId: request.user.id,
-    propertyId: request.params.propertyId,
-  });
+  try {
+    const propertyId = await addFavorite({
+      userId: request.user.id,
+      propertyId: request.params.propertyId,
+    });
 
-  return reply.status(201).send({
-    success: true,
-    data: {
-      propertyId,
-    },
-  });
+    return reply.status(201).send({
+      success: true,
+      data: {
+        propertyId,
+      },
+    });
+  } catch (error) {
+    if (
+      error instanceof PropertyNotFoundError
+      || error instanceof PropertyDeletedError
+    ) {
+      return reply.status(404).send({
+        success: false,
+        error: {
+          code: "PROPERTY_NOT_FOUND",
+          message: "Property not found",
+        },
+      });
+    }
+
+    throw error;
+  }
 }
 
 export async function removeFavoriteController(

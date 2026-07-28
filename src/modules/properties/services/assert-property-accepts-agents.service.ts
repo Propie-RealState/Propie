@@ -1,5 +1,6 @@
 import { getPropertyCommercializationModeRepository } from "../repositories/property-commercialization.repository";
 import { isAgentParticipationAllowed } from "../constants/commercialization-mode.constants";
+import { assertPropertyNotDeleted } from "../utils/assert-property-owner";
 
 export class PropertyAgentParticipationBlockedError extends Error {
   constructor(message = "Esta propiedad no acepta participación de agentes") {
@@ -11,6 +12,8 @@ export class PropertyAgentParticipationBlockedError extends Error {
 export async function assertPropertyAcceptsAgents(
   propertyId: string,
 ): Promise<void> {
+  await assertPropertyNotDeleted(propertyId);
+
   const mode = await getPropertyCommercializationModeRepository(propertyId);
 
   if (!isAgentParticipationAllowed(mode)) {

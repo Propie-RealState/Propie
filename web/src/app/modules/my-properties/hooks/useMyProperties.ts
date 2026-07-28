@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import type { OwnedProperty } from "../types/my-properties.types";
 import { getMyProperties } from "../services/my-properties.service";
+import { propertyQueryKeys } from "../../properties/cache/property-query-cache";
 
 interface UseMyPropertiesResult {
   properties: OwnedProperty[];
@@ -12,8 +13,8 @@ interface UseMyPropertiesResult {
 
 export function useMyProperties(): UseMyPropertiesResult {
   const { data, isFetching, error, refetch } = useQuery({
-    queryKey: ["properties", "mine"],
-    queryFn: getMyProperties,
+    queryKey: propertyQueryKeys.mine,
+    queryFn: ({ signal }) => getMyProperties(signal),
   });
 
   return {

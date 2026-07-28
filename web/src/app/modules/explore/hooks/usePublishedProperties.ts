@@ -2,8 +2,12 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { getPublishedProperties } from "../services/explore.service";
 import type { Property } from "../types/property.types";
+import {
+  propertyQueryKeys,
+  publishedPropertiesKey,
+} from "../../properties/cache/property-query-cache";
 
-export const publishedPropertiesKey = ["published-properties"] as const;
+export { publishedPropertiesKey, propertyQueryKeys };
 
 /**
  * Shared source of truth for the published-properties listing.
@@ -14,8 +18,8 @@ export const publishedPropertiesKey = ["published-properties"] as const;
  */
 export function usePublishedProperties() {
   return useQuery<Property[]>({
-    queryKey: publishedPropertiesKey,
-    queryFn: getPublishedProperties,
+    queryKey: propertyQueryKeys.published,
+    queryFn: ({ signal }) => getPublishedProperties(signal),
     staleTime: 60_000,
     gcTime: 5 * 60_000,
     retry: 1,

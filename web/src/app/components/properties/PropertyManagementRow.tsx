@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Trash2 } from "lucide-react";
 import type { PropertyStatus } from "../../modules/my-properties/types/my-properties.types";
 import type { OwnedProperty } from "../../modules/my-properties/types/my-properties.types";
 import {
@@ -48,7 +48,9 @@ interface PropertyManagementRowProps {
   property: OwnedProperty;
   currentUserId?: string;
   isUpdating: boolean;
+  isDeleting?: boolean;
   onStatusChange: (status: PropertyStatus) => Promise<void>;
+  onDelete?: () => Promise<void>;
   onNavigate: () => void;
   colors: AppTheme;
 }
@@ -57,7 +59,9 @@ export function PropertyManagementRow({
   property,
   currentUserId,
   isUpdating,
+  isDeleting = false,
   onStatusChange,
+  onDelete,
   onNavigate,
   colors,
 }: PropertyManagementRowProps) {
@@ -67,6 +71,8 @@ export function PropertyManagementRow({
   const location = [property.city, property.province].filter(Boolean).join(", ");
   const canEditStatus =
     Boolean(property.published_at) && currentUserId === property.publisher_id;
+  const canDelete =
+    property.access_type === "OWNER" && typeof onDelete === "function";
 
   const agentLabel =
     property.publisher_id && currentUserId !== property.publisher_id
@@ -286,6 +292,39 @@ export function PropertyManagementRow({
           >
             {getPropertyStatusLabel(property.status)}
           </span>
+        )}
+
+        {canDelete && (
+          <button
+            type="button"
+            aria-label="Eliminar propiedad"
+            disabled={isDeleting || isUpdating}
+            onClick={async (event) => {
+              event.stopPropagation();
+              const confirmed = window.confirm(
+                "¿Eliminar esta propiedad? No se podrá ver en listados activos.",
+              );
+              if (!confirmed || !onDelete) {
+                return;
+              }
+              await onDelete();
+            }}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              border: "1px solid #e8e8ed",
+              background: "#fff",
+              color: "#c62828",
+              cursor: isDeleting ? "wait" : "pointer",
+              opacity: isDeleting ? 0.6 : 1,
+            }}
+          >
+            <Trash2 size={15} aria-hidden />
+          </button>
         )}
 
         <ChevronRight size={16} color="#9a9aa0" aria-hidden />

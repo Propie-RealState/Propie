@@ -117,7 +117,8 @@ export async function createVisitService(input: {
 
   if (
     !property?.published_at ||
-    property.status !== PROPERTY_STATUSES.ACTIVE
+    property.status !== PROPERTY_STATUSES.ACTIVE ||
+    property.deleted_at != null
   ) {
     throw new Error("PROPERTY_NOT_AVAILABLE");
   }

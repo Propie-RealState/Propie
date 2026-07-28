@@ -155,6 +155,7 @@ export async function searchPropertiesRepository(
     ${commercializationJoin}
     WHERE p.published_at IS NOT NULL
       AND p.status IN ('ACTIVE', 'PAUSED', 'RESERVED')
+      AND p.deleted_at IS NULL
       ${agentDiscoveryFilter}
       AND (
         ${buildMatchSql(
@@ -239,6 +240,7 @@ export async function searchLocationsRepository(
         ON p.id = pl.property_id
         AND p.published_at IS NOT NULL
         AND p.status IN ('ACTIVE', 'PAUSED', 'RESERVED')
+        AND p.deleted_at IS NULL
       WHERE pl.neighborhood IS NOT NULL
         AND ${buildMatchSql(["pl.neighborhood"], 1)}
 
@@ -255,6 +257,7 @@ export async function searchLocationsRepository(
         ON p.id = pl.property_id
         AND p.published_at IS NOT NULL
         AND p.status IN ('ACTIVE', 'PAUSED', 'RESERVED')
+        AND p.deleted_at IS NULL
       WHERE pl.city IS NOT NULL
         AND ${buildMatchSql(["pl.city"], 1)}
 
@@ -271,6 +274,7 @@ export async function searchLocationsRepository(
         ON p.id = pl.property_id
         AND p.published_at IS NOT NULL
         AND p.status IN ('ACTIVE', 'PAUSED', 'RESERVED')
+        AND p.deleted_at IS NULL
       WHERE pl.province IS NOT NULL
         AND ${buildMatchSql(["pl.province"], 1)}
 
@@ -287,6 +291,7 @@ export async function searchLocationsRepository(
         ON p.id = pl.property_id
         AND p.published_at IS NOT NULL
         AND p.status IN ('ACTIVE', 'PAUSED', 'RESERVED')
+        AND p.deleted_at IS NULL
       WHERE pl.address IS NOT NULL
         AND ${buildMatchSql(["pl.address"], 1)}
 
@@ -303,6 +308,7 @@ export async function searchLocationsRepository(
         ON p.id = pl.property_id
         AND p.published_at IS NOT NULL
         AND p.status IN ('ACTIVE', 'PAUSED', 'RESERVED')
+        AND p.deleted_at IS NULL
       WHERE ${buildMatchSql(
         [
           "CONCAT_WS(' ', pl.address, pl.neighborhood, pl.city, pl.province, pl.country)",
@@ -428,6 +434,7 @@ export async function searchOwnersRepository(
         COUNT(*) FILTER (
           WHERE published_at IS NOT NULL
             AND status IN ('ACTIVE', 'PAUSED', 'RESERVED')
+            AND deleted_at IS NULL
         )::int AS active_count
       FROM properties
       GROUP BY owner_id

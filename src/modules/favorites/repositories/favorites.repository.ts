@@ -5,10 +5,12 @@ export async function listFavoritePropertyIdsRepository(
 ) {
   const result = await db.query(
     `
-      SELECT property_id
-      FROM property_favorites
-      WHERE user_id = $1
-      ORDER BY created_at DESC
+      SELECT pf.property_id
+      FROM property_favorites pf
+      INNER JOIN properties p ON p.id = pf.property_id
+      WHERE pf.user_id = $1
+        AND p.deleted_at IS NULL
+      ORDER BY pf.created_at DESC
     `,
     [userId],
   );

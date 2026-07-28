@@ -24,6 +24,7 @@ import {
   publishPropertyController,
   savePropertyAmenitiesController,
   savePropertyCommercializationController,
+  softDeletePropertyController,
   updatePropertyBasicController,
   updatePropertyLocationController,
   updatePropertyStatusController,
@@ -94,6 +95,14 @@ export async function propertiesRoutes(app: FastifyInstance) {
       preHandler: optionalAuthMiddleware,
     },
     findPropertyByIdController as RouteHandlerMethod,
+  );
+
+  app.delete(
+    "/:id",
+    {
+      preHandler: authMiddleware,
+    },
+    softDeletePropertyController as RouteHandlerMethod,
   );
 
   app.patch(

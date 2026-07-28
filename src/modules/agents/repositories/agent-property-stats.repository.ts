@@ -21,15 +21,20 @@ export async function getAgentPropertyStatsRepository(
       WITH agent_properties AS (
         SELECT DISTINCT
           p.id,
-          p.status
+          p.status,
+          p.published_at,
+          p.deleted_at
         FROM properties p
-        WHERE p.owner_id = $1
-          OR EXISTS (
-            SELECT 1
-            FROM agent_applications aa
-            WHERE aa.property_id = p.id
-              AND aa.agent_id = $1
-              AND aa.status = 'ACCEPTED'
+        WHERE p.deleted_at IS NULL
+          AND (
+            p.owner_id = $1
+            OR EXISTS (
+              SELECT 1
+              FROM agent_applications aa
+              WHERE aa.property_id = p.id
+                AND aa.agent_id = $1
+                AND aa.status = 'ACCEPTED'
+            )
           )
       )
       SELECT

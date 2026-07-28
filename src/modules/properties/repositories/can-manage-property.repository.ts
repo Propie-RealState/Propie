@@ -10,6 +10,7 @@ export async function canManageProperty(
         SELECT 1
         FROM properties p
         WHERE p.id = $2
+          AND p.deleted_at IS NULL
           AND (
             p.owner_id = $1
             OR EXISTS (

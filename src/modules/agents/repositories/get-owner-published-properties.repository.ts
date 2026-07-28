@@ -29,6 +29,7 @@ export async function getOwnerPublishedPropertiesRepository(ownerId: string) {
         WHERE p.owner_id = $1
           AND p.published_at IS NOT NULL
           AND p.status IN ('ACTIVE', 'PAUSED', 'RESERVED')
+          AND p.deleted_at IS NULL
         ORDER BY p.id, p.published_at DESC NULLS LAST, p.created_at DESC
       ) published
       ORDER BY published_at DESC NULLS LAST, created_at DESC

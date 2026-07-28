@@ -5,6 +5,7 @@ import {
   removeFavoriteRepository,
   syncFavoritesRepository,
 } from "../repositories/favorites.repository";
+import { assertPropertyNotDeleted } from "@/modules/properties/utils/assert-property-owner";
 
 export async function listFavoritePropertyIds(userId: string) {
   return listFavoritePropertyIdsRepository(userId);
@@ -14,6 +15,7 @@ export async function addFavorite(input: {
   userId: string;
   propertyId: string;
 }) {
+  await assertPropertyNotDeleted(input.propertyId);
   return addFavoriteRepository(input);
 }
 
