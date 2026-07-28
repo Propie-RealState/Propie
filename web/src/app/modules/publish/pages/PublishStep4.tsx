@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PublishWizardCTA } from "../components/PublishWizardCTA";
 import { PublishWizardLayout } from "../components/PublishWizardLayout";
@@ -7,23 +7,81 @@ import React from "react";
 import {
   savePropertyCommercialization,
 } from "../services/save-property-commercialization.ts";
-import { useAppTheme } from "../../../../theme/useAppTheme";
+import { useAppTheme, useIsAgent } from "../../../../theme/useAppTheme";
 import { usePropertyPublish } from "../context/PropertyPublishContext";
+import { getNextPublishWizardPath } from "../publish-wizard-steps";
+import { useAuth } from "../../../../context/AuthContext";
 
 type CommercializationType = "AGENTS" | "DIRECT";
 
 export default function PublishStep4() {
   const theme = useAppTheme();
-
+  const { isHydrating } = useAuth();
+  const isAgent = useIsAgent();
   const navigate = useNavigate();
   const {
     data,
     updateData,
   } = usePropertyPublish();
+  const nextPath = getNextPublishWizardPath("comercializacion", isAgent);
+  const agentDirectSaveRef = useRef<Promise<void> | null>(null);
 
   const [commercializationType, setCommercializationType] =
     useState<CommercializationType | null>(null);
   const [showValidation, setShowValidation] = useState(false);
+
+  useEffect(() => {
+    if (isHydrating || !isAgent || !nextPath) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const redirectAgentsPastCommercialization = async () => {
+      try {
+        if (
+          data.propertyId &&
+          data.commercializationType !== "DIRECT"
+        ) {
+          if (!agentDirectSaveRef.current) {
+            agentDirectSaveRef.current = savePropertyCommercialization({
+              propertyId: data.propertyId,
+              commercializationType: "DIRECT",
+            }).then(() => {
+              updateData({ commercializationType: "DIRECT" });
+            });
+          }
+
+          await agentDirectSaveRef.current;
+        }
+
+        if (!cancelled) {
+          navigate(nextPath, { replace: true });
+        }
+      } catch (error) {
+        console.error("Agent commercialization auto-save failed", error);
+        agentDirectSaveRef.current = null;
+      }
+    };
+
+    void redirectAgentsPastCommercialization();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    data.commercializationType,
+    data.propertyId,
+    isAgent,
+    isHydrating,
+    navigate,
+    nextPath,
+    updateData,
+  ]);
+
+  if (isHydrating || isAgent) {
+    return null;
+  }
 
   const isFormValid = Boolean(commercializationType);
 
@@ -73,7 +131,9 @@ export default function PublishStep4() {
         commercializationType,
       });
 
-      navigate("/publicar/revision");
+      if (nextPath) {
+        navigate(nextPath);
+      }
     } catch (error) {
       console.error("Save commercialization failed", error);
     }

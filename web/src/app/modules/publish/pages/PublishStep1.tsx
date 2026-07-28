@@ -8,14 +8,17 @@ import { updatePropertyBasic } from "../services/updatePropertyBasic";
 import { PropertyType } from "../types/property-publish.types";
 import { createProperty } from "../services/create-property";
 import type { ListingType } from "../types/property-publish.types";
-import { useAppTheme } from "../../../../theme/useAppTheme";
+import { useAppTheme, useIsAgent } from "../../../../theme/useAppTheme";
 import { PublishLocationPicker } from "../components/PublishLocationPicker";
 import { updatePropertyLocation } from "../services/update-property-location";
+import { getNextPublishWizardPath } from "../publish-wizard-steps";
 type OperationType = "venta" | "alquiler" | "temporario" | null;
 
 export default function PublishStep1() {
   const theme = useAppTheme();
   const navigate = useNavigate();
+  const isAgent = useIsAgent();
+  const nextPath = getNextPublishWizardPath("publicar", isAgent);
 
   const { data, updateData, startCreatePublish } = usePropertyPublish();
 
@@ -127,7 +130,9 @@ export default function PublishStep1() {
         await updatePropertyBasic(data.propertyId!, basicPayload);
         await persistLocationForProperty(data.propertyId!);
         updateData(contextUpdate);
-        navigate("/publicar/fotos-videos");
+        if (nextPath) {
+          navigate(nextPath);
+        }
         return;
       }
 
@@ -135,7 +140,9 @@ export default function PublishStep1() {
         await updatePropertyBasic(data.propertyId, basicPayload);
         await persistLocationForProperty(data.propertyId);
         updateData(contextUpdate);
-        navigate("/publicar/fotos-videos");
+        if (nextPath) {
+          navigate(nextPath);
+        }
         return;
       }
 
@@ -154,7 +161,9 @@ export default function PublishStep1() {
         result.propertyId
       );
 
-      navigate("/publicar/fotos-videos");
+      if (nextPath) {
+          navigate(nextPath);
+        }
     } catch (error) {
       console.error("Create property failed", error);
     }

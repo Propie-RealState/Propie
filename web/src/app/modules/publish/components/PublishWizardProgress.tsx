@@ -1,20 +1,21 @@
 import { useLocation } from "react-router-dom";
 
-const PUBLISH_STEP_BY_PATH: Record<string, number> = {
-  publicar: 1,
-  "fotos-videos": 2,
-  informacion: 3,
-  comercializacion: 4,
-  revision: 5,
-};
-
-const PUBLISH_STEP_TOTAL = 5;
+import { useAuth } from "../../../../context/AuthContext";
+import { useIsAgent } from "../../../../theme/useAppTheme";
+import { getPublishWizardProgress } from "../publish-wizard-steps";
 
 export function PublishWizardProgress() {
   const location = useLocation();
-  const segment = location.pathname.split("/").filter(Boolean).pop() ?? "publicar";
-  const current = PUBLISH_STEP_BY_PATH[segment] ?? 1;
-  const progress = (current / PUBLISH_STEP_TOTAL) * 100;
+  const { isHydrating } = useAuth();
+  const isAgent = useIsAgent();
+  const { current, total, progress } = getPublishWizardProgress(
+    location.pathname,
+    isAgent,
+  );
+
+  if (isHydrating) {
+    return null;
+  }
 
   return (
     <div
@@ -25,7 +26,7 @@ export function PublishWizardProgress() {
         padding: "0 28px 4px",
         boxSizing: "border-box",
       }}
-      aria-label={`Paso ${current} de ${PUBLISH_STEP_TOTAL}`}
+      aria-label={`Paso ${current} de ${total}`}
       role="progressbar"
       aria-valuemin={0}
       aria-valuemax={100}
@@ -48,7 +49,7 @@ export function PublishWizardProgress() {
             letterSpacing: "0.02em",
           }}
         >
-          Paso {current} de {PUBLISH_STEP_TOTAL}
+          Paso {current} de {total}
         </span>
         <span
           style={{
