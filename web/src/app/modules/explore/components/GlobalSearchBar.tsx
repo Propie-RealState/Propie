@@ -178,10 +178,8 @@ export default function GlobalSearchBar({
     };
   }, []);
 
-  const showPanel =
-    isOpen &&
-    isActive &&
-    (loading || !!error || hasResults);
+  // Keep panel open for any active query (≥2 chars) so empty/loading/error states are visible.
+  const showPanel = isOpen && isActive;
 
   const handleSelection = (
     selection: GlobalSearchSelection,

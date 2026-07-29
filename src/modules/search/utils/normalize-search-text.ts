@@ -46,18 +46,29 @@ export function escapeLikePattern(
   return value.replace(/[%_\\]/g, "\\$&");
 }
 
-/** SQL expression mirroring {@link normalizeSearchText} for indexed-friendly filters. */
+/**
+ * SQL expression mirroring {@link normalizeSearchText} exactly:
+ * lower → strip accents → punctuation to spaces → collapse whitespace → trim.
+ * Keep in sync with the JS implementation; covered by search normalization tests.
+ */
 export function sqlNormalizeColumn(
   column: string,
 ): string {
-  return `regexp_replace(
-    translate(
-      lower(coalesce(${column}, '')),
-      'áàäâãåéèëêíìïîóòöôõúùüûñç',
-      'aaaaaaeeeeiiiioooooouuuunc'
-    ),
-    '[^a-z0-9@ ]',
-    '',
-    'g'
+  return `trim(
+    regexp_replace(
+      regexp_replace(
+        translate(
+          lower(coalesce(${column}, '')),
+          'áàäâãåéèëêíìïîóòöôõúùüûñç',
+          'aaaaaaeeeeiiiiooooouuuunc'
+        ),
+        '[^a-z0-9@ ]+',
+        ' ',
+        'g'
+      ),
+      '\\s+',
+      ' ',
+      'g'
+    )
   )`;
 }
