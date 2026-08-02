@@ -1,8 +1,15 @@
 import { FastifyReply, FastifyRequest } from "fastify";
+import { z } from "zod";
 
-import { CreatePropertyInput } from "../schemas/create-property.schema";
+import {
+  CreatePropertyInput,
+  CreatePropertySchema,
+} from "../schemas/create-property.schema";
 import { UpdatePropertyAmenitiesInput } from "../schemas/update-property-amenities.schema";
-import { UpdatePropertyBasicInput } from "../schemas/update-property-basic.schema";
+import {
+  UpdatePropertyBasicInput,
+  updatePropertyBasicSchema,
+} from "../schemas/update-property-basic.schema";
 import { UpdatePropertyCommercializationInput } from "../schemas/update-property-commercialization.schema";
 import { UpdatePropertyLocationInput } from "../schemas/update-property-location.schema";
 import { UpdatePropertyStatusSchema } from "../schemas/update-property-status.schema";
@@ -26,10 +33,28 @@ export async function createPropertyController(
   }>,
   reply: FastifyReply,
 ) {
+  let body: CreatePropertyInput;
+
+  try {
+    body = CreatePropertySchema.parse(request.body);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return reply.status(400).send({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          details: error.flatten(),
+        },
+      });
+    }
+
+    throw error;
+  }
+
   const result = await createPropertyService({
     ownerId: request.user.id,
-    propertyType: request.body.propertyType,
-    listingType: request.body.listingType,
+    propertyType: body.propertyType,
+    listingType: body.listingType,
   });
 
   return reply.status(201).send(result);
@@ -44,19 +69,37 @@ export async function updatePropertyBasicController(
   }>,
   reply: FastifyReply,
 ) {
+  let body: UpdatePropertyBasicInput;
+
+  try {
+    body = updatePropertyBasicSchema.parse(request.body);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return reply.status(400).send({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          details: error.flatten(),
+        },
+      });
+    }
+
+    throw error;
+  }
+
   try {
     await updatePropertyBasicService({
       propertyId: request.params.id,
       ownerId: request.user.id,
-      title: request.body.title,
-      description: request.body.description,
-      price: request.body.price,
-      currency: request.body.currency,
-      bedrooms: request.body.bedrooms,
-      bathrooms: request.body.bathrooms,
-      areaM2: request.body.areaM2,
-      propertyType: request.body.propertyType,
-      operationType: request.body.operationType,
+      title: body.title,
+      description: body.description,
+      price: body.price,
+      currency: body.currency,
+      bedrooms: body.bedrooms,
+      bathrooms: body.bathrooms,
+      areaM2: body.areaM2,
+      propertyType: body.propertyType,
+      operationType: body.operationType,
     });
 
     return reply.status(200).send({ ok: true });

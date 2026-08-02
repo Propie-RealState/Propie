@@ -28,7 +28,6 @@ export const registerUiStricterLimits = {
   lastNameMax: 50,
   dniMax: 8,
   cuitCuilLength: 11,
-  phoneMin: 10,
   minAge: 18,
   verificationCodeLength: 6,
   maxImageBytes: 10 * 1024 * 1024,

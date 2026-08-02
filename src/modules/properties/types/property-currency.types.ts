@@ -1,8 +1,6 @@
-import { z } from "zod";
+import type { PropertyCurrency } from "../schemas/property-currency.schema";
 
-export const PropertyCurrencySchema = z.enum(["USD", "ARS"]);
-
-export type PropertyCurrency = z.infer<typeof PropertyCurrencySchema>;
+export type { PropertyCurrency } from "../schemas/property-currency.schema";
 
 export const DEFAULT_PROPERTY_CURRENCY: PropertyCurrency = "USD";
 

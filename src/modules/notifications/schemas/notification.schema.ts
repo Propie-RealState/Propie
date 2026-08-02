@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { PaginationSchema } from "@/database/shared/pagination";
+import { PaginationSchema } from "./pagination.schema";
 
 import { NOTIFICATION_TYPES } from "../types/notification.types";
 

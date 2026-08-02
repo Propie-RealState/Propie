@@ -1,21 +1,16 @@
 import { z } from "zod";
 
-import { RegisterableUserRoleSchema } from "@/database/types/roles";
 import { registerApiLimits } from "@/shared/registration";
 
-// ========================================================
-// ENUMS
-// ========================================================
-
-export const RegisterRoleSchema = RegisterableUserRoleSchema;
-
-export const MainGoalSchema = z.enum(registerApiLimits.mainGoals);
+import { RegisterableUserRoleSchema } from "./roles.schema";
 
 // ========================================================
 // REGISTER
 // ========================================================
 
 const L = registerApiLimits;
+
+export const RegisterRoleSchema = RegisterableUserRoleSchema;
 
 export const RegisterSchema = z.object({
   role: RegisterRoleSchema,

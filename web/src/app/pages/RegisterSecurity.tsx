@@ -1,5 +1,6 @@
 import { flushSync } from "react-dom";
 import { useNavigate } from "react-router-dom";
+import { registerApiLimits } from "@propie/registration-validation";
 import { AuthHeroHeader } from "../components/AuthHeroHeader";
 import { Check, Smartphone } from "lucide-react";
 import React from "react";
@@ -90,7 +91,9 @@ export default function RegisterSecurity() {
                     inputMode="numeric"
                     value={data.phone}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, "").slice(0, 15);
+                      const value = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, registerApiLimits.phone.max);
                       updateData({ phone: value });
                       validation.handleChange("phone", value);
                     }}

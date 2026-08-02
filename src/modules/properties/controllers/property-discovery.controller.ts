@@ -1,23 +1,10 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { z } from "zod";
 
 import {
   applyOptionalAuthDetailCache,
   applyOptionalAuthPublicCache,
 } from "@/lib/http/cache-headers";
 import { decodeCursor } from "@/database/shared/cursor";
-
-// Explore listing pagination query.
-//   - No params            → full array (legacy, current default).
-//   - `offset` present      → legacy LIMIT/OFFSET array (deprecated, temporary).
-//   - `cursor` and/or `limit` (no offset) → keyset envelope (preferred).
-const ExplorePaginationSchema = z.object({
-  limit: z.coerce.number().int().min(1).max(100).optional(),
-  offset: z.coerce.number().int().min(0).optional(),
-  cursor: z.string().min(1).optional(),
-});
-
-const DEFAULT_KEYSET_LIMIT = 20;
 
 import { isAgentDiscoveryAudience } from "../utils/discovery-audience";
 import { findPropertyByIdService } from "../services/find-property-by-id.service";
@@ -28,10 +15,13 @@ import {
   getPropertiesKeysetService,
   getPropertiesService,
 } from "../services/get-properties.service";
+import { ExplorePaginationSchema } from "../schemas/explore-pagination.schema";
 import {
   NearbyPropertiesQuerySchema,
   PropertyMapQuerySchema,
 } from "../schemas/property-map.schema";
+
+const DEFAULT_KEYSET_LIMIT = 20;
 
 export async function getPropertiesController(
   request: FastifyRequest,

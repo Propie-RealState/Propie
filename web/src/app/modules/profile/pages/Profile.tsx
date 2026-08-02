@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { registerApiLimits } from "@propie/registration-validation";
 import { useAuth } from "../../../../context/AuthContext";
 import {
   ArrowLeft,
@@ -43,6 +44,16 @@ import { useAgentReviews } from "../../agents/hooks/useAgentReviews";
 import { resolveMediaUrl } from "../../../../lib/api-base";
 import { showToast } from "../../../../lib/toast";
 import { getAppVersion } from "../../../../lib/app-version";
+import { FieldError } from "../../../../features/register/validation/components";
+import {
+  validateLocation,
+  validatePhone,
+} from "../../../../features/register/validation/validators";
+
+/** Profile allows clearing phone; min/max come from shared registerApiLimits.phone. */
+const profilePhoneOptions = { required: false } as const;
+
+const profileLocationOptions = { required: false } as const;
 
 export default function Profile() {
   const [isSaving, setIsSaving] = useState(false);
@@ -60,6 +71,13 @@ export default function Profile() {
   const [location, setLocation] = useState("");
 
   const [bio, setBio] = useState("");
+
+  const [phoneTouched, setPhoneTouched] = useState(false);
+  const [locationTouched, setLocationTouched] = useState(false);
+  const [saveAttempted, setSaveAttempted] = useState(false);
+
+  const phoneInputRef = useRef<HTMLInputElement>(null);
+  const locationInputRef = useRef<HTMLInputElement>(null);
 
   const [dni, setDni] = useState("");
 
@@ -169,6 +187,12 @@ export default function Profile() {
     navigate("/explore");
   };
 
+  function clearFieldErrors() {
+    setPhoneTouched(false);
+    setLocationTouched(false);
+    setSaveAttempted(false);
+  }
+
   function resetFormFromUser() {
     if (!user) return;
 
@@ -180,6 +204,7 @@ export default function Profile() {
     setNationality(user.profile?.nationality || "");
     setAddress(user.profile?.address || "");
     setCuitCuil(user.profile?.cuit_cuil || "");
+    clearFieldErrors();
   }
 
   function handleStartEditing() {
@@ -192,7 +217,36 @@ export default function Profile() {
     setIsEditing(false);
   }
 
+  function handlePhoneChange(raw: string) {
+    const value = raw.replace(/\D/g, "").slice(0, registerApiLimits.phone.max);
+    setPhone(value);
+  }
+
+  function handleLocationChange(value: string) {
+    setLocation(value);
+  }
+
+  const phoneValidation = validatePhone(phone, profilePhoneOptions);
+  const locationValidation = validateLocation(location, profileLocationOptions);
+  const isEditFormValid = phoneValidation.valid && locationValidation.valid;
+  const showPhoneError =
+    (phoneTouched || saveAttempted) && !phoneValidation.valid;
+  const showLocationError =
+    (locationTouched || saveAttempted) && !locationValidation.valid;
+  const canSave = !isSaving && isEditFormValid;
+
   async function handleSaveProfile() {
+    setSaveAttempted(true);
+
+    if (!phoneValidation.valid || !locationValidation.valid) {
+      if (!phoneValidation.valid) {
+        phoneInputRef.current?.focus();
+      } else {
+        locationInputRef.current?.focus();
+      }
+      return;
+    }
+
     try {
       setIsSaving(true);
 
@@ -204,6 +258,7 @@ export default function Profile() {
 
       await refreshUser();
 
+      clearFieldErrors();
       setIsEditing(false);
     } catch (error) {
       console.error(error);
@@ -213,17 +268,19 @@ export default function Profile() {
     }
   }
 
-  const editableFieldStyle: React.CSSProperties = {
+  const editableFieldStyle = (
+    hasError: boolean,
+  ): React.CSSProperties => ({
     width: "100%",
     padding: "10px 12px",
     borderRadius: 10,
-    border: `1.5px solid ${colors.primary}`,
+    border: `1.5px solid ${hasError ? "#ef4444" : colors.primary}`,
     background: "#f9f9fb",
     fontSize: 14,
     color: "#1a1a1a",
     outline: "none",
     boxSizing: "border-box",
-  };
+  });
 
   if (!user) {
     return null;
@@ -416,6 +473,7 @@ export default function Profile() {
                         onClick={handleCancelEdit}
                         disabled={isSaving}
                         title="Cancelar"
+                        aria-label="Cancelar edición"
                         style={{
                           background: "#f5f5f7",
                           border: "1px solid #e5e5ea",
@@ -433,10 +491,11 @@ export default function Profile() {
                       <button
                         type="button"
                         onClick={handleSaveProfile}
-                        disabled={isSaving}
+                        disabled={!canSave}
                         title="Guardar"
+                        aria-label="Guardar perfil"
                         style={{
-                          background: colors.primary,
+                          background: canSave ? colors.primary : "#e5e5ea",
                           border: "none",
                           borderRadius: 12,
                           width: 40,
@@ -444,11 +503,15 @@ export default function Profile() {
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          cursor: isSaving ? "not-allowed" : "pointer",
+                          cursor: canSave ? "pointer" : "not-allowed",
                           opacity: isSaving ? 0.7 : 1,
                         }}
                       >
-                        <Check size={18} color="white" strokeWidth={2.5} />
+                        <Check
+                          size={18}
+                          color={canSave ? "white" : "#9a9aa0"}
+                          strokeWidth={2.5}
+                        />
                       </button>
                     </>
                   ) : (
@@ -456,6 +519,7 @@ export default function Profile() {
                       type="button"
                       onClick={handleStartEditing}
                       title="Editar perfil"
+                      aria-label="Editar perfil"
                       style={{
                         background: colors.lightBg,
                         border: "none",
@@ -517,14 +581,48 @@ export default function Profile() {
                     size={18}
                     color={isEditing ? colors.primary : "#6e6e73"}
                     style={{ marginTop: isEditing ? 10 : 0 }}
+                    aria-hidden
                   />
                   {isEditing ? (
-                    <input
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="Teléfono"
-                      style={editableFieldStyle}
-                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <label
+                        htmlFor="profile-phone"
+                        style={{
+                          display: "block",
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: "#6e6e73",
+                          marginBottom: 6,
+                        }}
+                      >
+                        Teléfono
+                      </label>
+                      <input
+                        ref={phoneInputRef}
+                        id="profile-phone"
+                        type="tel"
+                        inputMode="numeric"
+                        autoComplete="tel"
+                        name="tel"
+                        value={phone}
+                        onChange={(e) => handlePhoneChange(e.target.value)}
+                        onBlur={() => setPhoneTouched(true)}
+                        placeholder="Ej: 1123456789"
+                        maxLength={registerApiLimits.phone.max}
+                        aria-invalid={showPhoneError ? "true" : "false"}
+                        aria-describedby={
+                          showPhoneError ? "profile-phone-error" : undefined
+                        }
+                        data-testid="profile-field-phone"
+                        style={editableFieldStyle(showPhoneError)}
+                      />
+                      <FieldError
+                        id="profile-phone-error"
+                        message={
+                          showPhoneError ? phoneValidation.error : undefined
+                        }
+                      />
+                    </div>
                   ) : (
                     <span style={{ fontSize: 14, color: "#1a1a1a" }}>
                       {displayPhone}
@@ -543,14 +641,51 @@ export default function Profile() {
                     size={18}
                     color={isEditing ? colors.primary : "#6e6e73"}
                     style={{ marginTop: isEditing ? 10 : 0 }}
+                    aria-hidden
                   />
                   {isEditing ? (
-                    <input
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      placeholder="Localización"
-                      style={editableFieldStyle}
-                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <label
+                        htmlFor="profile-location"
+                        style={{
+                          display: "block",
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: "#6e6e73",
+                          marginBottom: 6,
+                        }}
+                      >
+                        Localización
+                      </label>
+                      <input
+                        ref={locationInputRef}
+                        id="profile-location"
+                        type="text"
+                        autoComplete="address-level2"
+                        name="location"
+                        value={location}
+                        onChange={(e) => handleLocationChange(e.target.value)}
+                        onBlur={() => setLocationTouched(true)}
+                        placeholder="Ciudad o zona"
+                        maxLength={registerApiLimits.location.max}
+                        aria-invalid={showLocationError ? "true" : "false"}
+                        aria-describedby={
+                          showLocationError
+                            ? "profile-location-error"
+                            : undefined
+                        }
+                        data-testid="profile-field-location"
+                        style={editableFieldStyle(showLocationError)}
+                      />
+                      <FieldError
+                        id="profile-location-error"
+                        message={
+                          showLocationError
+                            ? locationValidation.error
+                            : undefined
+                        }
+                      />
+                    </div>
                   ) : (
                     <span style={{ fontSize: 14, color: "#1a1a1a" }}>
                       {displayLocation}

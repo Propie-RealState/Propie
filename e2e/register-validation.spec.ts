@@ -79,7 +79,7 @@ test.describe("registration validation", () => {
 
     await page.locator("#phone").fill("123");
     await page.locator("#phone").blur();
-    await expect(page.getByText("El teléfono debe tener al menos 10 dígitos")).toBeVisible();
+    await expect(page.getByText("El teléfono debe tener al menos 8 dígitos")).toBeVisible();
     await expect(page.getByTestId("register-continue")).toBeDisabled();
   });
 

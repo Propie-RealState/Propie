@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { z } from "zod";
 
 import { UPLOAD_BODY_LIMIT } from "@/config/body-limits";
 import { authMiddleware }
@@ -9,6 +10,9 @@ from "../repositories/profiles.repository";
 
 import { uploadAvatarController }
 from "../controllers/upload-avatar.controller";
+
+import { UpdateProfileSchema }
+from "../schemas/update-profile.schema";
 
 export async function profileRoutes(
   app: FastifyInstance
@@ -35,19 +39,23 @@ export async function profileRoutes(
       request,
       reply
     ) => {
+      let body: z.infer<typeof UpdateProfileSchema>;
 
-      const body =
-        request.body as {
-          phone?: string;
-          location?: string;
-          bio?: string;
-        };
+      try {
+        body = UpdateProfileSchema.parse(request.body);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          return reply.status(400).send({
+            success: false,
+            error: {
+              code: "VALIDATION_ERROR",
+              details: error.flatten(),
+            },
+          });
+        }
 
-      console.log("BODY");
-      console.log(body);
-
-      console.log("USER ID");
-      console.log(request.user.id);
+        throw error;
+      }
 
       const updatedProfile = await updateProfile(request.user.id, {
         phone: body.phone,
