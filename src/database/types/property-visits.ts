@@ -1,64 +1,46 @@
-import { z } from "zod";
-
-import {
-  VISIT_ACTOR_ROLES,
-  VISIT_EVENT_TYPES,
-  VISIT_STATUSES,
+import type {
+  VisitActorRole,
+  VisitEventType,
+  VisitStatus,
 } from "@/modules/property-visits/types/visit.types";
 
-export const VisitStatusSchema = z.enum(VISIT_STATUSES);
+export type VisitStatusRow = VisitStatus;
 
-export type VisitStatusRow = z.infer<typeof VisitStatusSchema>;
+export type PropertyVisitRow = {
+  id: string;
+  property_id: string;
+  conversation_id: string | null;
+  client_id: string;
+  agent_id: string | null;
+  created_by: string;
+  status: VisitStatus;
+  scheduled_at: string;
+  duration_minutes: number;
+  notes: string | null;
+  cancelled_reason: string | null;
+  metadata: Record<string, unknown>;
+  confirmed_at: string | null;
+  completed_at: string | null;
+  cancelled_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
 
-export const VisitEventTypeSchema = z.enum(VISIT_EVENT_TYPES);
+export type PropertyVisitEventRow = {
+  id: string;
+  visit_id: string;
+  actor_id: string | null;
+  actor_role: VisitActorRole | null;
+  event_type: VisitEventType;
+  payload: Record<string, unknown>;
+  created_at: string;
+};
 
-export const VisitActorRoleSchema = z.enum(VISIT_ACTOR_ROLES);
-
-export const PropertyVisitRowSchema = z.object({
-  id: z.string().uuid(),
-  property_id: z.string().uuid(),
-  conversation_id: z.string().uuid().nullable(),
-  client_id: z.string().uuid(),
-  agent_id: z.string().uuid().nullable(),
-  created_by: z.string().uuid(),
-  status: VisitStatusSchema,
-  scheduled_at: z.string().datetime(),
-  duration_minutes: z.number().int(),
-  notes: z.string().nullable(),
-  cancelled_reason: z.string().nullable(),
-  metadata: z.record(z.string(), z.unknown()),
-  confirmed_at: z.string().datetime().nullable(),
-  completed_at: z.string().datetime().nullable(),
-  cancelled_at: z.string().datetime().nullable(),
-  created_at: z.string().datetime(),
-  updated_at: z.string().datetime(),
-});
-
-export type PropertyVisitRow = z.infer<typeof PropertyVisitRowSchema>;
-
-export const PropertyVisitEventRowSchema = z.object({
-  id: z.string().uuid(),
-  visit_id: z.string().uuid(),
-  actor_id: z.string().uuid().nullable(),
-  actor_role: VisitActorRoleSchema.nullable(),
-  event_type: VisitEventTypeSchema,
-  payload: z.record(z.string(), z.unknown()),
-  created_at: z.string().datetime(),
-});
-
-export type PropertyVisitEventRow = z.infer<
-  typeof PropertyVisitEventRowSchema
->;
-
-export const PropertyVisitReminderRowSchema = z.object({
-  id: z.string().uuid(),
-  visit_id: z.string().uuid(),
-  offset_minutes: z.number().int(),
-  remind_at: z.string().datetime(),
-  sent_at: z.string().datetime().nullable(),
-  created_at: z.string().datetime(),
-});
-
-export type PropertyVisitReminderRow = z.infer<
-  typeof PropertyVisitReminderRowSchema
->;
+export type PropertyVisitReminderRow = {
+  id: string;
+  visit_id: string;
+  offset_minutes: number;
+  remind_at: string;
+  sent_at: string | null;
+  created_at: string;
+};

@@ -4,7 +4,7 @@ import { createSession } from "../../database/repositories/session.repository";
 
 import { findUserByEmail } from "../../database/repositories/user.repository";
 
-import type { LoginInput } from "../../database/types/auth";
+import type { LoginInput } from "../../modules/auth/schemas/auth.schema";
 
 import { generateAccessToken, generateRefreshToken } from "./jwt";
 

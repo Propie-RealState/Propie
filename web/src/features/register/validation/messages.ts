@@ -60,7 +60,7 @@ export const validationMessages = {
     max: `La ubicación no puede superar ${api.location.max} caracteres`,
   },
   phone: {
-    format: `El teléfono debe tener al menos ${ui.phoneMin} dígitos numéricos`,
+    format: `El teléfono debe tener al menos ${api.phone.min} dígitos numéricos`,
     max: `El teléfono no puede superar ${api.phone.max} dígitos`,
   },
   image: {

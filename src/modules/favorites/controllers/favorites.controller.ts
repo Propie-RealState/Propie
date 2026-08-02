@@ -2,7 +2,6 @@ import type {
   FastifyReply,
   FastifyRequest,
 } from "fastify";
-import { z } from "zod";
 
 import {
   addFavorite,
@@ -14,10 +13,7 @@ import {
   PropertyDeletedError,
   PropertyNotFoundError,
 } from "@/modules/properties/utils/assert-property-owner";
-
-const SyncFavoritesSchema = z.object({
-  propertyIds: z.array(z.string().uuid()),
-});
+import { SyncFavoritesSchema } from "../schemas/favorites.schema";
 
 export async function listFavoritesController(
   request: FastifyRequest,

@@ -1,27 +1,10 @@
-import { z } from 'zod';
+import type {
+  RegisterableUserRoleCode,
+  UserRoleCode,
+} from "@/constants/roles";
 
-export const UserRoleSchema =
-  z.enum([
-    'OWNER',
-    'AGENT',
-    'CLIENT',
-    'ADMIN',
-  ]);
+/** Persisted `users.role` value. */
+export type UserRole = UserRoleCode;
 
-export type UserRole =
-  z.infer<
-    typeof UserRoleSchema
-  >;
-
-/** Public registration — ADMIN must never be accepted via API. */
-export const RegisterableUserRoleSchema =
-  z.enum([
-    'OWNER',
-    'AGENT',
-    'CLIENT',
-  ]);
-
-export type RegisterableUserRole =
-  z.infer<
-    typeof RegisterableUserRoleSchema
-  >;
+/** Roles accepted by public registration (excludes ADMIN). */
+export type RegisterableUserRole = RegisterableUserRoleCode;

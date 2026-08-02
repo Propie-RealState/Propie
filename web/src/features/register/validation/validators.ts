@@ -189,9 +189,21 @@ export function validateAddress(value: string): ValidationResult {
   return validResult();
 }
 
-export function validateLocation(value: string): ValidationResult {
+export type OptionalFieldOptions = {
+  /** Default true (register). Profile update allows empty to clear. */
+  required?: boolean;
+};
+
+export function validateLocation(
+  value: string,
+  options: OptionalFieldOptions = {},
+): ValidationResult {
+  const required = options.required !== false;
   const trimmed = value.trim();
-  if (!trimmed) return invalidResult(validationMessages.required);
+  if (!trimmed) {
+    if (!required) return validResult();
+    return invalidResult(validationMessages.required);
+  }
   if (trimmed.length < api.location.min) {
     return invalidResult(validationMessages.location.min);
   }
@@ -223,9 +235,19 @@ export function validateProfilePhotoFile(file: File | null | undefined): Validat
   return validResult();
 }
 
-export function validatePhone(value: string): ValidationResult {
-  if (!value) return invalidResult(validationMessages.required);
-  if (!DIGITS_ONLY.test(value) || value.length < ui.phoneMin) {
+export type PhoneValidationOptions = OptionalFieldOptions;
+
+export function validatePhone(
+  value: string,
+  options: PhoneValidationOptions = {},
+): ValidationResult {
+  const required = options.required !== false;
+
+  if (!value) {
+    if (!required) return validResult();
+    return invalidResult(validationMessages.required);
+  }
+  if (!DIGITS_ONLY.test(value) || value.length < api.phone.min) {
     return invalidResult(validationMessages.phone.format);
   }
   if (value.length > api.phone.max) {

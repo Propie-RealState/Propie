@@ -1,7 +1,5 @@
 import type { FastifyInstance } from "fastify";
 
-import { LoginSchema } from "../database/types/auth";
-
 import { login } from "../services/auth/auth.service";
 
 import { refreshSession, RefreshSessionError } from "../services/auth/refresh";
@@ -19,10 +17,13 @@ import {
 
 import {
   ForgotPasswordSchema,
+  LoginSchema,
+  RefreshTokenSchema,
   ResetPasswordSchema,
   ResendVerificationSchema,
   VerifyEmailSchema,
-} from "../database/types/auth";
+} from "../modules/auth/schemas/auth.schema";
+import { z } from "zod";
 
 import { rateLimitByEmailRouteConfig, rateLimitRouteConfig } from "@/config/rate-limit";
 
@@ -118,9 +119,7 @@ export async function authRoutes(app: FastifyInstance) {
     { config: rateLimitRouteConfig("authRefresh") },
     async (request, reply) => {
     try {
-      const body = request.body as {
-        refreshToken: string;
-      };
+      const body = RefreshTokenSchema.parse(request.body);
 
       // ================================================
       // REFRESH SESSION
@@ -138,6 +137,16 @@ export async function authRoutes(app: FastifyInstance) {
         data: response,
       });
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: "VALIDATION_ERROR",
+            details: error.flatten(),
+          },
+        });
+      }
+
       console.error(error);
 
       if (error instanceof RefreshSessionError) {
@@ -431,9 +440,7 @@ export async function authRoutes(app: FastifyInstance) {
 
     async (request, reply) => {
       try {
-        const body = request.body as {
-          refreshToken: string;
-        };
+        const body = RefreshTokenSchema.parse(request.body);
 
         // ================================================
         // LOGOUT SESSION
@@ -449,6 +456,16 @@ export async function authRoutes(app: FastifyInstance) {
           success: true,
         });
       } catch (error) {
+        if (error instanceof z.ZodError) {
+          return reply.status(400).send({
+            success: false,
+            error: {
+              code: "VALIDATION_ERROR",
+              details: error.flatten(),
+            },
+          });
+        }
+
         console.error(error);
 
         return reply.status(200).send({

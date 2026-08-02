@@ -1,77 +1,49 @@
-import { z } from "zod";
-
-import {
-  MESSAGE_CONTENT_TYPES,
-  PARTICIPANT_ROLES,
-  PROPERTY_CONVERSATION_STATUSES,
-  PROPERTY_CONVERSATION_TYPES,
+import type {
+  MessageContentType,
+  ParticipantRole,
+  PropertyConversationStatus,
+  PropertyConversationType,
 } from "@/modules/property-conversations/types/property-conversation.types";
 
-export const PropertyConversationStatusSchema = z.enum(
-  PROPERTY_CONVERSATION_STATUSES,
-);
+export type PropertyConversationStatusRow = PropertyConversationStatus;
 
-export type PropertyConversationStatusRow = z.infer<
-  typeof PropertyConversationStatusSchema
->;
+export type PropertyConversationRow = {
+  id: string;
+  property_id: string;
+  conversation_type: PropertyConversationType;
+  client_id: string | null;
+  internal_agent_id: string | null;
+  status: PropertyConversationStatus;
+  assigned_agent_id: string | null;
+  metadata: Record<string, unknown>;
+  lead_score: number | null;
+  last_message_at: string | null;
+  last_message_preview: string | null;
+  created_at: string;
+  updated_at: string;
+};
 
-export const MessageContentTypeSchema = z.enum(MESSAGE_CONTENT_TYPES);
+export type PropertyConversationMessageRow = {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  sender_role: ParticipantRole;
+  content_type: MessageContentType;
+  body: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  edited_at: string | null;
+  deleted_at: string | null;
+};
 
-export const ParticipantRoleSchema = z.enum(PARTICIPANT_ROLES);
-
-export const PropertyConversationTypeSchema = z.enum(
-  PROPERTY_CONVERSATION_TYPES,
-);
-
-export const PropertyConversationRowSchema = z.object({
-  id: z.string().uuid(),
-  property_id: z.string().uuid(),
-  conversation_type: PropertyConversationTypeSchema,
-  client_id: z.string().uuid().nullable(),
-  internal_agent_id: z.string().uuid().nullable(),
-  status: PropertyConversationStatusSchema,
-  assigned_agent_id: z.string().uuid().nullable(),
-  metadata: z.record(z.string(), z.unknown()),
-  lead_score: z.coerce.number().nullable(),
-  last_message_at: z.string().datetime().nullable(),
-  last_message_preview: z.string().nullable(),
-  created_at: z.string().datetime(),
-  updated_at: z.string().datetime(),
-});
-
-export type PropertyConversationRow = z.infer<
-  typeof PropertyConversationRowSchema
->;
-
-export const PropertyConversationMessageRowSchema = z.object({
-  id: z.string().uuid(),
-  conversation_id: z.string().uuid(),
-  sender_id: z.string().uuid(),
-  sender_role: ParticipantRoleSchema,
-  content_type: MessageContentTypeSchema,
-  body: z.string(),
-  metadata: z.record(z.string(), z.unknown()),
-  created_at: z.string().datetime(),
-  edited_at: z.string().datetime().nullable(),
-  deleted_at: z.string().datetime().nullable(),
-});
-
-export type PropertyConversationMessageRow = z.infer<
-  typeof PropertyConversationMessageRowSchema
->;
-
-export const PropertyConversationParticipantStateRowSchema = z.object({
-  conversation_id: z.string().uuid(),
-  user_id: z.string().uuid(),
-  unread_count: z.number().int(),
-  last_read_at: z.string().datetime().nullable(),
-  last_read_message_id: z.string().uuid().nullable(),
-  participant_role: ParticipantRoleSchema,
-  revoked_at: z.string().datetime().nullable(),
-  created_at: z.string().datetime(),
-  updated_at: z.string().datetime(),
-});
-
-export type PropertyConversationParticipantStateRow = z.infer<
-  typeof PropertyConversationParticipantStateRowSchema
->;
+export type PropertyConversationParticipantStateRow = {
+  conversation_id: string;
+  user_id: string;
+  unread_count: number;
+  last_read_at: string | null;
+  last_read_message_id: string | null;
+  participant_role: ParticipantRole;
+  revoked_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
