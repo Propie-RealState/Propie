@@ -2,8 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { usePropertyPublish } from "../../publish/context/PropertyPublishContext";
-import { findPropertyById } from "../../publish/services/find-property-by-id";
-import { mapApiPropertyToPublishData } from "../mappers/map-property-to-publish-data";
+import { fetchEditPublishWizardData } from "../mappers/fetch-edit-publish-wizard-data";
 
 export default function EditProperty() {
   const { id } = useParams();
@@ -17,22 +16,17 @@ export default function EditProperty() {
       }
 
       try {
-        const property = await findPropertyById(id);
+        const editData = await fetchEditPublishWizardData(id);
 
         reset();
-
-        updateData({
-          ...mapApiPropertyToPublishData(property),
-          publishMode: "edit",
-        });
-
+        updateData(editData);
         navigate("/publicar");
       } catch (error) {
         console.error(error);
       }
     }
 
-    loadProperty();
+    void loadProperty();
     // updateData/navigate omitted intentionally to avoid re-fetch loops
   }, [id]);
 

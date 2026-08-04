@@ -3,16 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { CheckCircle2, Sparkles, ArrowRight, Eye } from "lucide-react";
 import { PropertyType } from "../types/property-publish.types";
 import { usePropertyPublish } from "../context/PropertyPublishContext";
+import type { WizardFinalizationPresentation } from "../finalization/resolve-wizard-finalization";
 import { useAppTheme } from "../../../../theme/useAppTheme";
 
 interface PublishSuccessModalProps {
   isOpen: boolean;
   onClose: () => void;
+  finalization: WizardFinalizationPresentation;
 }
 
 export default function PublishSuccessModal({
   isOpen,
   onClose,
+  finalization,
 }: PublishSuccessModalProps) {
   const navigate = useNavigate();
   const theme = useAppTheme();
@@ -58,6 +61,10 @@ export default function PublishSuccessModal({
       state: { backTo: "/explore" },
     });
   };
+
+  const primaryIsExplore = finalization.primaryAction === "explore";
+  const handlePrimary = primaryIsExplore ? handleExplore : handleViewPublication;
+  const handleSecondary = primaryIsExplore ? handleViewPublication : handleExplore;
 
   return (
     <>
@@ -172,7 +179,7 @@ export default function PublishSuccessModal({
                   fontFamily: "'Inter', sans-serif",
                 }}
               >
-                Publicación completada
+                {finalization.successEyebrow}
               </p>
               <h2
                 style={{
@@ -185,7 +192,7 @@ export default function PublishSuccessModal({
                   margin: 0,
                 }}
               >
-                ¡Tu propiedad ya está online!
+                {finalization.successHeadline}
               </h2>
             </div>
           </div>
@@ -268,22 +275,21 @@ export default function PublishSuccessModal({
               <div style={{ display: "flex", alignItems: "flex-start", gap: 11 }}>
                 <Sparkles size={15} color={theme.primary} style={{ flexShrink: 0, marginTop: 2 }} />
                 <p style={{ margin: 0, fontSize: 13, color: "#3a3a3a", lineHeight: 1.55 }}>
-                  Tu publicación ya puede aparecer en búsquedas y mapas.
+                  {finalization.successBullets[0]}
                 </p>
               </div>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 11 }}>
                 <Sparkles size={15} color="#C52E3E" style={{ flexShrink: 0, marginTop: 2 }} />
                 <p style={{ margin: 0, fontSize: 13, color: "#3a3a3a", lineHeight: 1.55 }}>
-                  Los agentes Propie ya pueden aplicar para comercializarla.
+                  {finalization.successBullets[1]}
                 </p>
               </div>
             </div>
 
-            {/* Buttons */}
+            {/* Buttons — order follows strategy primaryAction */}
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {/* Primary — Explore */}
               <button
-                onClick={handleExplore}
+                onClick={handlePrimary}
                 style={{
                   width: "100%",
                   background: theme.primary,
@@ -314,13 +320,13 @@ export default function PublishSuccessModal({
                   b.style.boxShadow = "0 4px 16px rgba(197,46,62,0.28)";
                 }}
               >
-                Explorar propiedades
-                <ArrowRight size={17} />
+                {!primaryIsExplore ? <Eye size={17} /> : null}
+                {finalization.primaryActionLabel}
+                {primaryIsExplore ? <ArrowRight size={17} /> : null}
               </button>
 
-              {/* Secondary — View publication */}
               <button
-                onClick={handleViewPublication}
+                onClick={handleSecondary}
                 style={{
                   width: "100%",
                   background: "transparent",
@@ -348,8 +354,9 @@ export default function PublishSuccessModal({
                   b.style.borderColor = "#e0e0e8";
                 }}
               >
-                <Eye size={17} />
-                Ver tu publicación
+                {primaryIsExplore ? <Eye size={17} /> : null}
+                {finalization.secondaryActionLabel}
+                {!primaryIsExplore ? <ArrowRight size={17} /> : null}
               </button>
             </div>
           </div>

@@ -12,6 +12,8 @@ import { useAppTheme, useIsAgent } from "../../../../theme/useAppTheme";
 import { PublishLocationPicker } from "../components/PublishLocationPicker";
 import { updatePropertyLocation } from "../services/update-property-location";
 import { getNextPublishWizardPath } from "../publish-wizard-steps";
+import { showToast } from "../../../../lib/toast";
+import { getApiErrorMessage } from "../../../../lib/api-error-message";
 type OperationType = "venta" | "alquiler" | "temporario" | null;
 
 export default function PublishStep1() {
@@ -30,6 +32,7 @@ export default function PublishStep1() {
 
   const [operationType, setOperationType] = useState<OperationType>(null);
   const [showValidation, setShowValidation] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (data.listingType) {
@@ -99,9 +102,11 @@ export default function PublishStep1() {
       temporario: "TEMPORARY",
     } as const;
 
-    if (!data.propertyType || !operationType) {
+    if (!data.propertyType || !operationType || isSaving) {
       return;
     }
+
+    setIsSaving(true);
 
     try {
       const mappedListingType = listingTypeMap[operationType];
@@ -166,6 +171,14 @@ export default function PublishStep1() {
         }
     } catch (error) {
       console.error("Create property failed", error);
+      showToast(
+        getApiErrorMessage(
+          error,
+          "No pudimos guardar la propiedad. Intentá de nuevo.",
+        ),
+      );
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -239,14 +252,18 @@ export default function PublishStep1() {
     },
   ];
 
+  const stepTitle =
+    data.publishMode === "edit" ? "Editar propiedad" : "Publicá tu propiedad";
+
   return (
     <PublishWizardLayout
-      title="Publicá tu propiedad"
+      title={stepTitle}
       footer={
         <PublishWizardCTA
           label="Continuar"
           onClick={handleContinueAttempt}
           hint={continueHint}
+          loading={isSaving}
         />
       }
     >
