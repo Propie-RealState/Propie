@@ -7,6 +7,8 @@ type PublishWizardCTAProps = {
   onClick: () => void;
   disabled?: boolean;
   loading?: boolean;
+  /** Shown while loading; defaults to a generic save label. */
+  loadingLabel?: string;
   hint?: string;
   large?: boolean;
 };
@@ -16,6 +18,7 @@ export function PublishWizardCTA({
   onClick,
   disabled = false,
   loading = false,
+  loadingLabel = "Guardando...",
   hint,
   large = false,
 }: PublishWizardCTAProps) {
@@ -59,7 +62,7 @@ export function PublishWizardCTA({
           boxShadow: isDisabled ? "none" : "0 4px 16px rgba(68, 23, 230, 0.24)",
         }}
       >
-        {loading ? "Guardando..." : label}
+        {loading ? loadingLabel : label}
       </button>
     </>
   );

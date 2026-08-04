@@ -72,7 +72,8 @@ test.describe("owner publish flow", () => {
     await continueDetails.click();
 
     await expect(page).toHaveURL(/\/publicar\/comercializacion/);
-    await page.getByRole("button", { name: "Sin intermediarios" }).click();
+    // Options are radios (not buttons) — see publish-commercialization.spec.ts
+    await page.getByRole("radio", { name: /Sin intermediarios/i }).click();
     await page.getByRole("button", { name: "Continuar" }).click();
 
     await expect(page).toHaveURL(/\/publicar\/revision/);

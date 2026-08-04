@@ -6,12 +6,12 @@ import React from "react";
 import {
   usePropertyPublish,
 } from "../context/PropertyPublishContext";
-import {
-  publishProperty,
-} from "../services/publish-property";
+import { resolveWizardFinalization } from "../finalization/resolve-wizard-finalization";
 import PublishSuccessModal from "./PublishSuccess";
 import { useAppTheme } from "../../../../theme/useAppTheme";
 import { formatPrice } from "../../explore/utils/formatPrice";
+import { showToast } from "../../../../lib/toast";
+import { getApiErrorMessage } from "../../../../lib/api-error-message";
 
 const propertyTypeLabel: Record<string, string> = {
   HOUSE:      "Casa",
@@ -33,6 +33,7 @@ export default function PublishStep5() {
   const {
     data,
   } = usePropertyPublish();
+  const finalization = resolveWizardFinalization(data.publishMode);
   const [checklist, setChecklist] = useState({
     autorizado: false,
     terminos: false,
@@ -42,6 +43,7 @@ export default function PublishStep5() {
   const [autorizacion, setAutorizacion] = useState<File | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
+  const [isFinalizing, setIsFinalizing] = useState(false);
 
   const handleCheckboxChange = (key: keyof typeof checklist) => {
     setChecklist((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -55,46 +57,50 @@ export default function PublishStep5() {
     }
   };
 
-  const handlePublish =
-    async () => {
+  const handleFinalize = async () => {
+    if (isFinalizing) {
+      return;
+    }
 
-      if (
-        !data.propertyId
-      ) {
-        return;
-      }
+    if (!data.propertyId) {
+      showToast("No encontramos la propiedad. Volvé a abrir el flujo e intentá de nuevo.");
+      return;
+    }
 
-      try {
+    setIsFinalizing(true);
 
-        await publishProperty(
-          data.propertyId
-        );
-
-        setShowSuccess(true);
-
-      } catch (error) {
-
-        console.error(
-          "Publish failed",
-          error
-        );
-      }
-    };
+    try {
+      await finalization.finalize(data.propertyId);
+      setShowSuccess(true);
+    } catch (error) {
+      console.error("Wizard finalization failed", error);
+      showToast(
+        getApiErrorMessage(
+          error,
+          finalization.kind === "publish"
+            ? "No pudimos publicar la propiedad. Intentá de nuevo."
+            : "No pudimos guardar los cambios. Intentá de nuevo.",
+        ),
+      );
+    } finally {
+      setIsFinalizing(false);
+    }
+  };
 
   const isFormValid = checklist.autorizado && checklist.terminos && checklist.identidad;
 
-  const publishHint =
+  const finalizeHint =
     showValidation && !isFormValid
       ? "Completá todas las verificaciones requeridas para continuar"
       : undefined;
 
-  const handlePublishAttempt = () => {
+  const handleFinalizeAttempt = () => {
     if (!isFormValid) {
       setShowValidation(true);
       return;
     }
 
-    void handlePublish();
+    void handleFinalize();
   };
 
   const previewPrice = data.price
@@ -106,12 +112,18 @@ export default function PublishStep5() {
   return (
     <>
       <PublishWizardLayout
-        title="Verificación y publicar"
+        title={finalization.stepTitle}
         footer={
           <PublishWizardCTA
-            label="Publicar propiedad"
-            onClick={handlePublishAttempt}
-            hint={publishHint}
+            label={finalization.ctaLabel}
+            onClick={handleFinalizeAttempt}
+            hint={finalizeHint}
+            loading={isFinalizing}
+            loadingLabel={
+              finalization.kind === "publish"
+                ? "Publicando..."
+                : "Guardando cambios..."
+            }
             large
           />
         }
@@ -464,6 +476,7 @@ export default function PublishStep5() {
       <PublishSuccessModal
         isOpen={showSuccess}
         onClose={() => setShowSuccess(false)}
+        finalization={finalization}
       />
     </>
   );

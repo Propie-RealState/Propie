@@ -33,9 +33,7 @@ import {
   UserCheck,
 } from "lucide-react";
 
-import { findPropertyById } from "../../publish/services/find-property-by-id";
-
-import { mapApiPropertyToPublishData } from "../mappers/map-property-to-publish-data";
+import { fetchEditPublishWizardData } from "../mappers/fetch-edit-publish-wizard-data";
 
 import { usePropertyPublish } from "../../publish/context/PropertyPublishContext";
 import {
@@ -550,23 +548,12 @@ export default function PropertyDetails() {
     if (!property?.id) {
       return;
     }
-  
+
     try {
+      const editData = await fetchEditPublishWizardData(property.id);
+
       reset();
-  
-      const propertyData =
-        await findPropertyById(property.id);
-  
-      const mappedProperty =
-        mapApiPropertyToPublishData(
-          propertyData
-        );
-  
-      updateData({
-        ...mappedProperty,
-        publishMode: "edit",
-      });
-  
+      updateData(editData);
       navigate("/publicar");
     } catch (error) {
       console.error(

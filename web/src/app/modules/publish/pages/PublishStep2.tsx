@@ -24,6 +24,8 @@ import { usePropertyMediaAssets } from "../../../../lib/media/use-property-media
 import { useMediaUploadQueue } from "../../../../lib/media/use-media-upload-queue";
 import { PublishMediaGridSkeleton } from "../components/PublishMediaGridSkeleton";
 import { PublishPendingMediaCard } from "../components/PublishPendingMediaCard";
+import { showToast } from "../../../../lib/toast";
+import { getApiErrorMessage } from "../../../../lib/api-error-message";
 import {
   DndContext,
   closestCenter,
@@ -340,6 +342,12 @@ export default function PublishStep2() {
     } catch (error) {
       console.error("Remove media failed", error);
       setMediaItems(previousItems);
+      showToast(
+        getApiErrorMessage(
+          error,
+          "No pudimos eliminar el archivo. Intentá de nuevo.",
+        ),
+      );
     }
   };
 
@@ -375,6 +383,12 @@ export default function PublishStep2() {
     } catch (error) {
       console.error("Update cover failed", error);
       setMediaItems(previousItems);
+      showToast(
+        getApiErrorMessage(
+          error,
+          "No pudimos actualizar la portada. Intentá de nuevo.",
+        ),
+      );
     }
   };
 
@@ -418,13 +432,14 @@ export default function PublishStep2() {
       );
     
     } catch (error) {
-    
-      console.error(
-        "Update media order failed",
-        error,
-      );
-    
+      console.error("Update media order failed", error);
       setMediaItems(previousItems);
+      showToast(
+        getApiErrorMessage(
+          error,
+          "No pudimos reordenar los archivos. Intentá de nuevo.",
+        ),
+      );
     }
   };
 

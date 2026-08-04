@@ -11,6 +11,8 @@ import { useAppTheme, useIsAgent } from "../../../../theme/useAppTheme";
 import { usePropertyPublish } from "../context/PropertyPublishContext";
 import { getNextPublishWizardPath } from "../publish-wizard-steps";
 import { useAuth } from "../../../../context/AuthContext";
+import { showToast } from "../../../../lib/toast";
+import { getApiErrorMessage } from "../../../../lib/api-error-message";
 
 type CommercializationType = "AGENTS" | "DIRECT";
 
@@ -23,6 +25,7 @@ export default function PublishStep4() {
     data,
     updateData,
   } = usePropertyPublish();
+  const [isSaving, setIsSaving] = useState(false);
   const nextPath = getNextPublishWizardPath("comercializacion", isAgent);
   const agentDirectSaveRef = useRef<Promise<void> | null>(null);
 
@@ -61,6 +64,12 @@ export default function PublishStep4() {
       } catch (error) {
         console.error("Agent commercialization auto-save failed", error);
         agentDirectSaveRef.current = null;
+        showToast(
+          getApiErrorMessage(
+            error,
+            "No pudimos guardar la comercialización. Intentá de nuevo.",
+          ),
+        );
       }
     };
 
@@ -119,9 +128,11 @@ export default function PublishStep4() {
   ];
 
   const handleContinue = async () => {
-    if (!commercializationType || !data.propertyId) {
+    if (!commercializationType || !data.propertyId || isSaving) {
       return;
     }
+
+    setIsSaving(true);
 
     try {
       updateData({ commercializationType });
@@ -136,6 +147,14 @@ export default function PublishStep4() {
       }
     } catch (error) {
       console.error("Save commercialization failed", error);
+      showToast(
+        getApiErrorMessage(
+          error,
+          "No pudimos guardar la comercialización. Intentá de nuevo.",
+        ),
+      );
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -172,6 +191,7 @@ export default function PublishStep4() {
           label="Continuar"
           onClick={handleContinueAttempt}
           hint={continueHint}
+          loading={isSaving}
         />
       }
     >

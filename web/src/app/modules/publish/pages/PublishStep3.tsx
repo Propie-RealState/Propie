@@ -11,6 +11,8 @@ import { useAppTheme, useIsAgent } from "../../../../theme/useAppTheme";
 import { amenitiesMap } from "../mappers/map-amenities-to-api";
 import type { PropertyCurrency } from "../types/property-publish.types";
 import { getNextPublishWizardPath } from "../publish-wizard-steps";
+import { showToast } from "../../../../lib/toast";
+import { getApiErrorMessage } from "../../../../lib/api-error-message";
   
 type AmenityType = "pileta" | "patio" | "balcon" | "mascotas" | "seguridad";
 
@@ -20,6 +22,7 @@ export default function PublishStep3() {
   const nextPath = getNextPublishWizardPath("informacion", isAgent);
   const { data, updateData } = usePropertyPublish();
   const navigate = useNavigate();
+  const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -91,17 +94,11 @@ export default function PublishStep3() {
   }, [data.amenities]);
 
   const handleContinue = async () => {
-    console.log("HANDLE CONTINUE");
-
-    console.log("PROPERTY ID", data.propertyId);
-
-    console.log("FORM DATA", formData);
-
-    if (!data.propertyId) {
-      console.log("NO PROPERTY ID");
-
+    if (!data.propertyId || isSaving) {
       return;
     }
+
+    setIsSaving(true);
 
     try {
       await updatePropertyBasic(data.propertyId, {
@@ -144,6 +141,14 @@ export default function PublishStep3() {
       }
     } catch (error) {
       console.error("Update property details failed", error);
+      showToast(
+        getApiErrorMessage(
+          error,
+          "No pudimos guardar los detalles. Intentá de nuevo.",
+        ),
+      );
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -196,6 +201,7 @@ export default function PublishStep3() {
           label="Continuar"
           onClick={handleContinueAttempt}
           hint={continueHint}
+          loading={isSaving}
         />
       }
     >
